@@ -1,0 +1,715 @@
+﻿@using System.Text.Json
+@using AsMart.Web.Helpers
+@using AsMart.Web.Models.ViewModels
+@model AsMart.Web.Models.ViewModels.CatalogCategoryViewModel
+
+@{
+    ViewData["Title"] = Model.Category.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var badges = new List<(string Url, string Text)>();
+
+    if (!string.IsNullOrWhiteSpace(Model.Category?.Links))
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(Model.Category.Links);
+
+            if (doc.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var el in doc.RootElement.EnumerateArray())
+                {
+                    var url = "";
+                    var text = "";
+
+                    if (el.ValueKind == JsonValueKind.Object)
+                    {
+                        if (el.TryGetProperty("url", out var u1) && u1.ValueKind == JsonValueKind.String)
+                            url = u1.GetString() ?? "";
+                        else if (el.TryGetProperty("Url", out var u2) && u2.ValueKind == JsonValueKind.String)
+                            url = u2.GetString() ?? "";
+
+                        if (el.TryGetProperty("text", out var t1) && t1.ValueKind == JsonValueKind.String)
+                            text = t1.GetString() ?? "";
+                        else if (el.TryGetProperty("Text", out var t2) && t2.ValueKind == JsonValueKind.String)
+                            text = t2.GetString() ?? "";
+                    }
+
+                    url = (url ?? "").Trim();
+                    text = (text ?? "").Trim();
+
+                    if (!string.IsNullOrWhiteSpace(url) && !string.IsNullOrWhiteSpace(text))
+                        badges.Add((url, text));
+                }
+            }
+
+            badges = badges
+                .GroupBy(x => x.Url, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First())
+                .ToList();
+        }
+        catch
+        {
+            badges = new List<(string Url, string Text)>();
+        }
+    }
+
+    var isAdmin = User.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
+    var productCount = Model.Products?.Count ?? 0;
+
+    var grid = new ProductGridVm
+    {
+        Title = null,
+        Actions = ProductGridActions.DetailsAndBuy,
+        Products = Model.Products.Select(p => p.ToCardVm(Model.Category.Name)).ToList()
+    };
+}
+
+@if (isAdmin)
+{
+    <a class="cat-admin-fab"
+       asp-area="Admin"
+       asp-controller="Categories"
+       asp-action="Edit"
+       asp-route-id="@Model.Category.Id"
+       title="Edit Category">
+        <i class="fa-solid fa-pen-to-square"></i>
+        <span>Edit Category</span>
+    </a>
+}
+
+@section Styles {
+    <style>
+        .category-page {
+            min-height: calc(100vh - 90px);
+            padding: 18px 0 40px;
+            background: radial-gradient(circle at 8% 0%, rgba(37,99,235,.12), transparent 32%), radial-gradient(circle at 94% 8%, rgba(14,165,233,.10), transparent 30%), linear-gradient(180deg, #f8fafc 0%, #ffffff 48%, #f8fafc 100%);
+        }
+
+        .category-shell {
+            max-width: 1760px;
+            margin: 0 auto;
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+
+        .category-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 30px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: radial-gradient(circle at 90% 18%, rgba(14,165,233,.13), transparent 32%), radial-gradient(circle at 12% 14%, rgba(37,99,235,.10), transparent 28%), linear-gradient(135deg, rgba(255,255,255,.98), rgba(239,246,255,.92));
+            box-shadow: 0 22px 60px rgba(15,23,42,.08);
+            margin-bottom: 18px;
+        }
+
+        .category-hero-body {
+            position: relative;
+            z-index: 1;
+            padding: 28px;
+        }
+
+        .category-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .category-breadcrumbs {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-crumb {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 13px;
+            border-radius: 999px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.86);
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            text-decoration: none;
+            box-shadow: 0 8px 20px rgba(15,23,42,.04);
+        }
+
+            .category-crumb:hover {
+                color: #1d4ed8;
+                border-color: rgba(37,99,235,.22);
+                text-decoration: none;
+            }
+
+        .category-crumb-active {
+            color: #0f172a;
+            background: rgba(255,255,255,.96);
+        }
+
+        .category-hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 22px;
+            align-items: stretch;
+        }
+
+        .category-info-card,
+        .category-stat-card {
+            height: 100%;
+            border-radius: 26px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.78);
+            box-shadow: 0 16px 42px rgba(15,23,42,.06);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .category-info-card {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .category-kicker {
+            width: fit-content;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.15);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: .045em;
+            margin-bottom: 16px;
+        }
+
+        .category-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(34px, 4vw, 64px);
+            line-height: 1;
+            letter-spacing: -.06em;
+            font-weight: 950;
+        }
+
+            .category-title span {
+                color: #2563eb;
+            }
+
+        .category-desc-card {
+            margin-top: 18px;
+            padding: 18px 20px;
+            border-radius: 22px;
+            border: 1px solid rgba(15,23,42,.07);
+            background: rgba(255,255,255,.82);
+        }
+
+        .category-desc {
+            margin: 0;
+            color: #334155;
+            font-size: 15px;
+            line-height: 1.85;
+            font-weight: 650;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            text-align: left;
+        }
+
+            .category-desc p:last-child {
+                margin-bottom: 0;
+            }
+
+            .category-desc a {
+                color: #2563eb;
+                font-weight: 900;
+                text-decoration: none;
+            }
+
+                .category-desc a:hover {
+                    text-decoration: underline;
+                }
+
+        .category-stat-card {
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 170px;
+        }
+
+        .category-stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 17px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .category-stat-label {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: .055em;
+        }
+
+        .category-stat-value {
+            color: #0f172a;
+            font-size: 42px;
+            font-weight: 950;
+            line-height: 1;
+            margin-top: 8px;
+        }
+
+        .category-stat-meta {
+            margin-top: 10px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .category-guide-section {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 24px;
+            border: 1px solid rgba(15,23,42,.07);
+            background: rgba(255,255,255,.66);
+        }
+
+        .category-guide-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 12px;
+        }
+
+            .category-guide-title i {
+                color: #2563eb;
+            }
+
+        .category-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+        }
+
+        .guide-badge {
+            max-width: 100%;
+            min-width: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(37,99,235,.20);
+            background: rgba(37,99,235,.07);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1.2;
+            text-decoration: none;
+            box-shadow: 0 8px 18px rgba(15,23,42,.05);
+            transition: all .16s ease;
+        }
+
+            .guide-badge:hover {
+                transform: translateY(-1px);
+                background: rgba(14,165,233,.10);
+                border-color: rgba(14,165,233,.34);
+                color: #075985;
+                text-decoration: none;
+                box-shadow: 0 12px 24px rgba(15,23,42,.08);
+            }
+
+        .guide-dot {
+            width: 8px;
+            height: 8px;
+            flex: 0 0 8px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.78);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.13);
+        }
+
+        .guide-text {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .category-grid-wrap {
+            position: relative;
+            z-index: 1;
+            margin-top: 14px;
+        }
+
+        .category-pagination-wrap {
+            margin-top: 28px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .category-pagination {
+            gap: 6px;
+            justify-content: center;
+        }
+
+            .category-pagination .page-link {
+                min-width: 42px;
+                min-height: 42px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                border: 1px solid rgba(15,23,42,.10);
+                border-radius: 14px !important;
+                color: #334155;
+                font-size: 13px;
+                font-weight: 900;
+                background: #fff;
+                box-shadow: 0 10px 24px rgba(15,23,42,.05);
+            }
+
+                .category-pagination .page-link:hover {
+                    color: #1d4ed8;
+                    background: #eff6ff;
+                    border-color: rgba(37,99,235,.18);
+                }
+
+            .category-pagination .page-item.active .page-link {
+                color: #fff;
+                background: #2563eb;
+                border-color: #2563eb;
+                box-shadow: 0 14px 28px rgba(37,99,235,.25);
+            }
+
+            .category-pagination .page-item.disabled .page-link {
+                opacity: .45;
+                box-shadow: none;
+            }
+
+        .cat-admin-fab {
+            position: fixed;
+            top: 92px;
+            right: 18px;
+            z-index: 1040;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 0 15px;
+            border-radius: 999px;
+            border: 1px solid rgba(37,99,235,.22);
+            background: rgba(255,255,255,.96);
+            color: #1d4ed8;
+            font-size: 13px;
+            font-weight: 950;
+            text-decoration: none;
+            box-shadow: 0 16px 38px rgba(15,23,42,.16);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all .16s ease;
+        }
+
+            .cat-admin-fab:hover {
+                transform: translateY(-1px);
+                border-color: rgba(14,165,233,.36);
+                color: #075985;
+                text-decoration: none;
+                box-shadow: 0 20px 46px rgba(15,23,42,.18);
+            }
+
+        @@media (max-width: 1199.98px) {
+            .category-page {
+                padding: 16px 0 34px;
+            }
+
+            .category-hero-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .category-stat-card {
+                min-height: auto;
+                display: grid;
+                grid-template-columns: 52px minmax(0, 1fr);
+                column-gap: 14px;
+                align-items: center;
+            }
+
+            .category-stat-icon {
+                margin-bottom: 0;
+                grid-row: span 3;
+            }
+
+            .category-stat-value {
+                font-size: 34px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .category-hero-body {
+                padding: 22px;
+            }
+
+            .category-info-card,
+            .category-stat-card {
+                border-radius: 24px;
+            }
+
+            .cat-admin-fab {
+                top: 86px;
+                right: 12px;
+                width: 44px;
+                padding: 0;
+                justify-content: center;
+            }
+
+                .cat-admin-fab span {
+                    display: none;
+                }
+        }
+
+        @@media (max-width: 575.98px) {
+            .category-page {
+                padding: 12px 0 28px;
+            }
+
+            .category-shell {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .category-hero {
+                border-radius: 22px;
+            }
+
+            .category-hero-body {
+                padding: 14px;
+            }
+
+            .category-topbar {
+                margin-bottom: 14px;
+            }
+
+            .category-breadcrumbs {
+                gap: 7px;
+            }
+
+            .category-crumb {
+                min-height: 36px;
+                padding: 0 10px;
+                font-size: 11px;
+            }
+
+            .category-info-card,
+            .category-stat-card {
+                border-radius: 20px;
+                padding: 16px;
+            }
+
+            .category-title {
+                font-size: 34px;
+                letter-spacing: -.045em;
+            }
+
+            .category-desc-card {
+                border-radius: 18px;
+                padding: 13px;
+            }
+
+            .category-desc {
+                font-size: 14px;
+                line-height: 1.65;
+            }
+
+            .category-stat-card {
+                grid-template-columns: 46px minmax(0, 1fr);
+                column-gap: 12px;
+            }
+
+            .category-stat-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 15px;
+            }
+
+            .category-stat-value {
+                font-size: 30px;
+            }
+
+            .guide-badge {
+                width: 100%;
+                justify-content: flex-start;
+                padding: 10px 12px;
+                border-radius: 16px;
+                box-shadow: none;
+            }
+
+            .guide-text {
+                white-space: normal;
+            }
+
+            .category-pagination .page-link {
+                min-width: 38px;
+                min-height: 38px;
+                padding: 8px 10px;
+            }
+        }
+    </style>
+}
+
+<section class="category-page">
+    <div class="container-fluid category-shell">
+
+        <header class="category-hero">
+            <div class="category-hero-body">
+
+                <div class="category-topbar">
+                    <div class="category-breadcrumbs">
+                        <a class="category-crumb" href="/">
+                            <i class="fa-solid fa-house"></i>
+                            <span>Home</span>
+                        </a>
+
+                        <a class="category-crumb" asp-controller="Catalog" asp-action="Index">
+                            <i class="fa-solid fa-store"></i>
+                            <span>Catalog</span>
+                        </a>
+
+                        <span class="category-crumb category-crumb-active">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span>@Model.Category.Name</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="category-hero-grid">
+                    <div class="category-info-card">
+                        <div class="category-kicker">
+                            <i class="fa-solid fa-layer-group"></i>
+                            Product Category
+                        </div>
+
+                        <h1 class="category-title">
+                            <span>@Model.TotalCount</span> @Model.Category.Name
+                        </h1>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Category.Description))
+                        {
+                            <div class="category-desc-card">
+                                <div class="category-desc">
+                                    @Html.Raw(Model.Category.Description)
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <aside class="category-stat-card">
+                        <div class="category-stat-icon">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+
+                        <div class="category-stat-label">Products on this page</div>
+                        <div class="category-stat-value">@productCount</div>
+                        <div class="category-stat-meta">Page @Model.Page of @Model.TotalPages</div>
+                    </aside>
+                </div>
+
+                @if (badges.Count > 0)
+                {
+                    <div class="category-guide-section">
+                        <div class="category-guide-title">
+                            <i class="fa-solid fa-link"></i>
+                            Related Guides
+                        </div>
+
+                        <div class="category-badges" aria-label="Related guides">
+                            @foreach (var b in badges)
+                            {
+                                <a href="@b.Url" class="guide-badge" title="@b.Text">
+                                    <span class="guide-dot"></span>
+                                    <span class="guide-text">@b.Text</span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </header>
+
+        <div class="category-grid-wrap">
+            <partial name="~/Views/Shared/Products/_ProductGrid.cshtml" model="grid" />
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Category pagination" class="category-pagination-wrap">
+                <ul class="pagination category-pagination flex-wrap">
+
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-controller="Catalog"
+                           asp-action="Category"
+                           asp-route-slug="@Model.Category.Slug"
+                           asp-route-page="@(Model.Page - 1)"
+                           asp-route-pageSize="@Model.PageSize">
+                            <i class="fa-solid fa-chevron-left"></i>
+                            Previous
+                        </a>
+                    </li>
+
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link"
+                               asp-controller="Catalog"
+                               asp-action="Category"
+                               asp-route-slug="@Model.Category.Slug"
+                               asp-route-page="@i"
+                               asp-route-pageSize="@Model.PageSize">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-controller="Catalog"
+                           asp-action="Category"
+                           asp-route-slug="@Model.Category.Slug"
+                           asp-route-page="@(Model.Page + 1)"
+                           asp-route-pageSize="@Model.PageSize">
+                            Next
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+        }
+
+    </div>
+</section>

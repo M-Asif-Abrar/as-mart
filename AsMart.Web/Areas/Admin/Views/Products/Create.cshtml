@@ -1,0 +1,204 @@
+﻿@model AsMart.Web.Models.DTOs.ProductFormDto
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .as-admin-product-page {
+            min-height: calc(100vh - 76px);
+            padding: 22px;
+            background: radial-gradient(900px 420px at 8% 0%, rgba(37, 99, 235, .12), transparent 60%), radial-gradient(760px 380px at 100% 8%, rgba(14, 165, 233, .10), transparent 60%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+        }
+
+        .as-admin-product-shell {
+            width: 100%;
+            max-width: 1540px;
+            margin: 0 auto;
+        }
+
+        .as-admin-product-form {
+            width: 100%;
+        }
+
+        .as-validation-box {
+            border: 0;
+            border-radius: 18px;
+            box-shadow: 0 16px 36px rgba(220, 38, 38, .10);
+        }
+
+        .as-delete-modal-content {
+            overflow: hidden;
+            border: 0;
+            border-radius: 26px;
+            box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
+        }
+
+        .as-delete-modal-header {
+            position: relative;
+            padding: 24px 24px 10px;
+            border-bottom: 0;
+            background: radial-gradient(520px 220px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
+        }
+
+        .as-delete-icon {
+            display: inline-grid;
+            width: 54px;
+            height: 54px;
+            place-items: center;
+            margin-bottom: 14px;
+            border-radius: 18px;
+            background: rgba(220, 38, 38, .10);
+            color: #dc2626;
+            font-size: 22px;
+        }
+
+        .as-delete-title {
+            color: #0f172a;
+            font-weight: 900;
+            letter-spacing: -.03em;
+        }
+
+        .as-delete-text {
+            max-width: 420px;
+            margin: 8px 0 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .as-delete-modal-footer {
+            gap: 10px;
+            padding: 18px 24px 24px;
+            border-top: 0;
+            background: #f8fafc;
+        }
+
+        .as-modal-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: .62rem 1rem;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        @@media (max-width: 767.98px) {
+            .as-admin-product-page {
+                padding: 12px;
+            }
+
+            .as-delete-modal-footer {
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
+
+                .as-delete-modal-footer .btn {
+                    width: 100%;
+                }
+        }
+    </style>
+}
+<div class="as-admin-product-page">
+    <div class="as-admin-product-shell">
+        <form asp-action="Create" method="post" class="as-admin-product-form">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger as-validation-box"></div>
+
+            <partial name="_ProductForm" model="Model" />
+        </form>
+    </div>
+</div>
+
+<div class="modal fade as-delete-modal" id="asDeleteConfirmModal" tabindex="-1" aria-labelledby="asDeleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content as-delete-modal-content">
+            <div class="modal-header as-delete-modal-header">
+                <div>
+                    <div class="as-delete-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <h5 class="modal-title as-delete-title" id="asDeleteConfirmModalLabel">Confirm Delete</h5>
+                    <p class="as-delete-text">This action cannot be undone. Please confirm before deleting.</p>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-footer as-delete-modal-footer">
+                <button type="button" class="btn btn-light as-modal-btn" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-danger as-modal-btn" id="asDeleteConfirmButton">
+                    <i class="fa-solid fa-trash"></i>
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let pendingDeleteForm = null;
+        let pendingDeleteUrl = null;
+
+        const modalElement = document.getElementById('asDeleteConfirmModal');
+        const confirmButton = document.getElementById('asDeleteConfirmButton');
+
+        if (!modalElement || !confirmButton || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        const modal = new bootstrap.Modal(modalElement);
+
+        document.addEventListener('click', function (event) {
+            const deleteTrigger = event.target.closest('[data-delete-confirm="true"]');
+
+            if (!deleteTrigger) {
+                return;
+            }
+
+            event.preventDefault();
+
+            pendingDeleteForm = deleteTrigger.closest('form');
+            pendingDeleteUrl = deleteTrigger.getAttribute('href') || deleteTrigger.dataset.deleteUrl || null;
+
+            const customMessage = deleteTrigger.dataset.deleteMessage;
+            const textElement = modalElement.querySelector('.as-delete-text');
+
+            if (customMessage && textElement) {
+                textElement.textContent = customMessage;
+            }
+
+            modal.show();
+        });
+
+        confirmButton.addEventListener('click', function () {
+            if (pendingDeleteForm) {
+                pendingDeleteForm.submit();
+                return;
+            }
+
+            if (pendingDeleteUrl) {
+                window.location.href = pendingDeleteUrl;
+            }
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            pendingDeleteForm = null;
+            pendingDeleteUrl = null;
+        });
+    })();
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

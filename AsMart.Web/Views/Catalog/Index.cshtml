@@ -1,0 +1,891 @@
+﻿@* Views/Catalog/Index.cshtml *@
+@using AsMart.Web.Helpers
+@using AsMart.Web.Models.ViewModels
+@model AsMart.Web.Models.ViewModels.CatalogIndexViewModel
+
+@{
+    ViewData["Title"] = "Shop";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var productsCount = Model.Products?.Count ?? 0;
+}
+
+@section Styles {
+    <style>
+        .as-nav,
+        .navbar,
+        .as-nav .navbar-collapse,
+        .as-nav .nav-item.dropdown {
+            z-index: 5000 !important;
+        }
+
+            .as-nav .dropdown-menu,
+            .navbar .dropdown-menu {
+                z-index: 5100 !important;
+            }
+
+        .catalog-page {
+            position: relative;
+            z-index: 1;
+            min-height: calc(100vh - 90px);
+            padding: 5px 0 42px;
+            background: radial-gradient(circle at 10% 8%, rgba(37, 99, 235, .10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14, 165, 233, .10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .catalog-shell {
+            max-width: 1440px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .catalog-hero {
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            border-radius: 28px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(239,246,255,.92)), radial-gradient(circle at top right, rgba(59,130,246,.18), transparent 34%);
+            box-shadow: 0 24px 70px rgba(15, 23, 42, .08);
+            margin-bottom: 18px;
+        }
+
+            .catalog-hero::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 18% 20%, rgba(37,99,235,.10), transparent 26%), radial-gradient(circle at 84% 80%, rgba(14,165,233,.13), transparent 30%);
+                pointer-events: none;
+            }
+
+        .catalog-hero-body {
+            position: relative;
+            z-index: 1;
+            padding: 28px;
+        }
+
+        .catalog-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, .09);
+            border: 1px solid rgba(37, 99, 235, .14);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: 13px;
+        }
+
+        .catalog-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(32px, 4vw, 54px);
+            line-height: 1.02;
+            letter-spacing: -.045em;
+            font-weight: 950;
+        }
+
+        .catalog-sub {
+            margin: 13px 0 0;
+            max-width: 780px;
+            color: #475569;
+            font-size: 15px;
+            line-height: 1.75;
+            font-weight: 600;
+        }
+
+        .catalog-stat-card {
+            width: 100%;
+            max-width: 260px;
+            margin-left: auto;
+            padding: 18px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .75);
+            border: 1px solid rgba(15, 23, 42, .08);
+            box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .catalog-stat-label {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .catalog-stat-value {
+            color: #0f172a;
+            font-size: 28px;
+            font-weight: 950;
+            line-height: 1.1;
+            margin-top: 5px;
+        }
+
+        .catalog-filter-card {
+            position: relative;
+            z-index: 5;
+            overflow: visible;
+            margin-bottom: 22px;
+            padding: 18px;
+            border-radius: 26px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            background: rgba(255,255,255,.94);
+            box-shadow: 0 20px 60px rgba(15,23,42,.08);
+        }
+
+        #catalogFilterForm {
+            position: relative;
+            z-index: 6;
+        }
+
+        .catalog-label {
+            color: #334155;
+            font-size: 12px;
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: .045em;
+            margin-bottom: 7px;
+        }
+
+        .catalog-control {
+            height: 48px;
+            min-height: 48px;
+            border-radius: 15px;
+            border: 1px solid rgba(15,23,42,.12);
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 750;
+            background-color: #fff;
+            box-shadow: none;
+        }
+
+            .catalog-control:focus {
+                border-color: rgba(37,99,235,.45);
+                box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
+            }
+
+        .catalog-dropdown-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            text-align: left;
+        }
+
+            .catalog-dropdown-btn i {
+                color: #64748b;
+                font-size: 12px;
+                flex: 0 0 auto;
+            }
+
+        .catalog-input-group .input-group-text {
+            height: 48px;
+            min-height: 48px;
+            border-radius: 15px 0 0 15px;
+            border-color: rgba(15,23,42,.12);
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 950;
+        }
+
+        .catalog-input-group .form-control {
+            border-radius: 0 15px 15px 0;
+        }
+
+        .catalog-actions {
+            width: 100%;
+            display: flex;
+            gap: 10px;
+        }
+
+        .catalog-btn {
+            flex: 1;
+            height: 48px;
+            min-height: 48px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            font-size: 14px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .catalog-reset-btn {
+            border: 1px solid rgba(15,23,42,.10);
+            color: #334155;
+            background: #fff;
+        }
+
+        .catalog-menu {
+            z-index: 50 !important;
+            overflow: hidden;
+            border: 1px solid rgba(15,23,42,.10);
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 22px 55px rgba(15, 23, 42, .16);
+        }
+
+        .catalog-menu-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 5px 6px 10px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .categories-menu {
+            max-height: 380px;
+        }
+
+        .categories-list,
+        .brand-list {
+            overflow: auto;
+            background: #fff;
+        }
+
+        .categories-list {
+            max-height: 250px;
+            border: 1px solid rgba(15,23,42,.08);
+            border-radius: 15px;
+            padding: 5px;
+        }
+
+        .brand-list {
+            max-height: 360px;
+        }
+
+        .catalog-check-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            white-space: normal;
+            border-radius: 12px;
+            padding: 10px;
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+            .catalog-check-item:hover {
+                background: rgba(37,99,235,.06);
+            }
+
+            .catalog-check-item small {
+                color: #64748b;
+                font-weight: 800;
+            }
+
+        .catalog-menu-tip {
+            padding: 9px 6px 3px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .brand-option {
+            display: block;
+            width: 100%;
+            padding: 12px 13px;
+            border: 0;
+            border-bottom: 1px solid rgba(15,23,42,.06);
+            background: transparent;
+            text-align: left;
+            white-space: normal;
+        }
+
+            .brand-option:last-child {
+                border-bottom: 0;
+            }
+
+            .brand-option:hover,
+            .brand-option:focus {
+                background: rgba(37,99,235,.06);
+            }
+
+            .brand-option.active,
+            .brand-option.active:hover,
+            .brand-option.active:focus {
+                background: rgba(37,99,235,.11);
+            }
+
+        .brand-name {
+            display: block;
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 950;
+            line-height: 1.25;
+        }
+
+        .brand-meta {
+            display: block;
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 11px;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+
+        .catalog-products-wrap {
+            position: relative;
+            z-index: 1;
+        }
+
+        .catalog-empty {
+            border-radius: 28px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.94);
+            box-shadow: 0 20px 60px rgba(15,23,42,.08);
+            padding: 42px 22px;
+            text-align: center;
+        }
+
+        .catalog-empty-icon {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 16px;
+            border-radius: 26px;
+            background: rgba(37,99,235,.09);
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 29px;
+        }
+
+        .catalog-empty h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 25px;
+            font-weight: 950;
+            letter-spacing: -.03em;
+        }
+
+        .catalog-empty p {
+            margin: 9px auto 18px;
+            max-width: 560px;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.7;
+            font-weight: 650;
+        }
+
+        .catalog-empty-btn {
+            min-height: 44px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            font-weight: 950;
+            padding: 0 18px;
+        }
+
+        .catalog-pagination-wrap {
+            margin-top: 26px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .pagination-modern {
+            gap: 6px;
+            justify-content: center;
+        }
+
+            .pagination-modern .page-link {
+                min-width: 42px;
+                min-height: 42px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                border: 1px solid rgba(15,23,42,.10);
+                border-radius: 14px !important;
+                color: #334155;
+                font-size: 13px;
+                font-weight: 900;
+                background: #fff;
+                box-shadow: 0 10px 24px rgba(15,23,42,.05);
+            }
+
+                .pagination-modern .page-link:hover {
+                    color: #1d4ed8;
+                    background: #eff6ff;
+                    border-color: rgba(37,99,235,.18);
+                }
+
+            .pagination-modern .page-item.active .page-link {
+                color: #fff;
+                background: #2563eb;
+                border-color: #2563eb;
+                box-shadow: 0 14px 28px rgba(37,99,235,.25);
+            }
+
+            .pagination-modern .page-item.disabled .page-link {
+                opacity: .45;
+                box-shadow: none;
+            }
+
+        @@media (min-width: 1200px) {
+            .filter-row {
+                flex-wrap: nowrap;
+            }
+
+                .filter-row > [class*="col-xl-"] {
+                    flex: 0 0 auto;
+                }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .catalog-page {
+                padding: 5px 0 34px;
+            }
+
+            .catalog-stat-card {
+                max-width: none;
+                margin-left: 0;
+            }
+
+            .catalog-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .catalog-page {
+                padding: 5px 0 28px;
+            }
+
+            .catalog-hero {
+                border-radius: 22px;
+            }
+
+            .catalog-hero-body {
+                padding: 18px;
+            }
+
+            .catalog-sub {
+                font-size: 14px;
+            }
+
+            .catalog-filter-card {
+                border-radius: 22px;
+                padding: 15px;
+            }
+
+            .catalog-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .catalog-btn {
+                width: 100%;
+            }
+
+            .brand-option {
+                padding: 11px;
+            }
+
+            .brand-name {
+                font-size: 13px;
+            }
+
+            .brand-meta {
+                font-size: 10px;
+            }
+
+            .pagination-modern .page-link {
+                min-width: 38px;
+                min-height: 38px;
+                padding: 8px 10px;
+            }
+        }
+    </style>
+}
+
+<section class="catalog-page">
+    <div class="container-fluid catalog-shell">
+
+        <div class="catalog-hero">
+            <div class="catalog-hero-body">
+                <div class="row align-items-center g-3">
+                    <div class="col-12 col-lg-8">
+                        <div class="catalog-kicker">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                            As-Mart Catalog
+                        </div>
+
+                        <h1 class="catalog-title">Shop Products</h1>
+
+                        <p class="catalog-sub">
+                            Browse products, filter by category, brand, price, and rating, then quickly open details or buy from trusted affiliate links.
+                        </p>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="catalog-stat-card">
+                            <div class="catalog-stat-label">Showing</div>
+                            <div class="catalog-stat-value">@productsCount Items</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="catalog-filter-card">
+            <form asp-action="Index" method="get" class="row g-3 align-items-end filter-row" id="catalogFilterForm">
+
+                <div class="col-12 col-xl-3">
+                    <label class="form-label catalog-label">Categories</label>
+
+                    <div class="dropdown w-100">
+                        <button class="btn btn-light w-100 catalog-control catalog-dropdown-btn"
+                                type="button"
+                                id="categoriesDropdownBtn"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                                data-bs-display="static"
+                                aria-expanded="false">
+                            <span class="text-truncate" id="categoriesDropdownText">All categories</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+
+                        <div class="dropdown-menu w-100 p-2 catalog-menu categories-menu" aria-labelledby="categoriesDropdownBtn">
+                            <div class="catalog-menu-head">
+                                <span>Select one or more</span>
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" id="btnClearCategories">
+                                    Clear
+                                </button>
+                            </div>
+
+                            <div class="categories-list">
+                                @foreach (var c in Model.AllCategories)
+                                {
+                                    var isChecked = Model.SelectedCategoryIds.Contains(c.Id);
+
+                                    <label class="dropdown-item catalog-check-item">
+                                        <input class="form-check-input m-0 category-check"
+                                               type="checkbox"
+                                               value="@c.Id"
+                                               @(isChecked ? "checked" : "") />
+                                        <span class="text-truncate">
+                                            @c.Name
+                                            <small>[@(Model.CategoryCounts.TryGetValue(c.Id, out var count) ? count : 0)]</small>
+                                        </span>
+                                    </label>
+                                }
+                            </div>
+
+                            <div class="catalog-menu-tip">
+                                Apply filters with <strong>Apply Filters</strong>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="categories" id="categoriesCsv" value="@Model.CategoriesCsv" />
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label catalog-label">Brand</label>
+
+                    <div class="dropdown w-100">
+                        <button class="btn btn-light w-100 catalog-control catalog-dropdown-btn"
+                                type="button"
+                                id="brandDropdownBtn"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                                data-bs-display="static"
+                                aria-expanded="false">
+                            <span class="text-truncate" id="brandDropdownText">
+                                @(string.IsNullOrWhiteSpace(Model.Brand) ? "All brands" : Model.Brand)
+                            </span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+
+                        <div class="dropdown-menu w-100 p-0 catalog-menu brand-menu" aria-labelledby="brandDropdownBtn">
+                            <div class="brand-list">
+                                <button type="button"
+                                        class="dropdown-item brand-option @(string.IsNullOrWhiteSpace(Model.Brand) ? "active" : "")"
+                                        data-brand="">
+                                    <span class="brand-name">All brands</span>
+                                    <span class="brand-meta">Show products from every brand</span>
+                                </button>
+
+                                @foreach (var b in Model.BrandOptions)
+                                {
+                                    var meta = string.Join(" | ", b.Categories.Select(x => $"{x.Name} [{x.Count}]"));
+
+                                    <button type="button"
+                                            class="dropdown-item brand-option @(string.Equals(Model.Brand, b.Name, StringComparison.OrdinalIgnoreCase) ? "active" : "")"
+                                            data-brand="@b.Name"
+                                            title="@b.Name">
+                                        <span class="brand-name">@b.Name</span>
+                                        <span class="brand-meta">@meta</span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="brand" id="brandInput" value="@Model.Brand" />
+                </div>
+
+                <div class="col-6 col-md-3 col-xl-1">
+                    <label class="form-label catalog-label">Min Price</label>
+                    <div class="input-group catalog-input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number"
+                               name="minPrice"
+                               step="0.01"
+                               min="0"
+                               class="form-control catalog-control"
+                               value="@(Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")"
+                               placeholder="0.00" />
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3 col-xl-1">
+                    <label class="form-label catalog-label">Max Price</label>
+                    <div class="input-group catalog-input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number"
+                               name="maxPrice"
+                               step="0.01"
+                               min="0"
+                               class="form-control catalog-control"
+                               value="@(Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")"
+                               placeholder="999.99" />
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3 col-xl-1">
+                    <label class="form-label catalog-label">Min Rating</label>
+                    <select name="minRating" class="form-select catalog-control">
+                        <option value="">Any</option>
+                        <option value="1" selected="@(Model.MinRating == 1 ? "selected" : null)">1+</option>
+                        <option value="2" selected="@(Model.MinRating == 2 ? "selected" : null)">2+</option>
+                        <option value="3" selected="@(Model.MinRating == 3 ? "selected" : null)">3+</option>
+                        <option value="4" selected="@(Model.MinRating == 4 ? "selected" : null)">4+</option>
+                        <option value="4.5" selected="@(Model.MinRating == 4.5m ? "selected" : null)">4.5+</option>
+                        <option value="5" selected="@(Model.MinRating == 5 ? "selected" : null)">5</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-3 col-xl-1">
+                    <label class="form-label catalog-label">Max Rating</label>
+                    <select name="maxRating" class="form-select catalog-control">
+                        <option value="">Any</option>
+                        <option value="1" selected="@(Model.MaxRating == 1 ? "selected" : null)">1</option>
+                        <option value="2" selected="@(Model.MaxRating == 2 ? "selected" : null)">2</option>
+                        <option value="3" selected="@(Model.MaxRating == 3 ? "selected" : null)">3</option>
+                        <option value="4" selected="@(Model.MaxRating == 4 ? "selected" : null)">4</option>
+                        <option value="4.5" selected="@(Model.MaxRating == 4.5m ? "selected" : null)">4.5</option>
+                        <option value="5" selected="@(Model.MaxRating == 5 ? "selected" : null)">5</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-xl-3">
+                    <label class="form-label catalog-label d-none d-xl-block">&nbsp;</label>
+                    <div class="catalog-actions">
+                        <button type="submit" class="btn btn-primary catalog-btn">
+                            <i class="fa-solid fa-filter"></i>
+                            Apply Filters
+                        </button>
+
+                        <a asp-action="Index" class="btn btn-light catalog-btn catalog-reset-btn">
+                            <i class="fa-solid fa-arrow-rotate-left"></i>
+                            Reset
+                        </a>
+                    </div>
+                </div>
+
+                <input type="hidden" name="pageSize" value="@Model.PageSize" />
+            </form>
+        </div>
+
+        @{
+            var grid = new ProductGridVm
+            {
+                Title = null,
+                Actions = ProductGridActions.DetailsAndBuy,
+                Products = Model.Products.Select(p => p.ToCardVm()).ToList()
+            };
+        }
+
+        @if (!Model.Products.Any())
+        {
+            <div class="catalog-empty">
+                <div class="catalog-empty-icon">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+
+                <h2>No products found</h2>
+
+                <p>
+                    Try removing filters, changing the brand, or adjusting the price and rating range.
+                </p>
+
+                <a asp-action="Index" class="btn btn-primary catalog-empty-btn">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                    Clear Filters
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="catalog-products-wrap">
+                <partial name="~/Views/Shared/Products/_ProductGrid.cshtml" model="grid" />
+            </div>
+        }
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="catalog-pagination-wrap" aria-label="Catalog pagination">
+                <ul class="pagination pagination-modern flex-wrap">
+
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@(Model.Page - 1)"
+                           asp-route-pageSize="@Model.PageSize"
+                           asp-route-categories="@Model.CategoriesCsv"
+                           asp-route-brand="@Model.Brand"
+                           asp-route-minPrice="@(Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                           asp-route-maxPrice="@(Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                           asp-route-minRating="@(Model.MinRating?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                           asp-route-maxRating="@(Model.MaxRating?.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                            <i class="fa-solid fa-chevron-left"></i>
+                            Prev
+                        </a>
+                    </li>
+
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@i"
+                               asp-route-pageSize="@Model.PageSize"
+                               asp-route-categories="@Model.CategoriesCsv"
+                               asp-route-brand="@Model.Brand"
+                               asp-route-minPrice="@(Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                               asp-route-maxPrice="@(Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                               asp-route-minRating="@(Model.MinRating?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                               asp-route-maxRating="@(Model.MaxRating?.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@(Model.Page + 1)"
+                           asp-route-pageSize="@Model.PageSize"
+                           asp-route-categories="@Model.CategoriesCsv"
+                           asp-route-brand="@Model.Brand"
+                           asp-route-minPrice="@(Model.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                           asp-route-maxPrice="@(Model.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                           asp-route-minRating="@(Model.MinRating?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                           asp-route-maxRating="@(Model.MaxRating?.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                            Next
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+        }
+
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('catalogFilterForm');
+            const categoriesHidden = document.getElementById('categoriesCsv');
+            const categoriesDropdownText = document.getElementById('categoriesDropdownText');
+            const clearCategoriesBtn = document.getElementById('btnClearCategories');
+            const brandInput = document.getElementById('brandInput');
+            const brandDropdownText = document.getElementById('brandDropdownText');
+            const brandOptions = Array.from(document.querySelectorAll('.brand-option'));
+
+            const syncCategories = () => {
+                if (!categoriesHidden || !categoriesDropdownText) return;
+
+                const checkedItems = Array.from(document.querySelectorAll('.category-check:checked'));
+                const values = checkedItems.map(x => x.value);
+
+                categoriesHidden.value = values.join(',');
+
+                if (values.length === 0) {
+                    categoriesDropdownText.textContent = 'All categories';
+                    return;
+                }
+
+                if (values.length === 1) {
+                    const labelText = checkedItems[0]?.closest('label')?.innerText?.trim();
+                    categoriesDropdownText.textContent = labelText || '1 category selected';
+                    return;
+                }
+
+                categoriesDropdownText.textContent = values.length + ' categories selected';
+            };
+
+            const syncBrand = (value) => {
+                if (!brandInput || !brandDropdownText) return;
+
+                const cleanValue = value || '';
+
+                brandInput.value = cleanValue;
+                brandDropdownText.textContent = cleanValue.trim() !== '' ? cleanValue : 'All brands';
+
+                brandOptions.forEach(x => {
+                    const itemBrand = x.getAttribute('data-brand') || '';
+                    x.classList.toggle('active', itemBrand === cleanValue);
+                });
+            };
+
+            document.addEventListener('change', function (e) {
+                if (e.target && e.target.classList.contains('category-check')) {
+                    syncCategories();
+                }
+            });
+
+            if (clearCategoriesBtn) {
+                clearCategoriesBtn.addEventListener('click', function () {
+                    document.querySelectorAll('.category-check:checked').forEach(x => x.checked = false);
+                    syncCategories();
+                });
+            }
+
+            brandOptions.forEach(x => {
+                x.addEventListener('click', function () {
+                    syncBrand(this.getAttribute('data-brand') || '');
+                });
+            });
+
+            if (form) {
+                form.addEventListener('submit', function () {
+                    syncCategories();
+                });
+            }
+
+            syncCategories();
+            syncBrand(brandInput ? brandInput.value : '');
+        })();
+    </script>
+}

@@ -1,0 +1,565 @@
+﻿@model AsMart.Web.Models.ViewModels.Marketing.MarketingClickAnalyticsViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mca-page">
+    <div class="mca-hero">
+        <div>
+            <span class="mca-kicker">
+                <i class="fa-solid fa-chart-pie"></i>
+                Click Analytics
+            </span>
+            <h1>Campaign Click Analytics</h1>
+            <p>Track Facebook/social traffic, campaign clicks, UTM performance, blog visits, and product landings.</p>
+        </div>
+
+        <div class="mca-actions">
+            <a asp-area="Admin" asp-controller="MarketingAnalytics" asp-action="Index" class="btn btn-light">
+                <i class="fa-solid fa-chart-line"></i>
+                Posting Analytics
+            </a>
+            <a asp-area="Admin" asp-controller="MarketingQueue" asp-action="Index" class="btn btn-primary">
+                <i class="fa-solid fa-list-check"></i>
+                Queue
+            </a>
+        </div>
+    </div>
+
+    <div class="mca-stats">
+        <div class="mca-stat primary"><span>Total Social Clicks</span><strong>@Model.TotalSocialClicks</strong></div>
+        <div class="mca-stat facebook"><span>Facebook Clicks</span><strong>@Model.FacebookClicks</strong></div>
+        <div class="mca-stat purple"><span>Instagram Clicks</span><strong>@Model.InstagramClicks</strong></div>
+        <div class="mca-stat red"><span>Pinterest Clicks</span><strong>@Model.PinterestClicks</strong></div>
+        <div class="mca-stat info"><span>Telegram Clicks</span><strong>@Model.TelegramClicks</strong></div>
+        <div class="mca-stat success"><span>Blog Landings</span><strong>@Model.BlogLandingClicks</strong></div>
+        <div class="mca-stat warning"><span>Product Landings</span><strong>@Model.ProductLandingClicks</strong></div>
+        <div class="mca-stat dark"><span>Amazon Outbound</span><strong>@Model.AmazonOutboundClicks</strong></div>
+    </div>
+
+    <div class="mca-grid">
+        <section class="mca-card">
+            <div class="mca-card-head">
+                <div>
+                    <h2>Campaign Click Performance</h2>
+                    <p>Top campaigns by social traffic clicks.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table mca-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Campaign</th>
+                            <th>UTM Campaign</th>
+                            <th>Total Clicks</th>
+                            <th>Facebook</th>
+                            <th>Blog</th>
+                            <th>Product</th>
+                            <th class="text-end">Open</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.CampaignClicks.Any())
+                        {
+                            foreach (var item in Model.CampaignClicks)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@item.CampaignName</td>
+                                    <td><span class="badge-soft">@item.UtmCampaign</span></td>
+                                    <td>@item.Clicks</td>
+                                    <td>@item.FacebookClicks</td>
+                                    <td>@item.BlogClicks</td>
+                                    <td>@item.ProductClicks</td>
+                                    <td class="text-end">
+                                        @if (item.CampaignId.HasValue)
+                                        {
+                                            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Details" asp-route-id="@item.CampaignId" class="btn btn-sm btn-outline-primary rounded-pill">
+                                                View
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span>-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="7" class="empty-cell">No campaign clicks tracked yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="mca-card">
+            <div class="mca-card-head">
+                <div>
+                    <h2>Target Click Performance</h2>
+                    <p>Facebook group/page traffic by UTM content.</p>
+                </div>
+            </div>
+
+            <div class="target-list">
+                @if (Model.TargetClicks.Any())
+                {
+                    foreach (var item in Model.TargetClicks)
+                    {
+                        <div class="target-row">
+                            <div class="target-icon"><i class="fa-brands fa-facebook-f"></i></div>
+                            <div class="target-info">
+                                <strong>@item.TargetName</strong>
+                                <span>@item.UtmContent</span>
+                            </div>
+                            <div class="target-counts">
+                                <span>Total @item.Clicks</span>
+                                <span>Facebook @item.FacebookClicks</span>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-cell">No target clicks tracked yet.</div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="mca-grid">
+        <section class="mca-card">
+            <div class="mca-card-head">
+                <div>
+                    <h2>Top Social Blog Posts</h2>
+                    <p>Blog posts receiving social campaign traffic.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table mca-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Blog</th>
+                            <th>Slug</th>
+                            <th>Clicks</th>
+                            <th class="text-end">Open</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.BlogClicks.Any())
+                        {
+                            foreach (var item in Model.BlogClicks)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@item.Title</td>
+                                    <td>@item.Slug</td>
+                                    <td>@item.Clicks</td>
+                                    <td class="text-end">
+                                        <a asp-area="" asp-controller="Blog" asp-action="Post" asp-route-slug="@item.Slug" class="btn btn-sm btn-outline-primary rounded-pill" target="_blank">
+                                            Open
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="4" class="empty-cell">No social blog clicks yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="mca-card">
+            <div class="mca-card-head">
+                <div>
+                    <h2>Top Social Products</h2>
+                    <p>Products receiving social campaign traffic.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table mca-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Slug</th>
+                            <th>Clicks</th>
+                            <th class="text-end">Open</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.ProductClicks.Any())
+                        {
+                            foreach (var item in Model.ProductClicks)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@item.Title</td>
+                                    <td>@item.Slug</td>
+                                    <td>@item.Clicks</td>
+                                    <td class="text-end">
+                                        <a asp-area="" asp-controller="Product" asp-action="Details" asp-route-slug="@item.Slug" class="btn btn-sm btn-outline-primary rounded-pill" target="_blank">
+                                            Open
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="4" class="empty-cell">No social product clicks yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <section class="mca-card">
+        <div class="mca-card-head">
+            <div>
+                <h2>UTM Campaign Report</h2>
+                <p>Raw UTM campaign/source/medium click performance.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table mca-table align-middle">
+                <thead>
+                    <tr>
+                        <th>UTM Campaign</th>
+                        <th>Source</th>
+                        <th>Medium</th>
+                        <th>Clicks</th>
+                        <th>Last Click</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.UtmCampaigns.Any())
+                    {
+                        foreach (var item in Model.UtmCampaigns)
+                        {
+                            <tr>
+                                <td><span class="badge-soft">@item.UtmCampaign</span></td>
+                                <td>@item.UtmSource</td>
+                                <td>@item.UtmMedium</td>
+                                <td class="fw-bold">@item.Clicks</td>
+                                <td>@item.LastClickAt.ToString("dd MMM yyyy hh:mm tt")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="5" class="empty-cell">No UTM campaign clicks yet.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+@section Styles {
+    <style>
+        .mca-page {
+            padding: 18px 0 42px;
+            font-family: Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+        }
+
+        .mca-hero {
+            border-radius: 30px;
+            padding: 30px;
+            margin-bottom: 18px;
+            background: radial-gradient(circle at top left,rgba(37,99,235,.20),transparent 38%),radial-gradient(circle at top right,rgba(168,85,247,.16),transparent 34%),linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,246,255,.92));
+            border: 1px solid rgba(15,23,42,.10);
+            box-shadow: 0 24px 60px rgba(2,6,23,.10);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px
+        }
+
+        .mca-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #2563eb;
+            background: rgba(37,99,235,.10);
+            border: 1px solid rgba(37,99,235,.14);
+            border-radius: 999px;
+            padding: 8px 13px;
+            font-weight: 900;
+            font-size: 13px;
+            margin-bottom: 14px
+        }
+
+        .mca-hero h1 {
+            font-size: clamp(28px,4vw,44px);
+            line-height: 1;
+            font-weight: 950;
+            color: #0f172a;
+            margin: 0 0 10px;
+            letter-spacing: -.04em
+        }
+
+        .mca-hero p {
+            margin: 0;
+            max-width: 780px;
+            color: #64748b;
+            font-weight: 650;
+            font-size: 16px
+        }
+
+        .mca-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end
+        }
+
+            .mca-actions .btn {
+                border-radius: 999px;
+                font-weight: 900;
+                padding: 11px 18px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap
+            }
+
+        .mca-stats {
+            display: grid;
+            grid-template-columns: repeat(4,minmax(0,1fr));
+            gap: 12px;
+            margin-bottom: 16px
+        }
+
+        .mca-stat {
+            border-radius: 22px;
+            background: rgba(255,255,255,.90);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 14px 30px rgba(2,6,23,.06);
+            padding: 16px
+        }
+
+            .mca-stat span {
+                display: block;
+                color: #64748b;
+                font-size: 13px;
+                font-weight: 850
+            }
+
+            .mca-stat strong {
+                display: block;
+                color: #0f172a;
+                font-size: 28px;
+                font-weight: 950;
+                line-height: 1;
+                margin-top: 6px
+            }
+
+            .mca-stat.primary {
+                border-color: rgba(37,99,235,.20)
+            }
+
+            .mca-stat.facebook {
+                border-color: rgba(24,119,242,.22)
+            }
+
+            .mca-stat.purple {
+                border-color: rgba(124,58,237,.20)
+            }
+
+            .mca-stat.red {
+                border-color: rgba(239,68,68,.20)
+            }
+
+            .mca-stat.info {
+                border-color: rgba(8,145,178,.20)
+            }
+
+            .mca-stat.success {
+                border-color: rgba(16,185,129,.20)
+            }
+
+            .mca-stat.warning {
+                border-color: rgba(245,158,11,.20)
+            }
+
+            .mca-stat.dark {
+                border-color: rgba(15,23,42,.20)
+            }
+
+        .mca-grid {
+            display: grid;
+            grid-template-columns: minmax(0,1.25fr) minmax(340px,.75fr);
+            gap: 16px;
+            margin-bottom: 16px
+        }
+
+        .mca-card {
+            border-radius: 26px;
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 18px 44px rgba(2,6,23,.08);
+            padding: 18px;
+            overflow: hidden;
+            margin-bottom: 16px
+        }
+
+        .mca-card-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px
+        }
+
+        .mca-card h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #0f172a;
+            font-weight: 950
+        }
+
+        .mca-card p {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-weight: 650
+        }
+
+        .mca-table {
+            min-width: 760px;
+            margin: 0
+        }
+
+            .mca-table thead th {
+                color: #475569;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: .06em;
+                border-bottom: 1px solid rgba(15,23,42,.10);
+                background: rgba(248,250,252,.86);
+                font-weight: 950;
+                white-space: nowrap
+            }
+
+            .mca-table td {
+                color: #334155;
+                font-weight: 650;
+                border-bottom: 1px solid rgba(15,23,42,.07);
+                vertical-align: middle
+            }
+
+        .badge-soft {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 6px 10px;
+            background: rgba(37,99,235,.09);
+            color: #1d4ed8;
+            font-weight: 850;
+            font-size: 12px;
+            white-space: nowrap
+        }
+
+        .target-list {
+            display: grid;
+            gap: 10px
+        }
+
+        .target-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 13px;
+            border-radius: 18px;
+            background: rgba(248,250,252,.88);
+            border: 1px solid rgba(15,23,42,.08)
+        }
+
+        .target-icon {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            border-radius: 15px;
+            background: linear-gradient(135deg,#1877f2,#60a5fa);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .target-info {
+            flex: 1;
+            min-width: 0
+        }
+
+            .target-info strong, .target-info span {
+                display: block
+            }
+
+            .target-info strong {
+                color: #0f172a;
+                font-weight: 950;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis
+            }
+
+            .target-info span {
+                color: #64748b;
+                font-size: 12px;
+                font-weight: 800
+            }
+
+        .target-counts {
+            text-align: right;
+            font-size: 12px;
+            font-weight: 850;
+            color: #64748b;
+            display: grid;
+            gap: 1px
+        }
+
+        .empty-cell {
+            text-align: center;
+            color: #64748b;
+            font-weight: 850;
+            padding: 28px;
+            background: rgba(248,250,252,.75);
+            border-radius: 18px
+        }
+
+        @@media(max-width:1199.98px) {
+            .mca-stats {
+                grid-template-columns: repeat(2,minmax(0,1fr))
+            }
+
+            .mca-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @@media(max-width:767.98px) {
+            .mca-hero {
+                padding: 22px;
+                border-radius: 24px;
+                flex-direction: column;
+                align-items: stretch
+            }
+
+            .mca-actions .btn {
+                width: 100%;
+                justify-content: center
+            }
+
+            .mca-stats {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+}

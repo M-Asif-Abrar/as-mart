@@ -1,0 +1,322 @@
+﻿@* ===========================
+   Views/Shared/Products/_ProductCard.cshtml
+   Model: ProductCardVm
+   =========================== *@
+@model AsMart.Web.Models.ViewModels.ProductCardVm
+
+@{
+    var img = string.IsNullOrWhiteSpace(Model.ImageUrl)
+        ? Url.Content("~/images/no-image.png")
+        : Model.ImageUrl;
+
+    var hasRating = Model.Rating > 0 && Model.RatingCount > 0;
+
+    var ratingValue = (double)Model.Rating;
+    var stars = (int)Math.Round(ratingValue, MidpointRounding.AwayFromZero);
+    stars = Math.Clamp(stars, 0, 5);
+}
+
+<style>
+    .pc-card {
+        height: 100%;
+        overflow: hidden;
+        border-radius: 24px;
+        border: 1px solid rgba(15,23,42,.08);
+        background: rgba(255,255,255,.96);
+        box-shadow: 0 18px 48px rgba(15,23,42,.07);
+        display: flex;
+        flex-direction: column;
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+        .pc-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(37,99,235,.22);
+            box-shadow: 0 26px 70px rgba(15,23,42,.12);
+        }
+
+    .pc-media {
+        position: relative;
+        min-height: 230px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+        border-bottom: 1px solid rgba(15,23,42,.07);
+        text-decoration: none;
+    }
+
+    .pc-img {
+        width: 100%;
+        height: 210px;
+        object-fit: contain;
+        display: block;
+    }
+
+    .pc-badge {
+        position: absolute;
+        top: 13px;
+        left: 13px;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-weight: 950;
+        font-size: 12px;
+        line-height: 1;
+        border: 1px solid rgba(255,255,255,.35);
+        box-shadow: 0 10px 24px rgba(15,23,42,.15);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .pc-badge-discount {
+        color: #fff;
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+    }
+
+    .pc-body {
+        padding: 15px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .pc-title {
+        color: #0f172a;
+        font-size: 15px;
+        font-weight: 950;
+        line-height: 1.35;
+        text-decoration: none;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        overflow: hidden;
+        min-height: calc(1.35em * 3);
+    }
+
+        .pc-title:hover {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+    .pc-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .pc-rating {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+        font-size: 12px;
+    }
+
+    .pc-rating-num {
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 950;
+        padding: 5px 8px;
+        border-radius: 999px;
+        background: rgba(37,99,235,.09);
+    }
+
+    .pc-stars {
+        display: inline-flex;
+        align-items: center;
+        gap: 1px;
+        color: #f59f00;
+        font-size: 13px;
+        line-height: 1;
+    }
+
+    .pc-star-dim {
+        opacity: .35;
+    }
+
+    .pc-revs {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .pc-muted {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: fit-content;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 850;
+        padding: 6px 9px;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid rgba(15,23,42,.07);
+    }
+
+    .pc-price-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .pc-price {
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: rgba(16,185,129,.10);
+        color: #047857;
+        border: 1px solid rgba(16,185,129,.16);
+        font-size: 13px;
+        font-weight: 950;
+        white-space: nowrap;
+    }
+
+    .pc-list {
+        color: #94a3b8;
+        text-decoration: line-through;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .pc-action {
+        margin-top: auto;
+        min-height: 42px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: #2563eb;
+        background: rgba(37,99,235,.07);
+        border: 1px solid rgba(37,99,235,.16);
+        font-size: 13px;
+        font-weight: 950;
+        text-decoration: none;
+        transition: background .18s ease, color .18s ease, border-color .18s ease;
+    }
+
+        .pc-action:hover {
+            color: #fff;
+            background: #2563eb;
+            border-color: #2563eb;
+            text-decoration: none;
+        }
+
+    @@media (max-width: 575.98px) {
+        .pc-card {
+            border-radius: 22px;
+        }
+
+        .pc-media {
+            min-height: 300px;
+            padding: 16px;
+        }
+
+        .pc-img {
+            height: 270px;
+        }
+
+        .pc-title {
+            font-size: 15.5px;
+            -webkit-line-clamp: 4;
+            min-height: auto;
+        }
+
+        .pc-body {
+            padding: 15px;
+        }
+
+        .pc-action {
+            min-height: 44px;
+        }
+    }
+</style>
+
+<article class="pc-card">
+    <a asp-controller="Product"
+       asp-action="Details"
+       asp-route-slug="@Model.Slug"
+       class="pc-media"
+       aria-label="@Model.Title">
+        <img src="@img"
+             class="pc-img"
+             alt="@Model.Title"
+             loading="lazy" />
+
+        @if (Model.DiscountPercent.HasValue && Model.DiscountPercent.Value > 0)
+        {
+            <span class="pc-badge pc-badge-discount">
+                -@Model.DiscountPercent.Value%
+            </span>
+        }
+    </a>
+
+    <div class="pc-body">
+        <a asp-controller="Product"
+           asp-action="Details"
+           asp-route-slug="@Model.Slug"
+           class="pc-title">
+            @Model.Title
+        </a>
+
+        <div class="pc-meta">
+            @if (hasRating)
+            {
+                <div class="pc-rating" aria-label="Rating @ratingValue.ToString("0.0") out of 5">
+                    <span class="pc-rating-num">@ratingValue.ToString("0.0")</span>
+
+                    <span class="pc-stars">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= stars)
+                            {
+                                <span>&#9733;</span>
+                            }
+                            else
+                            {
+                                <span class="pc-star-dim">&#9733;</span>
+                            }
+                        }
+                    </span>
+
+                    <span class="pc-revs">@Model.RatingCount.ToString("N0")</span>
+                </div>
+            }
+            else
+            {
+                <span class="pc-muted">
+                    <i class="fa-regular fa-star"></i>
+                    No rating
+                </span>
+            }
+
+            @if (Model.Price.HasValue)
+            {
+                <div class="pc-price-row">
+                    <span class="pc-price">
+                        @Model.Price.Value.ToString("0.00") @Model.Currency
+                    </span>
+
+                    @if (Model.ListPrice.HasValue && Model.ListPrice.Value > Model.Price.Value)
+                    {
+                        <span class="pc-list">
+                            @Model.ListPrice.Value.ToString("0.00") @Model.Currency
+                        </span>
+                    }
+                </div>
+            }
+        </div>
+
+        <a asp-controller="Product"
+           asp-action="Details"
+           asp-route-slug="@Model.Slug"
+           class="pc-action">
+            <span>View Product</span>
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+</article>

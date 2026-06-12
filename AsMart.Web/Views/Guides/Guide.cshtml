@@ -1,0 +1,1489 @@
+﻿@using System
+@using System.Linq
+@using System.Collections.Generic
+@using System.Text
+@using System.Text.Json
+@using System.Text.Encodings.Web
+@using AsMart.Web.Models.ViewModels
+@using AsMart.Web.Models.Entities
+@using Microsoft.AspNetCore.Identity
+@model GuideViewModel
+
+@{
+    Layout = "_Layout";
+
+    var seoPage = Model.Page;
+    var products = Model.Products ?? new List<Product>();
+
+    var title = string.IsNullOrWhiteSpace(seoPage.Title) ? (seoPage.H1 ?? "Guide") : seoPage.Title;
+    var h1 = string.IsNullOrWhiteSpace(seoPage.H1) ? title : seoPage.H1;
+
+    ViewData["Title"] = title;
+
+    if (!string.IsNullOrWhiteSpace(seoPage.MetaDescription))
+    {
+        ViewData["MetaDescription"] = seoPage.MetaDescription;
+    }
+
+    string SafeRaw(string? html) => string.IsNullOrWhiteSpace(html) ? "" : html;
+
+    decimal PriceValue(Product p) => p.Price ?? 0m;
+    int RatingCountValue(Product p) => p.RatingCount ?? 0;
+
+    string FormatPrice(decimal price)
+    {
+        if (price <= 0) return "—";
+        return price.ToString("0.##");
+    }
+
+    string GetAffiliateUrl(Product p)
+    {
+        if (!string.IsNullOrWhiteSpace(p.AffiliateUrlOverride))
+            return p.AffiliateUrlOverride!;
+
+        return "/product/" + Uri.EscapeDataString((p.Slug ?? "").Trim());
+    }
+
+    string GetProductUrl(Product p) => "/product/" + Uri.EscapeDataString((p.Slug ?? "").Trim());
+
+    string GetImg(Product p) => string.IsNullOrWhiteSpace(p.MainImageUrl) ? "/images/placeholder.png" : p.MainImageUrl!;
+
+    string Stars(decimal? ratingNullable)
+    {
+        var rating = ratingNullable ?? 0m;
+        if (rating <= 0m) return "";
+
+        var full = (int)Math.Floor(rating);
+        var half = (rating - full) >= 0.5m;
+        var empty = 5 - full - (half ? 1 : 0);
+
+        var sb = new StringBuilder();
+
+        for (var i = 0; i < full; i++)
+            sb.Append("<i class='fas fa-star text-warning'></i>");
+
+        if (half)
+            sb.Append("<i class='fas fa-star-half-alt text-warning'></i>");
+
+        for (var i = 0; i < empty; i++)
+            sb.Append("<i class='far fa-star text-muted'></i>");
+
+        return sb.ToString();
+    }
+
+    var faqs = new List<(string q, string a)>();
+
+    if (!string.IsNullOrWhiteSpace(seoPage.FaqJson))
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(seoPage.FaqJson);
+
+            if (doc.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var el in doc.RootElement.EnumerateArray())
+                {
+                    var q = el.TryGetProperty("q", out var qv) ? qv.GetString() : null;
+                    var a = el.TryGetProperty("a", out var av) ? av.GetString() : null;
+
+                    if (!string.IsNullOrWhiteSpace(q) && !string.IsNullOrWhiteSpace(a))
+                        faqs.Add((q!.Trim(), a!.Trim()));
+                }
+            }
+        }
+        catch
+        {
+            faqs = new List<(string q, string a)>();
+        }
+    }
+
+    string faqSchemaJson = "";
+
+    if (faqs.Count > 0)
+    {
+        try
+        {
+            var mainEntity = faqs.Select(f => new Dictionary<string, object?>
+            {
+                ["@type"] = "Question",
+                ["name"] = f.q,
+                ["acceptedAnswer"] = new Dictionary<string, object?>
+                {
+                    ["@type"] = "Answer",
+                    ["text"] = f.a
+                }
+            }).ToList();
+
+            var schema = new Dictionary<string, object?>
+            {
+                ["@context"] = "https://schema.org",
+                ["@type"] = "FAQPage",
+                ["mainEntity"] = mainEntity
+            };
+
+            faqSchemaJson = JsonSerializer.Serialize(schema, new JsonSerializerOptions
+            {
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                WriteIndented = false
+            });
+        }
+        catch
+        {
+            faqSchemaJson = "";
+        }
+    }
+
+    var isAdmin = User?.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || User.IsInRole("Administrator"));
+    var topProducts = products.Take(12).ToList();
+    var quickProducts = products.Take(6).ToList();
+    var comparisonProducts = products.Take(30).ToList();
+}
+
+@section Head {
+    @if (!string.IsNullOrWhiteSpace(seoPage.MetaDescription))
+    {
+        <meta name="description" content="@seoPage.MetaDescription" />
+        <meta property="og:description" content="@seoPage.MetaDescription" />
+        <meta name="twitter:description" content="@seoPage.MetaDescription" />
+    }
+
+    <meta property="og:title" content="@title" />
+    <meta name="twitter:title" content="@title" />
+
+    @if (!string.IsNullOrWhiteSpace(faqSchemaJson))
+    {
+        <script type="application/ld+json">@Html.Raw(faqSchemaJson)</script>
+    }
+}
+
+@section Styles {
+    <style>
+        .guide-page {
+            min-height: calc(100vh - 90px);
+            padding: 24px 0 42px;
+            background: radial-gradient(circle at 10% 8%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .guide-shell {
+            max-width: 1480px;
+            margin: 0 auto;
+        }
+
+        .guide-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 30px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.93)), radial-gradient(circle at top right, rgba(37,99,235,.17), transparent 36%);
+            box-shadow: 0 24px 70px rgba(15,23,42,.08);
+            margin-bottom: 24px;
+        }
+
+            .guide-hero::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 16% 20%, rgba(37,99,235,.10), transparent 28%), radial-gradient(circle at 85% 80%, rgba(14,165,233,.13), transparent 30%);
+                pointer-events: none;
+            }
+
+        .guide-hero-body {
+            position: relative;
+            z-index: 1;
+            padding: 30px;
+        }
+
+        .guide-kicker,
+        .guide-section-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .guide-title {
+            margin: 13px 0 0;
+            color: #0f172a;
+            font-size: clamp(32px, 4vw, 58px);
+            line-height: 1.04;
+            letter-spacing: -.045em;
+            font-weight: 950;
+        }
+
+        .guide-sub {
+            margin: 13px 0 0;
+            max-width: 880px;
+            color: #475569;
+            font-size: 15px;
+            line-height: 1.75;
+            font-weight: 650;
+        }
+
+        .guide-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 18px;
+        }
+
+        .guide-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.78);
+            border: 1px solid rgba(15,23,42,.08);
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: 900;
+            box-shadow: 0 8px 18px rgba(15,23,42,.04);
+        }
+
+            .guide-badge i {
+                color: #2563eb;
+            }
+
+        .guide-action-card {
+            width: 100%;
+            max-width: 360px;
+            margin-left: auto;
+            padding: 19px;
+            border-radius: 26px;
+            background: rgba(255,255,255,.78);
+            border: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 18px 44px rgba(15,23,42,.07);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .guide-action-label {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .guide-action-value {
+            color: #0f172a;
+            font-size: 24px;
+            font-weight: 950;
+            line-height: 1.1;
+            margin-top: 6px;
+        }
+
+        .guide-nav-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+            margin-top: 16px;
+        }
+
+        .guide-nav-btn,
+        .guide-product-btn,
+        .guide-full-comparison-btn,
+        .guide-cmp-btn {
+            min-height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 950 !important;
+            white-space: nowrap;
+        }
+
+        .guide-card,
+        .guide-side-card {
+            overflow: hidden;
+            border-radius: 26px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.96);
+            box-shadow: 0 20px 60px rgba(15,23,42,.08);
+        }
+
+        .guide-card-header,
+        .guide-side-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(15,23,42,.08);
+            background: rgba(248,250,252,.86);
+        }
+
+            .guide-card-header h2,
+            .guide-side-header h3 {
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 9px;
+                color: #0f172a;
+                font-size: 20px;
+                font-weight: 950;
+                letter-spacing: -.02em;
+            }
+
+        .guide-card-body,
+        .guide-side-body {
+            padding: 20px;
+        }
+
+        .guide-intro-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .guide-intro-title {
+            margin: 13px 0 0;
+            color: #0f172a;
+            font-size: clamp(24px, 3vw, 34px);
+            line-height: 1.2;
+            font-weight: 950;
+            letter-spacing: -.025em;
+        }
+
+        .guide-rich-content {
+            color: #334155;
+            font-size: 16px;
+            line-height: 1.85;
+            overflow-wrap: anywhere;
+        }
+
+            .guide-rich-content p,
+            .guide-rich-content li {
+                line-height: 1.85;
+            }
+
+            .guide-rich-content h1,
+            .guide-rich-content h2,
+            .guide-rich-content h3,
+            .guide-rich-content h4 {
+                color: #0f172a;
+                font-weight: 950;
+                letter-spacing: -.025em;
+                line-height: 1.22;
+                margin-top: 1.35em;
+                margin-bottom: .65em;
+            }
+
+            .guide-rich-content img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 20px;
+            }
+
+            .guide-rich-content table {
+                width: 100%;
+                display: block;
+                overflow-x: auto;
+                border-radius: 18px;
+                border: 1px solid rgba(15,23,42,.10);
+            }
+
+            .guide-rich-content a {
+                color: #2563eb;
+                font-weight: 700;
+                text-decoration: none;
+            }
+
+                .guide-rich-content a:hover {
+                    text-decoration: underline;
+                }
+
+        .guide-products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .guide-product-card {
+            height: 100%;
+            overflow: hidden;
+            border-radius: 24px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #fff;
+            box-shadow: 0 14px 38px rgba(15,23,42,.06);
+            display: flex;
+            flex-direction: column;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+            .guide-product-card:hover {
+                transform: translateY(-4px);
+                border-color: rgba(37,99,235,.22);
+                box-shadow: 0 24px 60px rgba(15,23,42,.12);
+            }
+
+        .guide-product-media {
+            height: 270px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+            border-bottom: 1px solid rgba(15,23,42,.07);
+            text-decoration: none;
+        }
+
+        .guide-product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .guide-product-body {
+            padding: 17px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 11px;
+        }
+
+        .guide-asin {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .guide-product-title {
+            color: #0f172a;
+            font-size: 16px;
+            font-weight: 950;
+            line-height: 1.35;
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+            .guide-product-title:hover,
+            .guide-quick-title:hover,
+            .guide-cmp-title:hover {
+                color: #2563eb;
+                text-decoration: none;
+            }
+
+        .guide-product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .guide-rating,
+        .guide-quick-rating,
+        .guide-cmp-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .guide-rating-num {
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 950;
+            padding: 5px 8px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+        }
+
+        .guide-rating-stars {
+            display: inline-flex;
+            align-items: center;
+            gap: 1px;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .guide-rating-count,
+        .guide-muted {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .guide-no-rating {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .guide-price {
+            color: #047857;
+            font-size: 19px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .guide-product-actions {
+            margin-top: auto;
+            display: grid;
+            grid-template-columns: 1fr 1.25fr;
+            gap: 10px;
+        }
+
+        .guide-sidebar {
+            position: sticky;
+            top: 84px;
+        }
+
+        .guide-quick-item {
+            display: flex;
+            gap: 11px;
+            padding-bottom: 14px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid rgba(15,23,42,.07);
+        }
+
+            .guide-quick-item:last-of-type {
+                border-bottom: 0;
+            }
+
+        .guide-quick-media {
+            flex: 0 0 88px;
+            width: 88px;
+            height: 88px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background: #fff;
+            border: 1px solid rgba(15,23,42,.10);
+            padding: 7px;
+        }
+
+        .guide-quick-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .guide-quick-body {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .guide-quick-title {
+            display: block;
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 950;
+            line-height: 1.35;
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .guide-quick-price {
+            margin-top: 5px;
+            color: #047857;
+            font-size: 14px;
+            font-weight: 950;
+        }
+
+        .guide-full-comparison-btn {
+            width: 100%;
+        }
+
+        .guide-disclosure-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: .045em;
+            margin-bottom: 9px;
+        }
+
+            .guide-disclosure-label i {
+                color: #2563eb;
+            }
+
+        .guide-disclosure-text {
+            margin: 0;
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.75;
+            font-weight: 650;
+        }
+
+        .guide-empty-inline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px;
+            border-radius: 18px;
+            background: #f8fafc;
+            border: 1px solid rgba(15,23,42,.08);
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 850;
+        }
+
+        .guide-faq-accordion {
+            overflow: hidden;
+            border-radius: 20px;
+            border: 1px solid rgba(15,23,42,.08);
+        }
+
+        .guide-faq-item {
+            border: 0;
+            border-bottom: 1px solid rgba(15,23,42,.07);
+        }
+
+            .guide-faq-item:last-child {
+                border-bottom: 0;
+            }
+
+        .guide-faq-btn {
+            padding: 17px 18px;
+            color: #0f172a;
+            background: #fff;
+            font-size: 15px;
+            font-weight: 950;
+            line-height: 1.4;
+            box-shadow: none !important;
+        }
+
+            .guide-faq-btn:not(.collapsed) {
+                color: #1d4ed8;
+                background: #eff6ff;
+            }
+
+            .guide-faq-btn:focus {
+                box-shadow: 0 0 0 .18rem rgba(37,99,235,.16) !important;
+            }
+
+        .guide-faq-body {
+            color: #334155;
+            font-size: 15px;
+            line-height: 1.85;
+            background: #fff;
+        }
+
+        .guide-comparison-section {
+            padding: 22px 0 44px;
+            background: #f8fafc;
+        }
+
+        .guide-comparison-shell {
+            max-width: 1760px;
+            margin: 0 auto;
+        }
+
+        .guide-comparison-card {
+            border-radius: 28px;
+        }
+
+        .guide-comparison-scroll {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 14px 18px;
+        }
+
+        .guide-comparison-table {
+            min-width: 1400px;
+            margin: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+            .guide-comparison-table thead th {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                padding: 14px 12px;
+                background: #f8fafc;
+                color: #475569;
+                border-bottom: 1px solid rgba(15,23,42,.10);
+                font-size: 12px;
+                font-weight: 950;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                white-space: nowrap;
+            }
+
+            .guide-comparison-table tbody td {
+                padding: 14px 12px;
+                vertical-align: middle;
+                border-bottom: 1px solid rgba(15,23,42,.07);
+                color: #334155;
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+            .guide-comparison-table tbody tr:hover td {
+                background: rgba(37,99,235,.035);
+            }
+
+            .guide-comparison-table th:last-child,
+            .guide-comparison-table td:last-child {
+                min-width: 300px;
+                width: 300px;
+                padding-right: 24px;
+            }
+
+        .guide-cmp-img {
+            width: 112px;
+            height: 112px;
+            object-fit: contain;
+            display: block;
+            border-radius: 16px;
+            border: 1px solid rgba(15,23,42,.10);
+            background: #fff;
+            padding: 8px;
+        }
+
+        .guide-cmp-title {
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 950;
+            line-height: 1.35;
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            max-width: 420px;
+        }
+
+        .guide-cmp-price {
+            color: #047857;
+            font-size: 15px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .guide-cmp-list {
+            color: #64748b;
+            text-decoration: line-through;
+            white-space: nowrap;
+        }
+
+        .guide-cmp-discount {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(220,38,38,.09);
+            border: 1px solid rgba(220,38,38,.18);
+            color: #b91c1c;
+            font-size: 12px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .guide-cmp-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            min-width: 270px;
+        }
+
+        .guide-cmp-btn {
+            flex: 0 0 auto;
+            min-width: 112px;
+            padding: 0 15px;
+        }
+
+        @@media (min-width: 768px) {
+            .guide-rich-content {
+                text-align: justify;
+                text-justify: inter-word;
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .guide-page {
+                padding: 18px 0 34px;
+            }
+
+            .guide-action-card {
+                max-width: none;
+                margin-left: 0;
+            }
+
+            .guide-sidebar {
+                position: static;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .guide-hero-body {
+                padding: 24px;
+            }
+
+            .guide-products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .guide-product-media {
+                height: 300px;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .guide-card-body,
+            .guide-side-body {
+                padding: 17px;
+            }
+
+            .guide-card-header,
+            .guide-side-header {
+                padding: 16px 17px;
+            }
+
+            .guide-product-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .guide-product-btn,
+            .guide-nav-btn {
+                width: 100%;
+            }
+
+            .guide-nav-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .guide-page {
+                padding: 14px 0 28px;
+            }
+
+            .guide-hero,
+            .guide-card,
+            .guide-side-card {
+                border-radius: 22px;
+            }
+
+            .guide-hero-body {
+                padding: 18px;
+            }
+
+            .guide-title {
+                margin-top: 11px;
+            }
+
+            .guide-badge {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .guide-product-media {
+                height: 245px;
+            }
+
+            .guide-product-title {
+                font-size: 15px;
+            }
+
+            .guide-product-meta {
+                align-items: flex-start;
+            }
+
+            .guide-quick-media {
+                flex-basis: 82px;
+                width: 82px;
+                height: 82px;
+            }
+
+            .guide-faq-btn {
+                padding: 15px;
+                font-size: 14px;
+            }
+
+            .guide-comparison-section {
+                padding: 16px 0 30px;
+            }
+
+            .guide-comparison-card {
+                border-radius: 22px;
+            }
+
+            .guide-comparison-table {
+                min-width: 1560px;
+            }
+
+                .guide-comparison-table th:last-child,
+                .guide-comparison-table td:last-child {
+                    min-width: 310px;
+                    width: 310px;
+                    padding-right: 24px;
+                }
+
+            .guide-cmp-actions {
+                min-width: 280px;
+            }
+
+            .guide-cmp-img {
+                width: 96px;
+                height: 96px;
+            }
+        }
+    </style>
+}
+
+<section class="guide-page">
+    <div class="container-fluid guide-shell">
+
+        <header class="guide-hero">
+            <div class="guide-hero-body">
+                <div class="row align-items-center g-3">
+                    <div class="col-12 col-lg-8">
+                        <div class="guide-kicker">
+                            <i class="fa-solid fa-book-open"></i>
+                            Buying Guide
+                        </div>
+
+                        <h1 class="guide-title">@h1</h1>
+
+                        @if (!string.IsNullOrWhiteSpace(seoPage.MetaDescription))
+                        {
+                            <p class="guide-sub">@seoPage.MetaDescription</p>
+                        }
+                        else
+                        {
+                            <p class="guide-sub">Explore this As-Mart product guide with top picks, comparison data, buying notes, and FAQs.</p>
+                        }
+
+                        <div class="guide-badges">
+                            <span class="guide-badge">
+                                <i class="fa-solid fa-book"></i>
+                                Guide
+                            </span>
+
+                            <span class="guide-badge">
+                                <i class="fa-solid fa-star"></i>
+                                Top Picks
+                            </span>
+
+                            <span class="guide-badge">
+                                <i class="fa-solid fa-table"></i>
+                                Comparison
+                            </span>
+
+                            @if (faqs.Count > 0)
+                            {
+                                <span class="guide-badge">
+                                    <i class="fa-solid fa-circle-question"></i>
+                                    FAQs
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="guide-action-card">
+                            <div class="guide-action-label">Last Updated</div>
+                            <div class="guide-action-value">
+                                @seoPage.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd")
+                            </div>
+
+                            <div class="guide-nav-actions">
+                                <a href="#top-picks" class="btn btn-outline-primary guide-nav-btn">
+                                    <i class="fa-solid fa-star"></i>
+                                    Top Picks
+                                </a>
+
+                                <a href="#comparison" class="btn btn-outline-secondary guide-nav-btn">
+                                    <i class="fa-solid fa-table"></i>
+                                    Comparison
+                                </a>
+
+                                @if (faqs.Count > 0)
+                                {
+                                    <a href="#faq" class="btn btn-outline-success guide-nav-btn">
+                                        <i class="fa-solid fa-circle-question"></i>
+                                        FAQs
+                                    </a>
+                                }
+
+                                @if (isAdmin)
+                                {
+                                    <a asp-area="Admin"
+                                       asp-controller="SeoPages"
+                                       asp-action="Edit"
+                                       asp-route-id="@seoPage.Id"
+                                       class="btn btn-primary guide-nav-btn">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        Edit
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="row g-4">
+            <main class="col-12 col-lg-9">
+
+                <section class="guide-card mb-4">
+                    <div class="guide-card-body">
+                        <div class="guide-intro-head">
+                            <div>
+                                <span class="guide-section-chip">
+                                    <i class="fa-solid fa-book-open-reader"></i>
+                                    Guide Overview
+                                </span>
+
+                                <h2 class="guide-intro-title">@title</h2>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(seoPage.IntroHtml))
+                        {
+                            <div class="guide-rich-content mt-3">
+                                @Html.Raw(SafeRaw(seoPage.IntroHtml))
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <section id="top-picks" class="guide-card mb-4">
+                    <div class="guide-card-header">
+                        <h2>
+                            <i class="fa-solid fa-star text-warning"></i>
+                            Top Picks
+                        </h2>
+                    </div>
+
+                    <div class="guide-card-body">
+                        @if (products.Count == 0)
+                        {
+                            <div class="guide-empty-inline">
+                                <i class="fa-solid fa-box-open"></i>
+                                <span>No matching products found for this guide.</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="guide-products-grid">
+                                @foreach (var p in topProducts)
+                                {
+                                    var pTitle = p.Title ?? "";
+                                    var pSlug = (p.Slug ?? "").Trim();
+
+                                    if (string.IsNullOrWhiteSpace(pSlug))
+                                    {
+                                        continue;
+                                    }
+
+                                    var price = PriceValue(p);
+                                    var ratingCount = RatingCountValue(p);
+
+                                    <article class="guide-product-card">
+                                        <a href="@GetProductUrl(p)" class="guide-product-media">
+                                            <img src="@GetImg(p)"
+                                                 alt="@pTitle"
+                                                 class="guide-product-img"
+                                                 loading="lazy" />
+                                        </a>
+
+                                        <div class="guide-product-body">
+                                            @if (!string.IsNullOrWhiteSpace(p.ASIN))
+                                            {
+                                                <div class="guide-asin">ASIN: @p.ASIN</div>
+                                            }
+
+                                            <a href="@GetProductUrl(p)" class="guide-product-title">
+                                                @pTitle
+                                            </a>
+
+                                            <div class="guide-product-meta">
+                                                <div class="guide-rating">
+                                                    @if (p.Rating.HasValue && p.Rating.Value > 0)
+                                                    {
+                                                        <span class="guide-rating-num">@p.Rating.Value.ToString("0.0")</span>
+                                                        <span class="guide-rating-stars">@Html.Raw(Stars(p.Rating))</span>
+                                                    }
+
+                                                    @if (ratingCount > 0)
+                                                    {
+                                                        <span class="guide-rating-count">(@ratingCount)</span>
+                                                    }
+                                                    else if (!p.Rating.HasValue || p.Rating.Value <= 0)
+                                                    {
+                                                        <span class="guide-no-rating">No rating</span>
+                                                    }
+                                                </div>
+
+                                                <div class="guide-price">
+                                                    @if (price > 0)
+                                                    {
+                                                        <span>$@FormatPrice(price)</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="guide-muted">—</span>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            <div class="guide-product-actions">
+                                                <a class="btn btn-outline-primary guide-product-btn"
+                                                   href="@GetProductUrl(p)">
+                                                    <i class="fa-solid fa-circle-info"></i>
+                                                    Details
+                                                </a>
+
+                                                <a class="btn btn-primary guide-product-btn"
+                                                   href="@GetAffiliateUrl(p)"
+                                                   target="_blank"
+                                                   rel="nofollow sponsored noopener">
+                                                    <i class="fa-solid fa-cart-shopping"></i>
+                                                    Check on Amazon
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                @if (!string.IsNullOrWhiteSpace(seoPage.BodyHtml))
+                {
+                    <section class="guide-card mb-4">
+                        <div class="guide-card-header">
+                            <h2>
+                                <i class="fa-solid fa-clipboard-list text-primary"></i>
+                                Buying Notes
+                            </h2>
+                        </div>
+
+                        <div class="guide-card-body">
+                            <div class="guide-rich-content">
+                                @Html.Raw(SafeRaw(seoPage.BodyHtml))
+                            </div>
+                        </div>
+                    </section>
+                }
+
+                @if (faqs.Count > 0)
+                {
+                    <section id="faq" class="guide-card guide-faq-card mb-4">
+                        <div class="guide-card-header">
+                            <h2>
+                                <i class="fa-solid fa-circle-question text-success"></i>
+                                FAQs
+                            </h2>
+                        </div>
+
+                        <div class="guide-card-body">
+                            <div class="accordion guide-faq-accordion" id="faqAccordion">
+                                @for (var i = 0; i < faqs.Count; i++)
+                                {
+                                    var f = faqs[i];
+                                    var hid = $"faq_h_{i}";
+                                    var cid = $"faq_c_{i}";
+                                    var showClass = i == 0 ? "show" : "";
+                                    var collapsedClass = i == 0 ? "" : "collapsed";
+                                    var expanded = i == 0 ? "true" : "false";
+
+                                    <div class="accordion-item guide-faq-item">
+                                        <h2 class="accordion-header" id="@hid">
+                                            <button class="accordion-button guide-faq-btn @collapsedClass"
+                                                    type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#@cid"
+                                                    aria-expanded="@expanded"
+                                                    aria-controls="@cid">
+                                                <span>@f.q</span>
+                                            </button>
+                                        </h2>
+
+                                        <div id="@cid"
+                                             class="accordion-collapse collapse @showClass"
+                                             aria-labelledby="@hid"
+                                             data-bs-parent="#faqAccordion">
+                                            <div class="accordion-body guide-faq-body">
+                                                @Html.Raw(f.a)
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </section>
+                }
+
+            </main>
+
+            <aside class="col-12 col-lg-3">
+                <div class="guide-sidebar">
+                    <section class="guide-side-card mb-4">
+                        <div class="guide-side-header">
+                            <h3>
+                                <i class="fa-solid fa-bolt text-primary"></i>
+                                Quick Picks
+                            </h3>
+                        </div>
+
+                        <div class="guide-side-body">
+                            @if (products.Count == 0)
+                            {
+                                <div class="guide-empty-inline">
+                                    <i class="fa-solid fa-box-open"></i>
+                                    <span>No products.</span>
+                                </div>
+                            }
+                            else
+                            {
+                                foreach (var p in quickProducts)
+                                {
+                                    var pSlug = (p.Slug ?? "").Trim();
+
+                                    if (string.IsNullOrWhiteSpace(pSlug))
+                                    {
+                                        continue;
+                                    }
+
+                                    var price = PriceValue(p);
+
+                                    <article class="guide-quick-item">
+                                        <a href="@GetProductUrl(p)" class="guide-quick-media">
+                                            <img src="@GetImg(p)"
+                                                 alt="@p.Title"
+                                                 class="guide-quick-img"
+                                                 loading="lazy" />
+                                        </a>
+
+                                        <div class="guide-quick-body">
+                                            <a href="@GetProductUrl(p)" class="guide-quick-title">
+                                                @p.Title
+                                            </a>
+
+                                            <div class="guide-quick-rating">
+                                                @if (p.Rating.HasValue && p.Rating.Value > 0)
+                                                {
+                                                    <span class="guide-rating-num">@p.Rating.Value.ToString("0.0")</span>
+                                                    <span class="guide-rating-stars">@Html.Raw(Stars(p.Rating))</span>
+                                                }
+
+                                                @if ((p.RatingCount ?? 0) > 0)
+                                                {
+                                                    <span class="guide-rating-count">(@p.RatingCount)</span>
+                                                }
+                                            </div>
+
+                                            <div class="guide-quick-price">
+                                                @if (price > 0)
+                                                {
+                                                    <span>$@FormatPrice(price)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="guide-muted">—</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </article>
+                                }
+
+                                <a class="btn btn-primary guide-full-comparison-btn"
+                                   href="#comparison">
+                                    <i class="fa-solid fa-table"></i>
+                                    View Full Comparison
+                                </a>
+                            }
+                        </div>
+                    </section>
+
+                    <section class="guide-side-card">
+                        <div class="guide-side-body">
+                            <div class="guide-disclosure-label">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Affiliate Disclosure
+                            </div>
+
+                            <p class="guide-disclosure-text">
+                                As an Amazon Associate, As-Mart may earn from qualifying purchases. Prices and availability may change.
+                            </p>
+                        </div>
+                    </section>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+</section>
+
+<section id="comparison" class="guide-comparison-section">
+    <div class="container-fluid guide-comparison-shell">
+        <div class="guide-card guide-comparison-card">
+            <div class="guide-card-header">
+                <h2>
+                    <i class="fa-solid fa-table text-primary"></i>
+                    Comparison Table
+                </h2>
+            </div>
+
+            <div class="guide-comparison-scroll">
+                <table class="table guide-comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th style="width: 430px;">Model</th>
+                            <th>ASIN</th>
+                            <th>Brand</th>
+                            <th>Price</th>
+                            <th>Off</th>
+                            <th>Reviews</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var p in comparisonProducts)
+                        {
+                            var price = p.Price ?? 0m;
+                            var ratingCount = p.RatingCount ?? 0;
+
+                            int? offPercent = null;
+
+                            if (p.ListPrice.HasValue &&
+                            p.Price.HasValue &&
+                            p.ListPrice.Value > 0 &&
+                            p.ListPrice.Value > p.Price.Value)
+                            {
+                                offPercent = (int)Math.Round(
+                                ((p.ListPrice.Value - p.Price.Value) / p.ListPrice.Value) * 100m,
+                                MidpointRounding.AwayFromZero
+                                );
+                            }
+
+                            <tr>
+                                <td>
+                                    <a href="@GetProductUrl(p)" class="guide-cmp-img-link">
+                                        <img class="guide-cmp-img"
+                                             src="@GetImg(p)"
+                                             alt="@p.Title"
+                                             loading="lazy" />
+                                    </a>
+                                </td>
+
+                                <td>
+                                    <a href="@GetProductUrl(p)" class="guide-cmp-title">
+                                        @p.Title
+                                    </a>
+
+                                    <div class="guide-cmp-rating">
+                                        @if (p.Rating.HasValue && p.Rating.Value > 0)
+                                        {
+                                            <span class="guide-rating-num">@p.Rating.Value.ToString("0.0")</span>
+                                            <span class="guide-rating-stars">@Html.Raw(Stars(p.Rating))</span>
+                                        }
+
+                                        @if ((p.RatingCount ?? 0) > 0)
+                                        {
+                                            <span class="guide-rating-count">(@p.RatingCount)</span>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="guide-muted">@p.ASIN</span>
+                                </td>
+
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(p.Brand) ? "—" : p.Brand)
+                                </td>
+
+                                <td>
+                                    @if (price > 0)
+                                    {
+                                        <span class="guide-cmp-price">$@price.ToString("0.##")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="guide-muted">—</span>
+                                    }<br/>
+                                    @if (p.ListPrice.HasValue && p.ListPrice.Value > 0)
+                                    {
+                                        <span class="guide-cmp-list">$@p.ListPrice.Value.ToString("0.##")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="guide-muted">—</span>
+                                    }
+                                </td>
+
+                                
+
+                                <td>
+                                    @if (offPercent.HasValue && offPercent.Value > 0)
+                                    {
+                                        <span class="guide-cmp-discount">-@offPercent.Value%</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="guide-muted">—</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (ratingCount > 0)
+                                    {
+                                        <span class="guide-muted">@ratingCount</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="guide-muted">—</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <div class="guide-cmp-actions">
+                                        <a class="btn btn-outline-primary guide-cmp-btn"
+                                           href="@GetProductUrl(p)">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            Details
+                                        </a>
+
+                                        <a class="btn btn-primary guide-cmp-btn"
+                                           href="@GetAffiliateUrl(p)"
+                                           target="_blank"
+                                           rel="nofollow sponsored noopener">
+                                            <i class="fa-solid fa-cart-shopping"></i>
+                                            Amazon
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

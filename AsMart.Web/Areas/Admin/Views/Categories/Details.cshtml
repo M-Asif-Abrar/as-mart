@@ -1,0 +1,692 @@
+﻿@model AsMart.Web.Models.DTOs.CategoryDetailsDto
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .category-details-page {
+            min-height: calc(100vh - 80px);
+            background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 45%, #ffffff 100%);
+        }
+
+        .details-hero {
+            border-radius: 30px;
+            padding: 2rem;
+            background: linear-gradient(135deg, #0f172a, #2563eb);
+            color: #fff;
+            box-shadow: 0 18px 45px rgba(15,23,42,.16);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .details-kicker {
+            text-transform: uppercase;
+            letter-spacing: .14em;
+            color: #bfdbfe;
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+        .details-hero h1 {
+            font-size: clamp(1.9rem, 4vw, 2.9rem);
+            font-weight: 900;
+            margin: .35rem 0;
+            line-height: 1.1;
+        }
+
+        .details-hero p {
+            margin: 0;
+            max-width: 760px;
+            color: rgba(255,255,255,.78);
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        .details-btn {
+            border-radius: 16px;
+            padding: .82rem 1.15rem;
+            font-weight: 900;
+            transition: .2s ease;
+        }
+
+            .details-btn:hover {
+                transform: translateY(-2px);
+            }
+
+        .details-btn-primary {
+            color: #fff;
+            background: linear-gradient(135deg,#2563eb,#1d4ed8);
+            border: 0;
+            box-shadow: 0 10px 24px rgba(37,99,235,.24);
+        }
+
+            .details-btn-primary:hover,
+            .details-btn-success:hover {
+                color: #fff;
+            }
+
+        .details-btn-success {
+            color: #fff;
+            background: linear-gradient(135deg,#059669,#16a34a);
+            border: 0;
+            box-shadow: 0 10px 24px rgba(5,150,105,.20);
+        }
+
+        .details-btn-light {
+            background: #fff;
+            color: #0f172a;
+        }
+
+        .details-card,
+        .side-card {
+            border-radius: 28px;
+            background: rgba(255,255,255,.96);
+            border: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 18px 45px rgba(15,23,42,.08);
+            overflow: hidden;
+        }
+
+        .details-card-body,
+        .side-card {
+            padding: 1.5rem;
+        }
+
+        .details-meta-label,
+        .metric-label {
+            font-size: .78rem;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 900;
+        }
+
+        .details-title {
+            font-size: clamp(1.5rem,3vw,2.1rem);
+            font-weight: 900;
+            color: #0f172a;
+            margin: .35rem 0;
+            overflow-wrap: anywhere;
+        }
+
+        .details-slug {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .45rem .85rem;
+            background: rgba(37,99,235,.08);
+            border: 1px solid rgba(37,99,235,.18);
+            color: #2563eb;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .status-badge,
+        .id-badge,
+        .count-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .5rem .9rem;
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+            .status-badge.active {
+                color: #166534;
+                background: rgba(22,101,52,.08);
+                border: 1px solid rgba(22,101,52,.18);
+            }
+
+            .status-badge.inactive {
+                color: #dc2626;
+                background: rgba(220,38,38,.08);
+                border: 1px solid rgba(220,38,38,.16);
+            }
+
+        .id-badge,
+        .count-badge {
+            color: #475569;
+            background: #f1f5f9;
+            border: 1px solid rgba(15,23,42,.08);
+        }
+
+        .metric-card {
+            height: 100%;
+            border-radius: 22px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #fff;
+            padding: 1rem;
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-size: 1.05rem;
+            font-weight: 900;
+            margin-top: .35rem;
+            overflow-wrap: anywhere;
+        }
+
+            .metric-value.blue {
+                color: #2563eb;
+            }
+
+            .metric-value.purple {
+                color: #7c3aed;
+            }
+
+        .section-card {
+            border-top: 1px solid rgba(15,23,42,.08);
+            padding-top: 1.5rem;
+        }
+
+        .section-title,
+        .side-title {
+            font-size: 1rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 1rem;
+        }
+
+        .description-box {
+            border-radius: 20px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #fff;
+            padding: 1rem;
+            line-height: 1.8;
+            color: #0f172a;
+            overflow-wrap: anywhere;
+        }
+
+        .guide-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+
+        .guide-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .55rem .9rem;
+            background: rgba(37,99,235,.08);
+            border: 1px solid rgba(37,99,235,.18);
+            color: #2563eb;
+            font-size: .82rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: .2s ease;
+        }
+
+            .guide-badge:hover {
+                background: rgba(37,99,235,.14);
+                transform: translateY(-2px);
+                color: #1d4ed8;
+            }
+
+        .empty-box {
+            border-radius: 18px;
+            background: #f8fafc;
+            border: 1px dashed rgba(15,23,42,.12);
+            padding: 1rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .tips-list {
+            padding-left: 1.1rem;
+            margin-bottom: 0;
+            color: #64748b;
+        }
+
+            .tips-list li {
+                margin-bottom: .75rem;
+                line-height: 1.6;
+            }
+
+        .public-url-box {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #f8fafc;
+            padding: .85rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+        }
+
+            .public-url-box code {
+                overflow-wrap: anywhere;
+                white-space: normal;
+                color: #0f172a;
+            }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(3,minmax(0,1fr));
+            gap: 14px;
+        }
+
+        .product-item {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #fff;
+            padding: .75rem;
+            transition: .2s ease;
+            display: block;
+        }
+
+            .product-item:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 24px rgba(15,23,42,.08);
+            }
+
+        .product-image {
+            width: 100%;
+            height: 140px;
+            object-fit: contain;
+            display: block;
+        }
+
+        @@media (max-width: 991.98px) {
+
+            .details-hero {
+                padding: 1.5rem;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(4,minmax(0,1fr));
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+
+            .details-hero,
+            .details-card,
+            .side-card {
+                border-radius: 22px;
+            }
+
+            .details-card-body,
+            .side-card {
+                padding: 1rem;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(3,minmax(0,1fr));
+                gap: 10px;
+            }
+
+            .product-image {
+                height: 95px;
+            }
+
+            .public-url-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+}
+
+<div class="container-fluid py-4 category-details-page">
+
+    <div class="details-hero mb-4">
+
+        <div>
+            <span class="details-kicker">
+                Admin Panel
+            </span>
+
+            <h1>Category Details</h1>
+
+            <p>
+                View category metadata, SEO structure, storefront visibility,
+                hierarchy, products, and public navigation details.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+
+            <a asp-action="Index"
+               class="btn details-btn details-btn-light">
+                <i class="fa-solid fa-arrow-left me-2"></i>
+                Back
+            </a>
+
+            <a asp-action="Edit"
+               asp-route-id="@Model.Id"
+               class="btn details-btn details-btn-primary">
+                <i class="fa-solid fa-pen-to-square me-2"></i>
+                Edit
+            </a>
+
+            <a asp-area=""
+               asp-controller="Catalog"
+               asp-action="Category"
+               asp-route-slug="@Model.Slug"
+               target="_blank"
+               rel="noopener"
+               class="btn details-btn details-btn-success">
+                <i class="fa-solid fa-eye me-2"></i>
+                View Public
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-xl-8">
+
+            <div class="details-card">
+
+                <div class="details-card-body">
+
+                    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+
+                        <div>
+
+                            <div class="details-meta-label">
+                                Category
+                            </div>
+
+                            <h2 class="details-title">
+                                @Model.Name
+                            </h2>
+
+                            <div class="details-slug">
+                                <i class="fa-solid fa-link me-2"></i>
+                                @Model.Slug
+                            </div>
+
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                            @if (Model.IsActive)
+                            {
+                                <span class="status-badge active">
+                                    <i class="fa-solid fa-circle-check me-1"></i>
+                                    Active
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-badge inactive">
+                                    <i class="fa-solid fa-circle-xmark me-1"></i>
+                                    Inactive
+                                </span>
+                            }
+
+                            <span class="id-badge">
+                                <i class="fa-solid fa-hashtag me-1"></i>
+                                @Model.Id
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="row g-3 mb-4">
+
+                        <div class="col-12 col-md-6">
+                            <div class="metric-card">
+
+                                <div class="metric-label">
+                                    Parent Category
+                                </div>
+
+                                <div class="metric-value">
+                                    @(string.IsNullOrWhiteSpace(Model.ParentCategoryName)
+                                                                        ? "None"
+                                                                        : Model.ParentCategoryName)
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="metric-card">
+
+                                <div class="metric-label">
+                                    Display Order
+                                </div>
+
+                                <div class="metric-value">
+                                    @Model.DisplayOrder
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="metric-card">
+
+                                <div class="metric-label">
+                                    Child Categories
+                                </div>
+
+                                <div class="metric-value">
+                                    @Model.ChildCount
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="metric-card">
+
+                                <div class="metric-label">
+                                    Products
+                                </div>
+
+                                <div class="metric-value blue">
+                                    @Model.ProductCount
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="metric-card">
+
+                                <div class="metric-label">
+                                    SEO Links
+                                </div>
+
+                                <div class="metric-value purple">
+                                    @Model.LinksCount
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="section-card mb-4">
+
+                        <div class="section-title">
+                            Description
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Description))
+                        {
+                            <div class="description-box">
+                                @Html.Raw(Model.Description)
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-box">
+                                <i class="fa-regular fa-note-sticky me-2"></i>
+                                No description available.
+                            </div>
+                        }
+
+                    </div>
+
+                    <div class="section-card">
+
+                        <div class="section-title">
+                            Guide Badges
+                        </div>
+
+                        @if (Model.Links != null && Model.Links.Count > 0)
+                        {
+                            <div class="guide-badges">
+
+                                @foreach (var b in Model.Links)
+                                {
+                                    <a href="@b.Url"
+                                       class="guide-badge"
+                                       target="_blank"
+                                       rel="noopener">
+
+                                        @b.Text
+
+                                    </a>
+                                }
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-box">
+                                <i class="fa-solid fa-tags me-2"></i>
+                                No SEO guide badges added.
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 col-xl-4">
+
+            <div class="side-card mb-4">
+
+                <div class="side-title">
+                    Quick Tips
+                </div>
+
+                <ul class="tips-list">
+
+                    <li>
+                        Keep slug stable for SEO indexing.
+                    </li>
+
+                    <li>
+                        Add guide links in format:
+                        <strong>Text | URL</strong>
+                    </li>
+
+                    <li>
+                        Use child categories for hierarchy structure.
+                    </li>
+
+                    <li>
+                        Category badges improve internal linking.
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="side-card mb-4">
+
+                <div class="side-title">
+                    Public URL
+                </div>
+
+                <div class="public-url-box">
+
+                    <code>
+                        /Catalog/Category?slug=@Model.Slug
+                    </code>
+
+                    <a asp-area=""
+                       asp-controller="Catalog"
+                       asp-action="Category"
+                       asp-route-slug="@Model.Slug"
+                       target="_blank"
+                       rel="noopener"
+                       class="btn btn-sm btn-outline-success">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="side-card">
+
+                <div class="d-flex align-items-center justify-content-between mb-3">
+
+                    <div class="side-title mb-0">
+                        Products
+                    </div>
+
+                    <span class="count-badge">
+                        @Model.ProductCount
+                    </span>
+
+                </div>
+
+                @if (Model.Products != null && Model.Products.Count > 0)
+                {
+                    <div class="products-grid">
+
+                        @foreach (var p in Model.Products)
+                        {
+                            <a href="/product/@p.Slug"
+                               target="_blank"
+                               rel="noopener"
+                               class="product-item"
+                               title="@p.Title">
+
+                                <img src="@p.MainImageUrl"
+                                     alt="@p.Title"
+                                     class="product-image"
+                                     loading="lazy" />
+
+                            </a>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-box">
+                        <i class="fa-solid fa-box-open me-2"></i>
+                        No products assigned to this category.
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

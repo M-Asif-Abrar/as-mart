@@ -1,0 +1,407 @@
+﻿@* /Areas/Identity/Pages/Account/Manage/_Layout.cshtml *@
+@using AsMart.Web.Models.Entities
+
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<div class="as-account-page">
+    <div class="as-account-shell">
+
+        <div class="as-account-hero">
+            <div>
+                <div class="as-account-kicker">
+                    <i class="fa-solid fa-user-shield"></i>
+                    Account Center
+                </div>
+
+                <h1 class="as-account-title">@ViewData["Title"]</h1>
+
+                <p class="as-account-subtitle">
+                    Manage your profile, login security, personal information, connected accounts, and account data.
+                </p>
+            </div>
+        </div>
+
+        <div class="as-account-grid">
+            <aside class="as-account-sidebar">
+                <div class="as-account-card as-account-nav-card">
+                    <div class="as-account-card-head">
+                        <div>
+                            <h2>
+                                <i class="fa-solid fa-sliders"></i>
+                                Settings
+                            </h2>
+                            <p>Account navigation</p>
+                        </div>
+                    </div>
+
+                    <div class="as-account-card-body">
+                        <partial name="_ManageNav" />
+                    </div>
+                </div>
+            </aside>
+
+            <main class="as-account-main">
+                <div class="as-account-card">
+                    <div class="as-account-card-body">
+                        @RenderBody()
+                    </div>
+                </div>
+            </main>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade as-delete-modal" id="asDeleteConfirmModal" tabindex="-1" aria-labelledby="asDeleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content as-delete-modal-content">
+            <div class="modal-header as-delete-modal-header">
+                <div>
+                    <div class="as-delete-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+                    <h5 class="modal-title as-delete-title" id="asDeleteConfirmModalLabel">
+                        Confirm Delete
+                    </h5>
+
+                    <p class="as-delete-text">
+                        This action cannot be undone. Please confirm before deleting.
+                    </p>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-footer as-delete-modal-footer">
+                <button type="button" class="btn btn-light as-action-btn" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-danger as-action-btn" id="asDeleteConfirmButton">
+                    <i class="fa-solid fa-trash"></i>
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .as-account-page {
+        min-height: calc(100vh - 76px);
+        padding: 24px;
+        background: radial-gradient(900px 420px at 8% 0%, rgba(37, 99, 235, .12), transparent 60%), radial-gradient(760px 380px at 100% 8%, rgba(14, 165, 233, .10), transparent 60%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    }
+
+    .as-account-shell {
+        width: 100%;
+        max-width: 1540px;
+        margin: 0 auto;
+    }
+
+    .as-account-hero,
+    .as-account-card {
+        border: 1px solid rgba(15, 23, 42, .08);
+        background: rgba(255, 255, 255, .88);
+        box-shadow: 0 18px 50px rgba(15, 23, 42, .08);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .as-account-hero {
+        margin-bottom: 18px;
+        padding: 24px;
+        border-radius: 30px;
+    }
+
+    .as-account-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        margin-bottom: 12px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, .10);
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .as-account-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: clamp(26px, 3vw, 42px);
+        font-weight: 950;
+        letter-spacing: -.055em;
+        line-height: 1.05;
+    }
+
+    .as-account-subtitle {
+        max-width: 820px;
+        margin: 10px 0 0;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.75;
+    }
+
+    .as-account-grid {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+    }
+
+    .as-account-sidebar {
+        min-width: 0;
+    }
+
+    .as-account-main {
+        min-width: 0;
+    }
+
+    .as-account-card {
+        overflow: hidden;
+        border-radius: 28px;
+    }
+
+    .as-account-nav-card {
+        position: sticky;
+        top: 88px;
+    }
+
+    .as-account-card-head {
+        padding: 18px 18px 0;
+    }
+
+        .as-account-card-head h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            color: #0f172a;
+            font-size: 16px;
+            font-weight: 950;
+            letter-spacing: -.03em;
+        }
+
+            .as-account-card-head h2 i {
+                display: inline-grid;
+                width: 36px;
+                height: 36px;
+                place-items: center;
+                border-radius: 14px;
+                background: rgba(37, 99, 235, .10);
+                color: #2563eb;
+            }
+
+        .as-account-card-head p {
+            margin: 7px 0 0;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+    .as-account-card-body {
+        padding: 18px;
+    }
+
+    .as-account-nav-card .as-account-card-body {
+        padding: 14px;
+    }
+
+    .as-account-nav-card .nav,
+    .as-account-nav-card ul {
+        display: grid;
+        gap: 8px;
+    }
+
+    .as-account-nav-card .nav-link,
+    .as-account-nav-card a {
+        border-radius: 15px;
+        color: #334155;
+        font-weight: 850;
+        transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+
+        .as-account-nav-card .nav-link:hover,
+        .as-account-nav-card a:hover {
+            background: rgba(37, 99, 235, .08);
+            color: #1d4ed8;
+            transform: translateX(2px);
+        }
+
+        .as-account-nav-card .nav-link.active,
+        .as-account-nav-card a.active {
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(37, 99, 235, .22);
+        }
+
+    .as-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: .62rem 1rem;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 850;
+    }
+
+    .as-delete-modal-content {
+        overflow: hidden;
+        border: 0;
+        border-radius: 26px;
+        box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
+    }
+
+    .as-delete-modal-header {
+        position: relative;
+        padding: 24px 24px 10px;
+        border-bottom: 0;
+        background: radial-gradient(520px 220px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
+    }
+
+    .as-delete-icon {
+        display: inline-grid;
+        width: 54px;
+        height: 54px;
+        place-items: center;
+        margin-bottom: 14px;
+        border-radius: 18px;
+        background: rgba(220, 38, 38, .10);
+        color: #dc2626;
+        font-size: 22px;
+    }
+
+    .as-delete-title {
+        color: #0f172a;
+        font-weight: 900;
+        letter-spacing: -.03em;
+    }
+
+    .as-delete-text {
+        max-width: 420px;
+        margin: 8px 0 0;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .as-delete-modal-footer {
+        gap: 10px;
+        padding: 18px 24px 24px;
+        border-top: 0;
+        background: #f8fafc;
+    }
+
+    @@media (max-width: 1199.98px) {
+        .as-account-grid {
+            grid-template-columns: 280px minmax(0, 1fr);
+        }
+    }
+
+    @@media (max-width: 991.98px) {
+        .as-account-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .as-account-nav-card {
+            position: static;
+            top: auto;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .as-account-page {
+            padding: 12px;
+        }
+
+        .as-account-hero {
+            padding: 18px;
+            border-radius: 24px;
+        }
+
+        .as-account-card {
+            border-radius: 24px;
+        }
+
+        .as-account-card-body {
+            padding: 16px;
+        }
+
+        .as-delete-modal-footer {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+
+            .as-delete-modal-footer .btn {
+                width: 100%;
+            }
+    }
+</style>
+
+<script>
+    (() => {
+        let pendingDeleteForm = null;
+        let pendingDeleteUrl = null;
+
+        const modalElement = document.getElementById('asDeleteConfirmModal');
+        const confirmButton = document.getElementById('asDeleteConfirmButton');
+
+        if (!modalElement || !confirmButton || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        const modal = new bootstrap.Modal(modalElement);
+
+        document.addEventListener('click', function (event) {
+            const deleteTrigger = event.target.closest('[data-delete-confirm="true"]');
+
+            if (!deleteTrigger) {
+                return;
+            }
+
+            event.preventDefault();
+
+            pendingDeleteForm = deleteTrigger.closest('form');
+            pendingDeleteUrl = deleteTrigger.getAttribute('href') || deleteTrigger.dataset.deleteUrl || null;
+
+            const customMessage = deleteTrigger.dataset.deleteMessage;
+            const textElement = modalElement.querySelector('.as-delete-text');
+
+            if (customMessage && textElement) {
+                textElement.textContent = customMessage;
+            }
+
+            modal.show();
+        });
+
+        confirmButton.addEventListener('click', function () {
+            if (pendingDeleteForm) {
+                pendingDeleteForm.submit();
+                return;
+            }
+
+            if (pendingDeleteUrl) {
+                window.location.href = pendingDeleteUrl;
+            }
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            pendingDeleteForm = null;
+            pendingDeleteUrl = null;
+        });
+    })();
+</script>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

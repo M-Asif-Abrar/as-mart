@@ -1,0 +1,535 @@
+﻿@model IEnumerable<AsMart.Web.Models.Entities.BlogPost>
+
+@{
+    ViewData["Title"] = "My Blog Posts";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var posts = Model?.ToList() ?? new List<AsMart.Web.Models.Entities.BlogPost>();
+    var totalPosts = posts.Count;
+    var publishedPosts = posts.Count(x => x.IsPublished);
+    var draftPosts = posts.Count(x => !x.IsPublished);
+}
+
+@section Styles {
+    <style>
+        .my-posts-page {
+            min-height: calc(100vh - 90px);
+            padding: 24px 0 42px;
+            background: radial-gradient(circle at 10% 10%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .my-posts-shell {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .my-posts-hero {
+            border-radius: 28px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(239,246,255,.92));
+            box-shadow: 0 24px 70px rgba(15,23,42,.08);
+            overflow: hidden;
+            margin-bottom: 22px;
+        }
+
+        .my-posts-hero-body {
+            padding: 26px;
+        }
+
+        .my-posts-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: 12px;
+        }
+
+        .my-posts-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(28px, 4vw, 46px);
+            line-height: 1.05;
+            letter-spacing: -.04em;
+            font-weight: 950;
+        }
+
+        .my-posts-subtitle {
+            margin: 11px 0 0;
+            max-width: 760px;
+            color: #475569;
+            font-size: 15px;
+            line-height: 1.7;
+            font-weight: 600;
+        }
+
+        .my-posts-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .my-posts-stat {
+            padding: 15px;
+            border-radius: 22px;
+            background: rgba(255,255,255,.76);
+            border: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 14px 34px rgba(15,23,42,.06);
+        }
+
+        .my-posts-stat-label {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .my-posts-stat-value {
+            color: #0f172a;
+            font-size: 26px;
+            font-weight: 950;
+            line-height: 1.1;
+            margin-top: 5px;
+        }
+
+        .my-posts-card {
+            border-radius: 26px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.94);
+            box-shadow: 0 20px 60px rgba(15,23,42,.08);
+            overflow: hidden;
+        }
+
+        .my-posts-card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(15,23,42,.08);
+            background: rgba(248,250,252,.85);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .my-posts-card-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: 18px;
+            font-weight: 950;
+            letter-spacing: -.02em;
+        }
+
+        .my-posts-card-meta {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .my-posts-table {
+            margin: 0;
+            vertical-align: middle;
+        }
+
+            .my-posts-table thead th {
+                background: #f8fafc;
+                color: #475569;
+                font-size: 12px;
+                font-weight: 950;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                border-bottom: 1px solid rgba(15,23,42,.08);
+                padding: 14px 16px;
+                white-space: nowrap;
+            }
+
+            .my-posts-table tbody td {
+                padding: 15px 16px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 650;
+                border-bottom: 1px solid rgba(15,23,42,.06);
+            }
+
+        .my-posts-img {
+            width: 76px;
+            height: 76px;
+            object-fit: cover;
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,.10);
+            box-shadow: 0 10px 24px rgba(15,23,42,.08);
+            background: #f8fafc;
+        }
+
+        .my-posts-no-img {
+            width: 76px;
+            height: 76px;
+            border-radius: 18px;
+            background: #f8fafc;
+            border: 1px dashed rgba(100,116,139,.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 20px;
+        }
+
+        .my-posts-post-title {
+            color: #0f172a;
+            font-size: 15px;
+            font-weight: 950;
+            line-height: 1.35;
+            max-width: 520px;
+        }
+
+        .my-posts-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #475569;
+            white-space: nowrap;
+        }
+
+        .my-posts-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border-radius: 999px;
+            padding: 8px 11px;
+            font-size: 12px;
+            font-weight: 950;
+        }
+
+        .my-posts-status-published {
+            color: #047857;
+            background: rgba(16,185,129,.10);
+            border: 1px solid rgba(16,185,129,.18);
+        }
+
+        .my-posts-status-draft {
+            color: #475569;
+            background: rgba(100,116,139,.10);
+            border: 1px solid rgba(100,116,139,.16);
+        }
+
+        .my-posts-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .my-posts-btn {
+            min-height: 38px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .my-posts-empty {
+            border-radius: 26px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.94);
+            box-shadow: 0 20px 60px rgba(15,23,42,.08);
+            padding: 38px 22px;
+            text-align: center;
+        }
+
+        .my-posts-empty-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 15px;
+            border-radius: 24px;
+            background: rgba(37,99,235,.09);
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .my-posts-empty h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 24px;
+            font-weight: 950;
+            letter-spacing: -.03em;
+        }
+
+        .my-posts-empty p {
+            margin: 9px auto 0;
+            max-width: 560px;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.7;
+            font-weight: 600;
+        }
+
+        @@media (max-width: 991.98px) {
+            .my-posts-hero-body {
+                padding: 22px;
+            }
+
+            .my-posts-stats {
+                grid-template-columns: 1fr;
+                margin-top: 16px;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .my-posts-page {
+                padding: 16px 0 30px;
+            }
+
+            .my-posts-hero {
+                border-radius: 22px;
+            }
+
+            .my-posts-hero-body {
+                padding: 18px;
+            }
+
+            .my-posts-card {
+                border-radius: 22px;
+            }
+
+            .my-posts-table thead {
+                display: none;
+            }
+
+            .my-posts-table,
+            .my-posts-table tbody,
+            .my-posts-table tr,
+            .my-posts-table td {
+                display: block;
+                width: 100%;
+            }
+
+                .my-posts-table tbody tr {
+                    padding: 15px;
+                    border-bottom: 1px solid rgba(15,23,42,.08);
+                }
+
+                .my-posts-table tbody td {
+                    border: 0;
+                    padding: 7px 0;
+                }
+
+                    .my-posts-table tbody td::before {
+                        content: attr(data-label);
+                        display: block;
+                        color: #64748b;
+                        font-size: 11px;
+                        font-weight: 950;
+                        text-transform: uppercase;
+                        letter-spacing: .05em;
+                        margin-bottom: 5px;
+                    }
+
+            .my-posts-actions {
+                justify-content: flex-start;
+            }
+
+            .my-posts-btn {
+                width: 100%;
+            }
+
+            .my-posts-img,
+            .my-posts-no-img {
+                width: 100%;
+                height: 180px;
+            }
+        }
+    </style>
+}
+
+<section class="my-posts-page">
+    <div class="container-fluid my-posts-shell">
+
+        <div class="my-posts-hero">
+            <div class="my-posts-hero-body">
+                <div class="row align-items-center g-3">
+                    <div class="col-12 col-lg-7">
+                        <div class="my-posts-kicker">
+                            <i class="fa-solid fa-pen-nib"></i>
+                            Blog Dashboard
+                        </div>
+
+                        <h1 class="my-posts-title">My Blog Posts</h1>
+
+                        <p class="my-posts-subtitle">
+                            Manage your created posts, check publish status, preview live articles, and continue editing drafts from one clean responsive dashboard.
+                        </p>
+                    </div>
+
+                    <div class="col-12 col-lg-5">
+                        <div class="my-posts-stats">
+                            <div class="my-posts-stat">
+                                <div class="my-posts-stat-label">Total</div>
+                                <div class="my-posts-stat-value">@totalPosts</div>
+                            </div>
+
+                            <div class="my-posts-stat">
+                                <div class="my-posts-stat-label">Published</div>
+                                <div class="my-posts-stat-value">@publishedPosts</div>
+                            </div>
+
+                            <div class="my-posts-stat">
+                                <div class="my-posts-stat-label">Drafts</div>
+                                <div class="my-posts-stat-value">@draftPosts</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!posts.Any())
+        {
+            <div class="my-posts-empty">
+                <div class="my-posts-empty-icon">
+                    <i class="fa-regular fa-folder-open"></i>
+                </div>
+
+                <h2>No blog posts yet</h2>
+
+                <p>
+                    You have not created any blog posts yet. Once you create posts, they will appear here with preview, status, dates, and management actions.
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="my-posts-card">
+                <div class="my-posts-card-header">
+                    <h2 class="my-posts-card-title">
+                        <i class="fa-solid fa-list-check me-2 text-primary"></i>
+                        Posts List
+                    </h2>
+
+                    <div class="my-posts-card-meta">
+                        Showing @totalPosts post@(totalPosts == 1 ? "" : "s")
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table my-posts-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 110px;">Image</th>
+                                <th>Title</th>
+                                <th style="width: 150px;">Created</th>
+                                <th style="width: 150px;">Published</th>
+                                <th style="width: 130px;">Status</th>
+                                <th style="width: 180px;" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var post in posts)
+                            {
+                                <tr>
+                                    <td data-label="Image">
+                                        @if (!string.IsNullOrWhiteSpace(post.FeaturedImageUrl))
+                                        {
+                                            <img src="@post.FeaturedImageUrl"
+                                                 alt="@post.Title"
+                                                 class="my-posts-img"
+                                                 loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="my-posts-no-img">
+                                                <i class="fa-regular fa-image"></i>
+                                            </div>
+                                        }
+                                    </td>
+
+                                    <td data-label="Title">
+                                        <div class="my-posts-post-title">
+                                            @post.Title
+                                        </div>
+                                    </td>
+
+                                    <td data-label="Created">
+                                        <span class="my-posts-date">
+                                            <i class="fa-regular fa-calendar-days text-primary"></i>
+                                            @post.CreatedAt.ToString("yyyy-MM-dd")
+                                        </span>
+                                    </td>
+
+                                    <td data-label="Published">
+                                        @if (post.PublishedAt.HasValue)
+                                        {
+                                            <span class="my-posts-date">
+                                                <i class="fa-regular fa-calendar-check text-success"></i>
+                                                @post.PublishedAt.Value.ToString("yyyy-MM-dd")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fw-bold">—</span>
+                                        }
+                                    </td>
+
+                                    <td data-label="Status">
+                                        @if (post.IsPublished)
+                                        {
+                                            <span class="my-posts-status my-posts-status-published">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                                Published
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="my-posts-status my-posts-status-draft">
+                                                <i class="fa-regular fa-clock"></i>
+                                                Draft
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td data-label="Actions">
+                                        <div class="my-posts-actions">
+                                            @if (!string.IsNullOrWhiteSpace(post.Slug))
+                                            {
+                                                <a asp-action="Post"
+                                                   asp-route-slug="@post.Slug"
+                                                   class="btn btn-outline-secondary btn-sm my-posts-btn">
+                                                    <i class="fa-regular fa-eye"></i>
+                                                    View
+                                                </a>
+                                            }
+
+                                            <a asp-area="Admin"
+                                               asp-controller="BlogPosts"
+                                               asp-action="Edit"
+                                               asp-route-id="@post.Id"
+                                               class="btn btn-outline-primary btn-sm my-posts-btn">
+                                                <i class="fa-regular fa-pen-to-square"></i>
+                                                Edit
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+    </div>
+</section>

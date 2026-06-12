@@ -1,0 +1,666 @@
+﻿@model AsMart.Web.Models.ViewModels.Marketing.MarketingDashboardViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="marketing-page">
+    <div class="marketing-hero">
+        <div>
+            <span class="marketing-kicker">
+                <i class="fa-solid fa-bullhorn"></i>
+                As-Mart Social Marketing Automation
+            </span>
+            <h1>Marketing Dashboard</h1>
+            <p>
+                Manage Facebook groups, pages, campaigns, posting queue, and social traffic tracking from one admin module.
+            </p>
+        </div>
+
+        <div class="marketing-hero-actions">
+            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Create" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i>
+                New Campaign
+            </a>
+            <a asp-area="Admin" asp-controller="FacebookTargets" asp-action="Create" class="btn btn-light">
+                <i class="fa-brands fa-facebook"></i>
+                Add Facebook Target
+            </a>
+        </div>
+    </div>
+
+    <div class="marketing-grid marketing-stats">
+        <div class="marketing-stat-card primary">
+            <div class="stat-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+            <div>
+                <span>Total Channels</span>
+                <strong>@Model.TotalChannels</strong>
+            </div>
+        </div>
+
+        <div class="marketing-stat-card info">
+            <div class="stat-icon"><i class="fa-solid fa-user-gear"></i></div>
+            <div>
+                <span>Social Accounts</span>
+                <strong>@Model.TotalSocialAccounts</strong>
+            </div>
+        </div>
+
+        <div class="marketing-stat-card facebook">
+            <div class="stat-icon"><i class="fa-brands fa-facebook"></i></div>
+            <div>
+                <span>Facebook Targets</span>
+                <strong>@Model.TotalFacebookTargets</strong>
+            </div>
+        </div>
+
+        <div class="marketing-stat-card success">
+            <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div>
+                <span>Active Targets</span>
+                <strong>@Model.ActiveFacebookTargets</strong>
+            </div>
+        </div>
+
+        <div class="marketing-stat-card warning">
+            <div class="stat-icon"><i class="fa-solid fa-bullseye"></i></div>
+            <div>
+                <span>Total Campaigns</span>
+                <strong>@Model.TotalCampaigns</strong>
+            </div>
+        </div>
+
+        <div class="marketing-stat-card purple">
+            <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+            <div>
+                <span>Scheduled Queue</span>
+                <strong>@Model.ScheduledQueueItems</strong>
+            </div>
+        </div>
+
+        <div class="marketing-stat-card success">
+            <div class="stat-icon"><i class="fa-solid fa-paper-plane"></i></div>
+            <div>
+                <span>Posted</span>
+                <strong>@Model.PostedQueueItems</strong>
+            </div>
+        </div>
+
+        <div class="marketing-stat-card danger">
+            <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+                <span>Failed</span>
+                <strong>@Model.FailedQueueItems</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="marketing-grid marketing-mini-stats">
+        <div class="mini-stat">
+            <span>Draft</span>
+            <strong>@Model.DraftCampaigns</strong>
+        </div>
+        <div class="mini-stat">
+            <span>Ready</span>
+            <strong>@Model.ReadyCampaigns</strong>
+        </div>
+        <div class="mini-stat">
+            <span>Scheduled</span>
+            <strong>@Model.ScheduledCampaigns</strong>
+        </div>
+        <div class="mini-stat">
+            <span>Running</span>
+            <strong>@Model.RunningCampaigns</strong>
+        </div>
+        <div class="mini-stat">
+            <span>Completed</span>
+            <strong>@Model.CompletedCampaigns</strong>
+        </div>
+        <div class="mini-stat">
+            <span>Posts Today</span>
+            <strong>@Model.PostsToday</strong>
+        </div>
+        <div class="mini-stat">
+            <span>Last 7 Days</span>
+            <strong>@Model.PostsLast7Days</strong>
+        </div>
+        <div class="mini-stat">
+            <span>Last 30 Days</span>
+            <strong>@Model.PostsLast30Days</strong>
+        </div>
+    </div>
+
+    <div class="marketing-layout">
+        <section class="marketing-card">
+            <div class="marketing-card-head">
+                <div>
+                    <h2>Recent Campaigns</h2>
+                    <p>Latest social marketing campaigns generated from products, blogs, or custom posts.</p>
+                </div>
+                <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table marketing-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Campaign</th>
+                            <th>Source</th>
+                            <th>Status</th>
+                            <th>Queue</th>
+                            <th>Posted</th>
+                            <th>Failed</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.RecentCampaigns.Any())
+                        {
+                            foreach (var item in Model.RecentCampaigns)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none">
+                                            @item.Title
+                                        </a>
+                                    </td>
+                                    <td><span class="badge-soft">@item.SourceType</span></td>
+                                    <td><span class="status-pill status-@item.Status.ToString().ToLower()">@item.Status</span></td>
+                                    <td>@item.TotalQueueItems</td>
+                                    <td class="text-success fw-bold">@item.PostedItems</td>
+                                    <td class="text-danger fw-bold">@item.FailedItems</td>
+                                    <td>@item.CreatedAt.ToString("dd MMM yyyy")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="empty-cell">
+                                    No campaigns created yet.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="marketing-card">
+            <div class="marketing-card-head">
+                <div>
+                    <h2>Top Facebook Targets</h2>
+                    <p>Groups and pages with the highest campaign activity.</p>
+                </div>
+                <a asp-area="Admin" asp-controller="FacebookTargets" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                    Manage Targets
+                </a>
+            </div>
+
+            <div class="target-list">
+                @if (Model.TopTargets.Any())
+                {
+                    foreach (var target in Model.TopTargets)
+                    {
+                        <div class="target-row">
+                            <div class="target-icon">
+                                <i class="fa-brands fa-facebook-f"></i>
+                            </div>
+                            <div class="target-info">
+                                <strong>@target.TargetName</strong>
+                                <span>@target.TargetType</span>
+                            </div>
+                            <div class="target-numbers">
+                                <span>Total @target.TotalPosts</span>
+                                <span class="text-success">Posted @target.PostedPosts</span>
+                                <span class="text-danger">Failed @target.FailedPosts</span>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-box">
+                        No target activity yet.
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <section class="marketing-card">
+        <div class="marketing-card-head">
+            <div>
+                <h2>Recent Posting Queue</h2>
+                <p>Scheduled, pending, posted, and failed queue records.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table marketing-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Target</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Scheduled</th>
+                        <th>Posted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.RecentQueueItems.Any())
+                    {
+                        foreach (var item in Model.RecentQueueItems)
+                        {
+                            <tr>
+                                <td>@item.CampaignTitle</td>
+                                <td>@item.TargetName</td>
+                                <td><span class="badge-soft">@item.TargetType</span></td>
+                                <td><span class="status-pill status-@item.Status.ToString().ToLower()">@item.Status</span></td>
+                                <td>@(item.ScheduledAt?.ToString("dd MMM yyyy hh:mm tt") ?? "-")</td>
+                                <td>@(item.PostedAt?.ToString("dd MMM yyyy hh:mm tt") ?? "-")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="empty-cell">
+                                No queue records yet.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+@section Styles {
+    <style>
+        .marketing-page {
+            padding: 18px 0 42px;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .marketing-hero {
+            border-radius: 30px;
+            padding: 30px;
+            margin-bottom: 22px;
+            background: radial-gradient(circle at top left, rgba(37,99,235,.20), transparent 38%), radial-gradient(circle at top right, rgba(168,85,247,.16), transparent 34%), linear-gradient(135deg, rgba(255,255,255,.96), rgba(239,246,255,.92));
+            border: 1px solid rgba(15,23,42,.10);
+            box-shadow: 0 24px 60px rgba(2,6,23,.10);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .marketing-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #2563eb;
+            background: rgba(37,99,235,.10);
+            border: 1px solid rgba(37,99,235,.14);
+            border-radius: 999px;
+            padding: 8px 13px;
+            font-weight: 900;
+            font-size: 13px;
+            margin-bottom: 14px;
+        }
+
+        .marketing-hero h1 {
+            font-size: clamp(28px, 4vw, 46px);
+            line-height: 1;
+            font-weight: 950;
+            color: #0f172a;
+            margin: 0 0 10px;
+            letter-spacing: -.04em;
+        }
+
+        .marketing-hero p {
+            margin: 0;
+            max-width: 760px;
+            color: #64748b;
+            font-weight: 650;
+            font-size: 16px;
+        }
+
+        .marketing-hero-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+            .marketing-hero-actions .btn {
+                border-radius: 999px;
+                font-weight: 900;
+                padding: 11px 16px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                box-shadow: 0 14px 28px rgba(2,6,23,.08);
+            }
+
+        .marketing-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .marketing-stats {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-bottom: 16px;
+        }
+
+        .marketing-stat-card {
+            border-radius: 24px;
+            padding: 18px;
+            background: rgba(255,255,255,.90);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 16px 34px rgba(2,6,23,.07);
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 19px;
+            background: linear-gradient(135deg, #2563eb, #60a5fa);
+        }
+
+        .marketing-stat-card span {
+            display: block;
+            color: #64748b;
+            font-weight: 850;
+            font-size: 13px;
+        }
+
+        .marketing-stat-card strong {
+            display: block;
+            color: #0f172a;
+            font-size: 28px;
+            line-height: 1;
+            font-weight: 950;
+            margin-top: 5px;
+        }
+
+        .marketing-stat-card.info .stat-icon {
+            background: linear-gradient(135deg, #0891b2, #22d3ee);
+        }
+
+        .marketing-stat-card.facebook .stat-icon {
+            background: linear-gradient(135deg, #1877f2, #60a5fa);
+        }
+
+        .marketing-stat-card.success .stat-icon {
+            background: linear-gradient(135deg, #059669, #34d399);
+        }
+
+        .marketing-stat-card.warning .stat-icon {
+            background: linear-gradient(135deg, #f97316, #facc15);
+        }
+
+        .marketing-stat-card.purple .stat-icon {
+            background: linear-gradient(135deg, #7c3aed, #c084fc);
+        }
+
+        .marketing-stat-card.danger .stat-icon {
+            background: linear-gradient(135deg, #dc2626, #fb7185);
+        }
+
+        .marketing-mini-stats {
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+            margin-bottom: 16px;
+        }
+
+        .mini-stat {
+            background: rgba(255,255,255,.82);
+            border: 1px solid rgba(15,23,42,.09);
+            border-radius: 18px;
+            padding: 14px;
+            text-align: center;
+            box-shadow: 0 12px 26px rgba(2,6,23,.05);
+        }
+
+            .mini-stat span {
+                display: block;
+                font-size: 12px;
+                color: #64748b;
+                font-weight: 850;
+            }
+
+            .mini-stat strong {
+                color: #0f172a;
+                font-size: 22px;
+                font-weight: 950;
+            }
+
+        .marketing-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(330px, .8fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .marketing-card {
+            border-radius: 26px;
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 18px 44px rgba(2,6,23,.08);
+            padding: 18px;
+            overflow: hidden;
+        }
+
+        .marketing-card-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .marketing-card h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #0f172a;
+            font-weight: 950;
+        }
+
+        .marketing-card p {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-weight: 650;
+        }
+
+        .marketing-table {
+            margin: 0;
+            min-width: 760px;
+        }
+
+            .marketing-table thead th {
+                color: #475569;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: .06em;
+                border-bottom: 1px solid rgba(15,23,42,.10);
+                background: rgba(248,250,252,.86);
+                font-weight: 950;
+                white-space: nowrap;
+            }
+
+            .marketing-table td {
+                color: #334155;
+                font-weight: 650;
+                border-bottom: 1px solid rgba(15,23,42,.07);
+                vertical-align: middle;
+            }
+
+        .badge-soft {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 6px 10px;
+            background: rgba(37,99,235,.09);
+            color: #1d4ed8;
+            font-weight: 850;
+            font-size: 12px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 950;
+            background: rgba(100,116,139,.12);
+            color: #475569;
+        }
+
+        .status-posted,
+        .status-completed,
+        .status-ready {
+            background: rgba(16,185,129,.12);
+            color: #047857;
+        }
+
+        .status-failed {
+            background: rgba(239,68,68,.12);
+            color: #dc2626;
+        }
+
+        .status-scheduled,
+        .status-running {
+            background: rgba(37,99,235,.12);
+            color: #1d4ed8;
+        }
+
+        .status-draft,
+        .status-pending {
+            background: rgba(245,158,11,.14);
+            color: #b45309;
+        }
+
+        .target-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .target-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 13px;
+            border-radius: 18px;
+            background: rgba(248,250,252,.88);
+            border: 1px solid rgba(15,23,42,.08);
+        }
+
+        .target-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: linear-gradient(135deg, #1877f2, #60a5fa);
+        }
+
+        .target-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+            .target-info strong,
+            .target-info span {
+                display: block;
+            }
+
+            .target-info strong {
+                color: #0f172a;
+                font-weight: 950;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .target-info span {
+                color: #64748b;
+                font-size: 12px;
+                font-weight: 800;
+            }
+
+        .target-numbers {
+            text-align: right;
+            font-size: 12px;
+            font-weight: 850;
+            color: #64748b;
+            display: grid;
+            gap: 1px;
+        }
+
+        .empty-cell,
+        .empty-box {
+            text-align: center;
+            color: #64748b;
+            font-weight: 800;
+            padding: 28px;
+            background: rgba(248,250,252,.75);
+            border-radius: 18px;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .marketing-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .marketing-mini-stats {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .marketing-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .marketing-hero {
+                padding: 22px;
+                border-radius: 24px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .marketing-hero-actions {
+                justify-content: stretch;
+            }
+
+                .marketing-hero-actions .btn {
+                    width: 100%;
+                    justify-content: center;
+                }
+
+            .marketing-stats,
+            .marketing-mini-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .marketing-card-head {
+                flex-direction: column;
+            }
+        }
+    </style>
+}

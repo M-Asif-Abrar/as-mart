@@ -1,0 +1,1433 @@
+﻿@using AsMart.Web.Models.ViewModels
+@using System.Text.Json
+@model ProductDetailViewModel
+
+@{
+    var product = Model.Product;
+
+    ViewData["Title"] = product.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    const int maxThumbs = 6;
+
+    var imageList = new List<string>();
+
+    if (!string.IsNullOrWhiteSpace(product.MainImageUrl))
+        imageList.Add(product.MainImageUrl);
+
+    if (!string.IsNullOrWhiteSpace(product.AdditionalImagesJson))
+    {
+        try
+        {
+            var extras = JsonSerializer.Deserialize<List<string>>(product.AdditionalImagesJson) ?? new List<string>();
+            imageList.AddRange(extras.Where(x => !string.IsNullOrWhiteSpace(x)));
+        }
+        catch { }
+    }
+
+    imageList = imageList.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList();
+
+    var mainImageUrl = imageList.FirstOrDefault() ?? Url.Content("~/images/no-image.png");
+
+    var primaryCategoryName = product.ProductCategories
+        .Select(pc => pc.Category?.Name)
+        .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name))
+        ?? "Uncategorized";
+
+    var gaProduct = new
+    {
+        id = product.Id,
+        title = product.Title,
+        slug = product.Slug,
+        category = primaryCategoryName,
+        price = product.Price ?? 0m,
+        currency = product.Currency
+    };
+
+    var gaProductJson = JsonSerializer.Serialize(gaProduct);
+
+    decimal? price = product.Price;
+    decimal? listPrice = product.ListPrice;
+    decimal? discountPercent = null;
+
+    if (price.HasValue && listPrice.HasValue && listPrice.Value > price.Value)
+        discountPercent = Math.Round(((listPrice.Value - price.Value) / listPrice.Value) * 100, 0);
+
+    var currency = string.IsNullOrWhiteSpace(product.Currency) ? "USD" : product.Currency.Trim();
+}
+
+@section Styles {
+    <style>
+        .pd-page {
+            min-height: calc(100vh - 90px);
+            padding: 24px 0 42px;
+            background: radial-gradient(circle at 10% 8%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .pd-container {
+            max-width: 1760px;
+            margin: 0 auto;
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+
+        .pd-topbar {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .pd-breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pd-crumb {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 11px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.82);
+            border: 1px solid rgba(15,23,42,.08);
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+            .pd-crumb:hover {
+                color: #1d4ed8;
+                border-color: rgba(37,99,235,.22);
+                text-decoration: none;
+            }
+
+        .pd-crumb-active {
+            color: #0f172a;
+        }
+
+        .pd-sep {
+            color: #cbd5e1;
+            font-weight: 950;
+        }
+
+        .pd-admin {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pd-btn-sm {
+            min-height: 38px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+        .pd-hero {
+            overflow: visible;
+            border-radius: 30px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.93)), radial-gradient(circle at top right, rgba(37,99,235,.14), transparent 36%);
+            box-shadow: 0 24px 70px rgba(15,23,42,.08);
+            padding: 22px;
+        }
+
+        .pd-card {
+            border-radius: 26px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.96);
+            box-shadow: 0 18px 48px rgba(15,23,42,.07);
+        }
+
+        .pd-gallery {
+            padding: 16px;
+        }
+
+        .pd-sticky {
+            position: sticky;
+            top: 92px;
+        }
+
+        .pd-main {
+            position: relative;
+        }
+
+        .main-image-wrapper {
+            width: 100%;
+            max-width: 620px;
+            height: 560px;
+            margin: 0 auto;
+            border-radius: 24px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #fff;
+            padding: 16px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-main-img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain;
+            display: block;
+        }
+
+        .thumbs-below {
+            margin-top: 13px;
+            display: flex;
+            gap: 9px;
+            align-items: center;
+            justify-content: center;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 4px 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+            .thumbs-below::-webkit-scrollbar {
+                display: none;
+            }
+
+        .thumb-tile {
+            position: relative;
+            flex: 0 0 auto;
+            width: 82px;
+            height: 82px;
+            padding: 0;
+            border: 0;
+            border-radius: 18px;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        .product-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,.12);
+            background: #fff;
+            padding: 3px;
+        }
+
+            .product-thumb.active {
+                border: 2px solid #2563eb;
+                box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+            }
+
+        .thumb-overlay {
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            background: rgba(15,23,42,.62);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .thumb-overlay span {
+                color: #fff;
+                font-size: 18px;
+                font-weight: 950;
+            }
+
+        .pd-gallery-help {
+            margin-top: 12px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .pd-right {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .pd-titlewrap {
+            padding: 3px 0;
+        }
+
+        .pd-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: 12px;
+        }
+
+        .pd-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(28px, 3.3vw, 48px);
+            line-height: 1.12;
+            letter-spacing: -.04em;
+            font-weight: 950;
+        }
+
+        .pd-short {
+            margin: 13px 0 0;
+            color: #475569;
+            font-size: 15px;
+            line-height: 1.75;
+            font-weight: 650;
+            text-align: justify;
+        }
+
+        .pd-rating-btn {
+            margin-top: 12px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pd-rating-num {
+            color: #1d4ed8;
+            font-size: 13px;
+            font-weight: 950;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+        }
+
+        .pd-rating-stars {
+            color: #f59e0b;
+            letter-spacing: 1px;
+            font-size: 16px;
+        }
+
+        .pd-rating-count {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .pd-rating-card {
+            max-width: 450px;
+            margin-top: 12px;
+            padding: 17px;
+            border-radius: 22px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #fff;
+            box-shadow: 0 14px 34px rgba(15,23,42,.08);
+        }
+
+        .pd-rating-card-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .pd-rating-line {
+            display: grid;
+            grid-template-columns: 62px minmax(0, 1fr) 42px;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 7px;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+            .pd-rating-line .progress {
+                height: 8px;
+                border-radius: 999px;
+            }
+
+        .pd-buybox {
+            padding: 18px;
+        }
+
+        .pd-price-row {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .pd-discount {
+            color: #b91c1c;
+            font-size: 22px;
+            font-weight: 950;
+        }
+
+        .pd-now {
+            color: #0f172a;
+            font-size: clamp(26px, 3vw, 36px);
+            line-height: 1;
+            font-weight: 950;
+            letter-spacing: -.035em;
+        }
+
+        .pd-was {
+            color: #94a3b8;
+            text-decoration: line-through;
+            font-size: 15px;
+            font-weight: 850;
+        }
+
+        .pd-price-note {
+            margin: 0 0 14px;
+            padding: 12px 13px;
+            border-radius: 16px;
+            background: rgba(245,158,11,.08);
+            border: 1px solid rgba(245,158,11,.18);
+            color: #475569;
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            font-size: 13px;
+            line-height: 1.55;
+            font-weight: 750;
+        }
+
+            .pd-price-note i {
+                color: #f59e0b;
+                margin-top: 3px;
+            }
+
+            .pd-price-note strong {
+                color: #0f172a;
+                font-weight: 950;
+            }
+
+        .pd-cta-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .pd-inline-form {
+            margin: 0;
+            display: flex;
+            min-width: 0;
+        }
+
+        .pd-mini-btn {
+            width: 100%;
+            min-height: 46px;
+            border-radius: 15px;
+            padding: 0 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .pd-desc {
+            padding: 18px;
+        }
+
+        .pd-section-title {
+            margin-bottom: 13px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: #0f172a;
+            font-size: 17px;
+            font-weight: 950;
+            letter-spacing: -.015em;
+        }
+
+            .pd-section-title i {
+                color: #2563eb;
+            }
+
+        .pd-desc-body {
+            color: #334155;
+            font-size: 15px;
+            line-height: 1.85;
+            text-align: justify;
+            overflow-wrap: anywhere;
+        }
+
+            .pd-desc-body img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 18px;
+            }
+
+            .pd-desc-body table {
+                width: 100%;
+                display: block;
+                overflow-x: auto;
+                border-radius: 16px;
+                border: 1px solid rgba(15,23,42,.10);
+            }
+
+        .pd-meta-card {
+            padding: 18px;
+        }
+
+        .pd-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+            .pd-meta-grid div {
+                padding: 13px;
+                border-radius: 18px;
+                background: #f8fafc;
+                border: 1px solid rgba(15,23,42,.08);
+            }
+
+            .pd-meta-grid span {
+                display: block;
+                color: #64748b;
+                font-size: 11px;
+                font-weight: 950;
+                text-transform: uppercase;
+                letter-spacing: .045em;
+                margin-bottom: 6px;
+            }
+
+            .pd-meta-grid strong {
+                color: #0f172a;
+                font-size: 13px;
+                font-weight: 900;
+                word-break: break-word;
+            }
+
+        .zoom-result {
+            position: absolute;
+            top: 0;
+            left: calc(100% + 14px);
+            width: 700px;
+            height: 700px;
+            border-radius: 24px;
+            border: 1px solid rgba(15,23,42,.10);
+            background-repeat: no-repeat;
+            background-size: 220% 220%;
+            background-color: #fff;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            box-shadow: 0 24px 70px rgba(15,23,42,.14);
+            transition: opacity .12s ease-in-out, visibility .12s ease-in-out;
+        }
+
+        @@media (min-width: 992px) {
+            #mainImageWrapper:hover ~ #zoomResult {
+                opacity: 1;
+                visibility: visible;
+            }
+        }
+
+        .product-gallery-modal {
+            width: 100%;
+            max-width: 96vw;
+            margin: 1.5rem auto;
+        }
+
+        .pd-modal-content,
+        .pd-confirm-modal {
+            border: 0;
+            border-radius: 26px;
+            box-shadow: 0 24px 70px rgba(15,23,42,.18);
+            overflow: hidden;
+        }
+
+        .gallery-main-wrapper {
+            max-height: calc(90vh - 160px);
+            min-height: 520px;
+            border-radius: 24px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #fff;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .gallery-main-img {
+            max-width: 100%;
+            max-height: 74vh;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .pd-modal-product-title {
+            color: #0f172a;
+            line-height: 1.4;
+            font-weight: 950;
+        }
+
+        .gallery-thumb-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+        }
+
+        .gallery-thumb {
+            width: 68px;
+            height: 68px;
+            object-fit: cover;
+            border-radius: 14px;
+            border: 1px solid rgba(15,23,42,.12);
+            cursor: pointer;
+            background: #fff;
+            padding: 3px;
+        }
+
+            .gallery-thumb:hover {
+                border-color: #2563eb;
+                box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+            }
+
+        .pd-dialog-btn {
+            min-height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 950;
+            padding: 0 16px;
+        }
+
+        .product-carousel {
+            scrollbar-width: none;
+        }
+
+            .product-carousel::-webkit-scrollbar {
+                display: none;
+            }
+
+        .product-card-mini {
+            width: 180px;
+            font-size: .9rem;
+        }
+
+        .product-card-img-wrapper {
+            width: 100%;
+            padding-top: 100%;
+            position: relative;
+            background-color: #fff;
+            border: 1px solid #eee;
+        }
+
+            .product-card-img-wrapper img {
+                position: absolute;
+                inset: 0;
+                margin: auto;
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }
+
+        .product-card-title {
+            max-height: none;
+            overflow: visible;
+            margin-bottom: .35rem;
+            line-height: 1.25;
+        }
+
+        @@supports (-webkit-line-clamp: 2) {
+            .product-card-title {
+                display: block;
+                overflow: visible;
+                -webkit-line-clamp: unset;
+                -webkit-box-orient: unset;
+            }
+        }
+
+        @@media (max-width: 1399.98px) {
+            .zoom-result {
+                width: 560px;
+                height: 560px;
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .pd-page {
+                padding: 18px 0 34px;
+            }
+
+            .main-image-wrapper {
+                height: 500px;
+            }
+
+            .pd-cta-row {
+                grid-template-columns: 1fr;
+            }
+
+            .pd-mini-btn {
+                min-height: 46px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .pd-container {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .pd-hero {
+                border-radius: 24px;
+                padding: 16px;
+            }
+
+            .pd-sticky {
+                position: static;
+            }
+
+            .main-image-wrapper {
+                height: 440px;
+                max-width: 100%;
+            }
+
+            .zoom-result {
+                display: none !important;
+            }
+
+            .pd-meta-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-gallery-modal {
+                max-width: 100vw !important;
+                margin: 0 !important;
+            }
+
+                .product-gallery-modal .modal-content {
+                    height: 100vh !important;
+                    max-height: 100vh !important;
+                    border-radius: 0 !important;
+                }
+
+            .gallery-main-wrapper {
+                max-height: 55vh;
+                min-height: 55vh;
+            }
+
+            .gallery-main-img {
+                max-height: 55vh;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .pd-page {
+                padding: 14px 0 28px;
+            }
+
+            .pd-container {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .pd-topbar {
+                align-items: flex-start;
+            }
+
+            .pd-admin,
+            .pd-admin .btn {
+                width: 100%;
+            }
+
+            .pd-btn-sm {
+                justify-content: center;
+            }
+
+            .pd-hero,
+            .pd-card,
+            .pd-modal-content,
+            .pd-confirm-modal {
+                border-radius: 22px;
+            }
+
+            .pd-hero {
+                padding: 12px;
+            }
+
+            .pd-gallery,
+            .pd-buybox,
+            .pd-desc,
+            .pd-meta-card {
+                padding: 14px;
+            }
+
+            .main-image-wrapper {
+                height: 330px;
+                border-radius: 18px;
+                padding: 10px;
+            }
+
+            .thumb-tile {
+                width: 68px;
+                height: 68px;
+                border-radius: 15px;
+            }
+
+            .product-thumb,
+            .thumb-overlay {
+                border-radius: 15px;
+            }
+
+            .pd-title {
+                font-size: 25px;
+                letter-spacing: -.035em;
+            }
+
+            .pd-short,
+            .pd-desc-body {
+                text-align: left;
+            }
+
+            .pd-rating-btn {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .pd-now {
+                font-size: 26px;
+            }
+
+            .pd-mini-btn {
+                min-height: 44px;
+                font-size: 12.5px;
+            }
+
+            .gallery-main-wrapper {
+                min-height: 48vh;
+                max-height: 48vh;
+                border-radius: 18px;
+            }
+
+            .product-carousel .product-card-mini {
+                width: calc(100vw - 2rem) !important;
+                max-width: calc(100vw - 2rem) !important;
+                flex: 0 0 calc(100vw - 2rem) !important;
+                font-size: 1rem;
+            }
+
+            .product-carousel .product-card-img-wrapper {
+                padding-top: 90% !important;
+            }
+
+                .product-carousel .product-card-img-wrapper img {
+                    max-width: 96% !important;
+                    max-height: 96% !important;
+                    object-fit: contain !important;
+                }
+
+            .product-carousel .product-card-title {
+                max-height: none !important;
+                font-size: 1rem;
+                line-height: 1.35;
+            }
+        }
+    </style>
+}
+
+<section class="pd-page">
+    <div class="container-fluid pd-container">
+        <div class="pd-shell">
+
+            <div class="pd-topbar">
+                <div class="pd-breadcrumbs">
+                    <a href="/" class="pd-crumb">
+                        <i class="fa-solid fa-house"></i>
+                        Home
+                    </a>
+                    <span class="pd-sep">/</span>
+                    <a href="/catalog" class="pd-crumb">Catalog</a>
+                    <span class="pd-sep">/</span>
+                    <span class="pd-crumb pd-crumb-active">@primaryCategoryName</span>
+                </div>
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="pd-admin">
+                        <a asp-area="Admin"
+                           asp-controller="Products"
+                           asp-action="Edit"
+                           asp-route-id="@product.Id"
+                           class="btn btn-outline-primary pd-btn-sm">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>Edit</span>
+                        </a>
+
+                        <a asp-area="Admin"
+                           asp-controller="Products"
+                           asp-action="Details"
+                           asp-route-id="@product.Id"
+                           class="btn btn-outline-info pd-btn-sm">
+                            <i class="fa-solid fa-eye"></i>
+                            <span>Admin Details</span>
+                        </a>
+                    </div>
+                }
+            </div>
+
+            <div class="pd-hero">
+                <div class="row g-4">
+
+                    <div class="col-12 col-lg-5">
+                        <div class="pd-sticky">
+                            <div class="pd-card pd-gallery">
+                                <div class="pd-main">
+                                    <div class="main-image-wrapper" id="mainImageWrapper">
+                                        <img id="mainImage"
+                                             src="@mainImageUrl"
+                                             data-large="@mainImageUrl"
+                                             alt="@product.Title"
+                                             class="product-main-img" />
+                                    </div>
+
+                                    <div id="zoomResult" class="zoom-result" aria-hidden="true"></div>
+                                </div>
+
+                                <div class="pd-thumbs thumbs-below" aria-label="Product images">
+                                    @if (imageList.Any())
+                                    {
+                                        var thumbsToShow = Math.Min(imageList.Count, maxThumbs);
+
+                                        for (int i = 0; i < thumbsToShow; i++)
+                                        {
+                                            var imgUrl = imageList[i];
+                                            var activeClass = i == 0 ? "active" : "";
+
+                                            if (i == maxThumbs - 1 && imageList.Count > maxThumbs)
+                                            {
+                                                var remaining = imageList.Count - (maxThumbs - 1);
+
+                                                <button type="button"
+                                                        class="thumb-tile more-thumb"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#imageGalleryModal"
+                                                        aria-label="Open all images">
+                                                    <img src="@imgUrl"
+                                                         class="product-thumb @activeClass"
+                                                         data-large="@imgUrl"
+                                                         alt="@product.Title" />
+                                                    <span class="thumb-overlay">
+                                                        <span>+@remaining</span>
+                                                    </span>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="thumb-tile" aria-label="View image @(i + 1)">
+                                                    <img src="@imgUrl"
+                                                         data-large="@imgUrl"
+                                                         class="product-thumb @activeClass"
+                                                         alt="@product.Title" />
+                                                </button>
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="thumb-tile">
+                                            <img src="@mainImageUrl"
+                                                 data-large="@mainImageUrl"
+                                                 class="product-thumb active"
+                                                 alt="@product.Title" />
+                                        </button>
+                                    }
+                                </div>
+
+                                <div class="pd-gallery-help">
+                                    <i class="fa-regular fa-hand-pointer"></i>
+                                    Hover to zoom on desktop. Click thumbnails to switch images.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-7">
+                        <div class="pd-right">
+
+                            <div class="pd-titlewrap">
+                                <div class="pd-kicker">
+                                    <i class="fa-solid fa-box-open"></i>
+                                    Product Details
+                                </div>
+
+                                <h1 class="pd-title">@product.Title</h1>
+
+                                @if (product.Rating.HasValue && product.RatingCount.HasValue)
+                                {
+                                    var rating = product.Rating.Value;
+                                    var filledStars = (int)Math.Round((double)rating, MidpointRounding.AwayFromZero);
+                                    if (filledStars < 0) filledStars = 0;
+                                    if (filledStars > 5) filledStars = 5;
+
+                                    var starsText = new string('★', filledStars) + new string('☆', 5 - filledStars);
+                                    var totalReviewsFormatted = product.RatingCount.Value.ToString("N0");
+
+                                    <div class="product-rating">
+                                        <button class="pd-rating-btn"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#ratingBreakdown"
+                                                aria-expanded="false"
+                                                aria-controls="ratingBreakdown">
+                                            <span class="pd-rating-num">@rating.ToString("0.0")</span>
+                                            <span class="pd-rating-stars">@starsText</span>
+                                            <span class="pd-rating-count">@totalReviewsFormatted reviews</span>
+                                            <i class="fa-solid fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="collapse" id="ratingBreakdown">
+                                        <div class="pd-rating-card">
+                                            <div class="pd-rating-card-head">
+                                                <div>
+                                                    <div class="pd-rating-stars">@starsText</div>
+                                                    <strong>@rating.ToString("0.0") out of 5</strong>
+                                                    <div class="small text-muted">@totalReviewsFormatted global ratings</div>
+                                                </div>
+
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-secondary"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#ratingBreakdown">
+                                                    <i class="fa-solid fa-xmark"></i>
+                                                </button>
+                                            </div>
+
+                                            @{
+                                                var ratingRows = new[] {
+                                                                                ("5 star", "55%"),
+                                                                                ("4 star", "23%"),
+                                                                                ("3 star", "8%"),
+                                                                                ("2 star", "7%"),
+                                                                                ("1 star", "7%")
+                                                                                };
+                                            }
+
+                                            @foreach (var row in ratingRows)
+                                            {
+                                                <div class="pd-rating-line">
+                                                    <span>@row.Item1</span>
+                                                    <div class="progress">
+                                                        <div class="progress-bar bg-warning" style="width:@row.Item2;"></div>
+                                                    </div>
+                                                    <small>@row.Item2</small>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(product.ShortDescription))
+                                {
+                                    <p class="pd-short">@product.ShortDescription</p>
+                                }
+                            </div>
+
+                            <div class="pd-card pd-buybox">
+                                <div class="pd-price">
+                                    @if (price.HasValue)
+                                    {
+                                        <div class="pd-price-row">
+                                            @if (discountPercent.HasValue)
+                                            {
+                                                <span class="pd-discount">-@discountPercent.Value%</span>
+                                            }
+
+                                            <span class="pd-now">@price.Value.ToString("0.00") @currency</span>
+
+                                            @if (listPrice.HasValue && listPrice.Value > price.Value)
+                                            {
+                                                <span class="pd-was">@listPrice.Value.ToString("0.00") @currency</span>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="pd-price-row">
+                                            <span class="pd-now">Price not available</span>
+                                        </div>
+                                    }
+
+                                    <div class="pd-price-note">
+                                        <i class="fa-solid fa-circle-info"></i>
+                                        <span>
+                                            Prices may change. Click <strong>Buy</strong> to check the latest price on Amazon.
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="pd-cta-row">
+                                    <a asp-controller="Product"
+                                       asp-action="Go"
+                                       asp-route-id="@product.Id"
+                                       target="_blank"
+                                       rel="nofollow noopener sponsored"
+                                       class="btn btn-warning pd-mini-btn js-affiliate-click"
+                                       data-product-id="@product.Id"
+                                       data-product-title="@product.Title"
+                                       data-category="@primaryCategoryName"
+                                       data-price="@(product.Price.HasValue? product.Price.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")"
+                                       onclick="if(typeof fbq === 'function'){fbq('track','InitiateCheckout');}">
+                                        <i class="fa-brands fa-amazon"></i>
+                                        <span>Buy on Amazon</span>
+                                    </a>
+
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <form asp-controller="MyProducts"
+                                              asp-action="AddToWishlist"
+                                              method="post"
+                                              class="pd-inline-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@product.Id" />
+
+                                            <button type="submit"
+                                                    class="btn btn-outline-danger pd-mini-btn js-add-wishlist"
+                                                    data-product-id="@product.Id"
+                                                    data-product-title="@product.Title">
+                                                <i class="fa-regular fa-heart"></i>
+                                                <span>Wishlist</span>
+                                            </button>
+                                        </form>
+
+                                        <form asp-controller="MyProducts"
+                                              asp-action="MarkPurchased"
+                                              method="post"
+                                              class="pd-inline-form js-purchased-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@product.Id" />
+
+                                            <button type="button"
+                                                    class="btn btn-outline-success pd-mini-btn js-open-purchased-confirm"
+                                                    data-product-title="@product.Title">
+                                                <i class="fa-solid fa-check"></i>
+                                                <span>Purchased</span>
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <a asp-area="Identity"
+                                           asp-page="/Account/Login"
+                                           class="btn btn-outline-primary pd-mini-btn">
+                                            <i class="fa-solid fa-right-to-bracket"></i>
+                                            <span>Login to save</span>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="pd-card pd-desc">
+                                <div class="pd-section-title">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    Description
+                                </div>
+
+                                <div class="pd-desc-body">
+                                    @Html.Raw(product.Description)
+                                </div>
+                            </div>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <div class="pd-card pd-meta-card">
+                                    <div class="pd-section-title">
+                                        <i class="fa-solid fa-database"></i>
+                                        Product Metadata
+                                    </div>
+
+                                    <div class="pd-meta-grid">
+                                        <div>
+                                            <span>Updated At</span>
+                                            <strong>@product.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</strong>
+                                        </div>
+
+                                        <div>
+                                            <span>Last Synced At</span>
+                                            <strong>
+                                                @(product.LastSyncedAt.HasValue
+                                                                                            ? product.LastSyncedAt.Value.ToString("yyyy-MM-dd HH:mm:ss")
+                                                                                            : "Never Synced")
+                                        </strong>
+                                    </div>
+
+                                        <div>
+                                            <span>Total Clicks</span>
+                                            <strong>@product.ClickCount</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                                        }
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+@if (imageList.Any())
+{
+    <div class="modal fade" id="imageGalleryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered product-gallery-modal">
+            <div class="modal-content pd-modal-content">
+                <div class="modal-header border-0">
+                    <h2 class="modal-title h5">Product Images</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-3 align-items-start">
+                        <div class="col-12 col-lg-8">
+                            <div class="gallery-main-wrapper">
+                                <img id="modalMainImage"
+                                     src="@mainImageUrl"
+                                     alt="@product.Title"
+                                     class="gallery-main-img" />
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-4">
+                            <h3 class="h6 pd-modal-product-title">@product.Title</h3>
+                            <div class="small text-muted mb-2">All images</div>
+
+                            <div class="gallery-thumb-grid">
+                                @for (int i = 0; i < imageList.Count; i++)
+                                {
+                                    var imgUrl = imageList[i];
+
+                                    <img src="@imgUrl"
+                                         data-large="@imgUrl"
+                                         class="gallery-thumb js-modal-thumb"
+                                         alt="@product.Title" />
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary pd-dialog-btn" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="modal fade" id="confirmPurchasedModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content pd-confirm-modal">
+            <div class="modal-header">
+                <h2 class="modal-title h5">
+                    <i class="fa-solid fa-circle-check text-success me-2"></i>
+                    Confirm Purchase
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="mb-1 fw-bold">Mark this product as purchased?</p>
+                <p class="text-muted mb-0" id="confirmPurchasedProductTitle">
+                    This item will be added to your purchase list.
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light pd-dialog-btn" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-success pd-dialog-btn" id="confirmPurchasedSubmit">
+                    <i class="fa-solid fa-check"></i>
+                    Yes, Mark Purchased
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.RelatedProducts.Any())
+{
+    @await Html.PartialAsync(
+    "_ProductCarousel",
+        (title: "Products related to this item", products: Model.RelatedProducts)
+    )
+}
+
+@if (Model.OtherProducts.Any())
+{
+    @await Html.PartialAsync(
+    "_ProductCarousel",
+        (title: "You may also like", products: Model.OtherProducts)
+    )
+}
+
+
+@section Scripts {
+    <script>
+        (function () {
+            const mainImage = document.getElementById('mainImage');
+            const zoomResult = document.getElementById('zoomResult');
+            const mainWrapper = document.getElementById('mainImageWrapper');
+            const thumbImgs = document.querySelectorAll('.thumbs-below .product-thumb');
+            const modal = document.getElementById('imageGalleryModal');
+            const modalMainImage = document.getElementById('modalMainImage');
+            const modalThumbs = document.querySelectorAll('.js-modal-thumb');
+
+            if (!mainImage || !zoomResult || !mainWrapper) return;
+
+            function setMainImage(url) {
+                if (!url) return;
+
+                mainImage.src = url;
+                mainImage.dataset.large = url;
+                zoomResult.style.backgroundImage = "url('" + url + "')";
+
+                if (modalMainImage) {
+                    modalMainImage.src = url;
+                }
+            }
+
+            thumbImgs.forEach(function (img) {
+                img.addEventListener('click', function () {
+                    const largeSrc = this.dataset.large || this.src;
+                    setMainImage(largeSrc);
+
+                    thumbImgs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            zoomResult.style.backgroundImage = "url('" + (mainImage.dataset.large || mainImage.src) + "')";
+
+            if (modalMainImage && modalThumbs.length) {
+                modalThumbs.forEach(function (thumb) {
+                    thumb.addEventListener('click', function () {
+                        const url = this.dataset.large || this.src;
+                        modalMainImage.src = url;
+                        setMainImage(url);
+                    });
+                });
+
+                if (modal) {
+                    modal.addEventListener('show.bs.modal', function () {
+                        modalMainImage.src = mainImage.src;
+                    });
+                }
+            }
+
+            function getCursorPos(e, element) {
+                const rect = element.getBoundingClientRect();
+
+                return {
+                    x: e.pageX - rect.left - window.pageXOffset,
+                    y: e.pageY - rect.top - window.pageYOffset
+                };
+            }
+
+            function moveZoom(e) {
+                const pos = getCursorPos(e, mainWrapper);
+                const rect = mainWrapper.getBoundingClientRect();
+
+                const xRatio = pos.x / rect.width;
+                const yRatio = pos.y / rect.height;
+
+                const clampedX = Math.max(0, Math.min(1, xRatio));
+                const clampedY = Math.max(0, Math.min(1, yRatio));
+
+                zoomResult.style.backgroundPosition = (clampedX * 100) + "% " + (clampedY * 100) + "%";
+            }
+
+            mainWrapper.addEventListener('mousemove', function (e) {
+                if (window.innerWidth < 992) return;
+                moveZoom(e);
+            });
+        })();
+
+        (function () {
+            let activePurchasedForm = null;
+
+            const modalElement = document.getElementById('confirmPurchasedModal');
+            const confirmButton = document.getElementById('confirmPurchasedSubmit');
+            const productTitleElement = document.getElementById('confirmPurchasedProductTitle');
+
+            if (!modalElement || !confirmButton) return;
+
+            const confirmModal = new bootstrap.Modal(modalElement);
+
+            document.querySelectorAll('.js-open-purchased-confirm').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    activePurchasedForm = this.closest('form');
+
+                    const title = this.getAttribute('data-product-title') || 'This product';
+
+                    if (productTitleElement) {
+                        productTitleElement.textContent = title;
+                    }
+
+                    confirmModal.show();
+                });
+            });
+
+            confirmButton.addEventListener('click', function () {
+                if (activePurchasedForm) {
+                    activePurchasedForm.submit();
+                }
+            });
+        })();
+
+        (function () {
+            if (typeof window.gtag !== 'function') return;
+
+            const product = @Html.Raw(gaProductJson);
+
+            window.gtag('event', 'view_item', {
+                currency: product.currency || 'USD',
+                value: product.price || 0,
+                items: [{
+                    item_id: product.id,
+                    item_name: product.title,
+                    item_category: product.category,
+                    price: product.price
+                }]
+            });
+        })();
+    </script>
+}

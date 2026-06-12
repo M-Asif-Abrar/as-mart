@@ -1,0 +1,910 @@
+﻿@model IEnumerable<AsMart.Web.Models.DTOs.ProductListItemDto>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var totalProducts = Model?.Count() ?? 0;
+    var activeProducts = Model?.Count(x => x.IsActive) ?? 0;
+    var featuredProducts = Model?.Count(x => x.IsFeatured) ?? 0;
+    var dealProducts = Model?.Count(x => x.IsDealOfTheDay) ?? 0;
+}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+
+@section Styles {
+    <style>
+        .as-products-page {
+            min-height: calc(100vh - 76px);
+            padding: 24px;
+            background: radial-gradient(900px 420px at 8% 0%, rgba(37, 99, 235, .12), transparent 60%), radial-gradient(760px 380px at 100% 8%, rgba(14, 165, 233, .10), transparent 60%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+        }
+
+        .as-products-shell {
+            width: 100%;
+            max-width: 1580px;
+            margin: 0 auto;
+        }
+
+        .as-products-hero,
+        .as-products-card,
+        .as-stat-card {
+            border: 1px solid rgba(15, 23, 42, .08);
+            background: rgba(255, 255, 255, .86);
+            box-shadow: 0 18px 50px rgba(15, 23, 42, .08);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .as-products-hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 24px;
+            border-radius: 30px;
+            margin-bottom: 18px;
+        }
+
+        .as-products-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            margin-bottom: 12px;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, .10);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .as-products-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(26px, 3vw, 42px);
+            font-weight: 950;
+            letter-spacing: -.055em;
+            line-height: 1.05;
+        }
+
+        .as-products-subtitle {
+            max-width: 760px;
+            margin: 10px 0 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.75;
+        }
+
+        .as-products-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .as-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: .62rem 1rem;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 850;
+        }
+
+        .as-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .as-stat-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            border-radius: 24px;
+        }
+
+        .as-stat-icon {
+            display: inline-grid;
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            place-items: center;
+            border-radius: 18px;
+            font-size: 18px;
+        }
+
+        .as-stat-blue {
+            background: rgba(37,99,235,.10);
+            color: #1d4ed8;
+        }
+
+        .as-stat-green {
+            background: rgba(22,163,74,.10);
+            color: #15803d;
+        }
+
+        .as-stat-amber {
+            background: rgba(245,158,11,.16);
+            color: #92400e;
+        }
+
+        .as-stat-sky {
+            background: rgba(14,165,233,.12);
+            color: #0369a1;
+        }
+
+        .as-stat-label {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .as-stat-value {
+            color: #0f172a;
+            font-size: 25px;
+            font-weight: 950;
+            letter-spacing: -.04em;
+            line-height: 1.1;
+        }
+
+        .as-products-card {
+            overflow: hidden;
+            border-radius: 30px;
+        }
+
+        .as-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 20px 22px;
+            border-bottom: 1px solid rgba(15, 23, 42, .08);
+            background: rgba(255,255,255,.68);
+        }
+
+        .as-card-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0;
+            color: #0f172a;
+            font-size: 18px;
+            font-weight: 950;
+            letter-spacing: -.03em;
+        }
+
+            .as-card-title i {
+                color: #2563eb;
+            }
+
+        .as-card-subtitle {
+            margin: 6px 0 0;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .as-card-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 1px solid rgba(15,23,42,.08);
+            border-radius: 999px;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .as-card-body {
+            padding: 16px;
+        }
+
+        .as-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .as-products-table {
+            width: 100% !important;
+            min-width: 1120px;
+            margin: 0 !important;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+
+            .as-products-table thead th {
+                padding: 10px 12px;
+                border: 0 !important;
+                color: #64748b;
+                font-size: 12px;
+                font-weight: 950;
+                letter-spacing: .06em;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+
+            .as-products-table tbody tr {
+                background: #fff;
+                box-shadow: 0 8px 24px rgba(15,23,42,.045);
+            }
+
+            .as-products-table tbody td {
+                padding: 13px 12px;
+                border-top: 1px solid rgba(15,23,42,.07);
+                border-bottom: 1px solid rgba(15,23,42,.07);
+                color: #0f172a;
+                font-size: 13px;
+                vertical-align: middle !important;
+            }
+
+                .as-products-table tbody td:first-child {
+                    border-left: 1px solid rgba(15,23,42,.07);
+                    border-radius: 18px 0 0 18px;
+                }
+
+                .as-products-table tbody td:last-child {
+                    border-right: 1px solid rgba(15,23,42,.07);
+                    border-radius: 0 18px 18px 0;
+                }
+
+            .as-products-table tbody tr:hover td {
+                background: rgba(37,99,235,.035);
+            }
+
+        .as-id-pill,
+        .as-soft-pill,
+        .as-click-pill,
+        .as-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+
+        .as-id-pill {
+            padding: 7px 10px;
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .as-soft-pill {
+            padding: 7px 10px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .as-click-pill {
+            padding: 7px 10px;
+            background: rgba(37,99,235,.08);
+            color: #1d4ed8;
+        }
+
+        .as-date {
+            color: #64748b;
+        }
+
+        .as-thumb-wrap {
+            position: relative;
+            display: grid;
+            width: 76px;
+            height: 76px;
+            place-items: center;
+            overflow: hidden;
+            border: 1px solid rgba(15,23,42,.08);
+            border-radius: 18px;
+            background: #fff;
+        }
+
+        .as-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 6px;
+        }
+
+        .as-thumb-fallback {
+            display: none;
+            color: #94a3b8;
+            font-size: 20px;
+        }
+
+        .as-thumb-missing .as-thumb-fallback,
+        .as-thumb-wrap:not(:has(img)) .as-thumb-fallback {
+            display: block;
+        }
+
+        .as-product-cell {
+            min-width: 330px;
+            max-width: 560px;
+        }
+
+        .as-product-name {
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 900;
+            line-height: 1.35;
+        }
+
+        .as-product-slug {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 5px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .as-price {
+            color: #0f172a;
+            font-size: 15px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .as-currency {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .as-status-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-start;
+        }
+
+        .as-status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+
+            .as-status-chip.is-on {
+                background: rgba(22,163,74,.10);
+                color: #15803d;
+            }
+
+            .as-status-chip.is-off {
+                background: rgba(100,116,139,.10);
+                color: #64748b;
+            }
+
+            .as-status-chip.is-featured {
+                background: rgba(245,158,11,.16);
+                color: #92400e;
+            }
+
+            .as-status-chip.is-deal {
+                background: rgba(14,165,233,.12);
+                color: #0369a1;
+            }
+
+        .as-row-actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 7px;
+            white-space: nowrap;
+        }
+
+        .as-icon-btn {
+            display: inline-grid;
+            width: 36px;
+            height: 36px;
+            place-items: center;
+            padding: 0;
+            border-radius: 13px;
+            font-size: 13px;
+        }
+
+        .as-delete-modal-content {
+            overflow: hidden;
+            border: 0;
+            border-radius: 26px;
+            box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
+        }
+
+        .as-delete-modal-header {
+            position: relative;
+            padding: 24px 24px 10px;
+            border-bottom: 0;
+            background: radial-gradient(520px 220px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
+        }
+
+        .as-delete-icon {
+            display: inline-grid;
+            width: 54px;
+            height: 54px;
+            place-items: center;
+            margin-bottom: 14px;
+            border-radius: 18px;
+            background: rgba(220, 38, 38, .10);
+            color: #dc2626;
+            font-size: 22px;
+        }
+
+        .as-delete-title {
+            color: #0f172a;
+            font-weight: 900;
+            letter-spacing: -.03em;
+        }
+
+        .as-delete-text {
+            max-width: 420px;
+            margin: 8px 0 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .as-delete-modal-footer {
+            gap: 10px;
+            padding: 18px 24px 24px;
+            border-top: 0;
+            background: #f8fafc;
+        }
+
+        div.dataTables_wrapper div.dataTables_filter input,
+        div.dataTables_wrapper div.dataTables_length select {
+            border-radius: 12px;
+            border: 1px solid rgba(15,23,42,.14);
+            min-height: 38px;
+        }
+
+            div.dataTables_wrapper div.dataTables_filter input:focus,
+            div.dataTables_wrapper div.dataTables_length select:focus {
+                border-color: rgba(37,99,235,.62);
+                box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
+            }
+
+        .page-link {
+            border-radius: 12px !important;
+            margin: 0 2px;
+            font-weight: 800;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .as-stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .as-products-page {
+                padding: 12px;
+            }
+
+            .as-products-hero {
+                flex-direction: column;
+                padding: 18px;
+                border-radius: 24px;
+            }
+
+            .as-products-actions,
+            .as-products-actions .btn {
+                width: 100%;
+            }
+
+            .as-stat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .as-card-header {
+                flex-direction: column;
+                padding: 18px;
+            }
+
+            .as-card-pill {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .as-card-body {
+                padding: 10px;
+            }
+
+            .as-thumb-wrap {
+                width: 58px;
+                height: 58px;
+                border-radius: 16px;
+            }
+
+            .as-delete-modal-footer {
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
+
+                .as-delete-modal-footer .btn {
+                    width: 100%;
+                }
+        }
+    </style>
+}
+
+<div class="as-products-page">
+    <div class="as-products-shell">
+
+        <div class="as-products-hero">
+            <div>
+                <div class="as-products-kicker">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    Product Catalog
+                </div>
+
+                <h1 class="as-products-title">Products</h1>
+
+                <p class="as-products-subtitle">
+                    Manage catalog items, product status, featured/deal flags, clicks, pricing, public pages, and admin actions.
+                </p>
+            </div>
+
+            <div class="as-products-actions">
+                <a asp-action="Create" class="btn btn-primary as-action-btn">
+                    <i class="fa-solid fa-plus"></i>
+                    Create Product
+                </a>
+            </div>
+        </div>
+
+        <div class="as-stat-grid">
+            <div class="as-stat-card">
+                <div class="as-stat-icon as-stat-blue">
+                    <i class="fa-solid fa-box"></i>
+                </div>
+                <div>
+                    <div class="as-stat-label">Total Products</div>
+                    <div class="as-stat-value">@totalProducts</div>
+                </div>
+            </div>
+
+            <div class="as-stat-card">
+                <div class="as-stat-icon as-stat-green">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <div class="as-stat-label">Active</div>
+                    <div class="as-stat-value">@activeProducts</div>
+                </div>
+            </div>
+
+            <div class="as-stat-card">
+                <div class="as-stat-icon as-stat-amber">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <div>
+                    <div class="as-stat-label">Featured</div>
+                    <div class="as-stat-value">@featuredProducts</div>
+                </div>
+            </div>
+
+            <div class="as-stat-card">
+                <div class="as-stat-icon as-stat-sky">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <div class="as-stat-label">Deals</div>
+                    <div class="as-stat-value">@dealProducts</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="as-products-card">
+            <div class="as-card-header">
+                <div>
+                    <h2 class="as-card-title">
+                        <i class="fa-solid fa-table"></i>
+                        Catalog Records
+                    </h2>
+                    <p class="as-card-subtitle">Search, sort, review, edit, and delete products from one responsive table.</p>
+                </div>
+
+                <div class="as-card-pill">
+                    <i class="fa-solid fa-database"></i>
+                    @totalProducts Records
+                </div>
+            </div>
+
+            <div class="as-card-body">
+                <div class="as-table-wrap">
+                    <table id="productsTable" class="table align-middle as-products-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Image</th>
+                                <th>Product</th>
+                                <th>ASIN</th>
+                                <th>Price</th>
+                                <th>Clicks</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in Model ?? Enumerable.Empty<AsMart.Web.Models.DTOs.ProductListItemDto>())
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="as-id-pill">@item.Id</span>
+                                    </td>
+
+                                    <td>
+                                        <div class="as-thumb-wrap">
+                                            @if (!string.IsNullOrWhiteSpace(item.MainImageUrl))
+                                            {
+                                                <img src="@item.MainImageUrl"
+                                                     class="as-thumb"
+                                                     alt="@item.Title"
+                                                     loading="lazy"
+                                                     onerror="this.closest('.as-thumb-wrap').classList.add('as-thumb-missing'); this.remove();" />
+                                            }
+
+                                            <div class="as-thumb-fallback">
+                                                <i class="fa-regular fa-image"></i>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="as-product-cell">
+                                        <div class="as-product-name">@item.Title</div>
+
+                                        @if (!string.IsNullOrWhiteSpace(item.Slug))
+                                        {
+                                            <div class="as-product-slug">
+                                                <i class="fa-solid fa-link"></i>
+                                                @item.Slug
+                                            </div>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(item.ASIN))
+                                        {
+                                            <span class="as-soft-pill">
+                                                <i class="fa-solid fa-barcode"></i>
+                                                @item.ASIN
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (item.Price.HasValue)
+                                        {
+                                            <div class="as-price">@item.Price.Value.ToString("0.00")</div>
+                                            <div class="as-currency">@item.Currency</div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <span class="as-click-pill">
+                                            <i class="fa-regular fa-hand-pointer"></i>
+                                            @item.ClickCount
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <div class="as-status-stack">
+                                            <span class="as-status-chip @(item.IsActive ? "is-on" : "is-off")">
+                                                <i class="fa-solid @(item.IsActive ? "fa-circle-check" : "fa-circle-xmark")"></i>
+                                                @(item.IsActive ? "Active" : "Inactive")
+                                            </span>
+
+                                            @if (item.IsFeatured)
+                                            {
+                                                <span class="as-status-chip is-featured">
+                                                    <i class="fa-solid fa-star"></i>
+                                                    Featured
+                                                </span>
+                                            }
+
+                                            @if (item.IsDealOfTheDay)
+                                            {
+                                                <span class="as-status-chip is-deal">
+                                                    <i class="fa-solid fa-bolt"></i>
+                                                    Deal
+                                                </span>
+                                            }
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <span class="as-date">
+                                            <i class="fa-regular fa-calendar"></i>
+                                            @item.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")
+                                        </span>
+                                    </td>
+
+                                    <td class="text-end">
+                                        <div class="as-row-actions">
+                                            @if (!string.IsNullOrWhiteSpace(item.Slug))
+                                            {
+                                                <a asp-area=""
+                                                   asp-controller="Product"
+                                                   asp-action="Details"
+                                                   asp-route-slug="@item.Slug"
+                                                   class="btn btn-outline-success as-icon-btn"
+                                                   title="View Public Product"
+                                                   target="_blank"
+                                                   rel="noopener">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </a>
+                                            }
+
+                                            <a asp-action="Details"
+                                               asp-route-id="@item.Id"
+                                               class="btn btn-outline-secondary as-icon-btn"
+                                               title="Admin Details">
+                                                <i class="fa-solid fa-circle-info"></i>
+                                            </a>
+
+                                            <a asp-action="Edit"
+                                               asp-route-id="@item.Id"
+                                               class="btn btn-outline-primary as-icon-btn"
+                                               title="Edit Product">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </a>
+
+                                            <a asp-action="Delete"
+                                               asp-route-id="@item.Id"
+                                               class="btn btn-outline-danger as-icon-btn"
+                                               title="Delete Product"
+                                               data-delete-confirm="true"
+                                               data-delete-message="Are you sure you want to delete this product? You will be taken to the final delete page before permanent deletion.">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade as-delete-modal" id="asDeleteConfirmModal" tabindex="-1" aria-labelledby="asDeleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content as-delete-modal-content">
+            <div class="modal-header as-delete-modal-header">
+                <div>
+                    <div class="as-delete-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+                    <h5 class="modal-title as-delete-title" id="asDeleteConfirmModalLabel">Confirm Delete</h5>
+
+                    <p class="as-delete-text">
+                        This action cannot be undone. Please confirm before deleting.
+                    </p>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-footer as-delete-modal-footer">
+                <button type="button" class="btn btn-light as-action-btn" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-danger as-action-btn" id="asDeleteConfirmButton">
+                    <i class="fa-solid fa-trash"></i>
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#productsTable').DataTable({
+                pageLength: 25,
+                order: [[0, 'desc']],
+                autoWidth: false,
+                scrollX: true,
+                columnDefs: [
+                    { orderable: false, targets: [1, 8] }
+                ],
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search products...",
+                    lengthMenu: "Show _MENU_ products",
+                    info: "Showing _START_ to _END_ of _TOTAL_ products"
+                }
+            });
+        });
+
+        (() => {
+            let pendingDeleteForm = null;
+            let pendingDeleteUrl = null;
+
+            const modalElement = document.getElementById('asDeleteConfirmModal');
+            const confirmButton = document.getElementById('asDeleteConfirmButton');
+
+            if (!modalElement || !confirmButton || typeof bootstrap === 'undefined') {
+                return;
+            }
+
+            const modal = new bootstrap.Modal(modalElement);
+
+            document.addEventListener('click', function (event) {
+                const deleteTrigger = event.target.closest('[data-delete-confirm="true"]');
+
+                if (!deleteTrigger) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                pendingDeleteForm = deleteTrigger.closest('form');
+                pendingDeleteUrl = deleteTrigger.getAttribute('href') || deleteTrigger.dataset.deleteUrl || null;
+
+                const customMessage = deleteTrigger.dataset.deleteMessage;
+                const textElement = modalElement.querySelector('.as-delete-text');
+
+                if (customMessage && textElement) {
+                    textElement.textContent = customMessage;
+                }
+
+                modal.show();
+            });
+
+            confirmButton.addEventListener('click', function () {
+                if (pendingDeleteForm) {
+                    pendingDeleteForm.submit();
+                    return;
+                }
+
+                if (pendingDeleteUrl) {
+                    window.location.href = pendingDeleteUrl;
+                }
+            });
+
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                pendingDeleteForm = null;
+                pendingDeleteUrl = null;
+            });
+        })();
+    </script>
+}

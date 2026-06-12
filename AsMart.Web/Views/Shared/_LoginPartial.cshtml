@@ -1,0 +1,477 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using AsMart.Web.Models.Entities
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+
+
+<style>
+    .as-login-nav {
+        align-items: center;
+        gap: 10px;
+    }
+
+    .as-user-toggle {
+        min-height: 46px;
+        display: inline-flex !important;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 12px 6px 7px !important;
+        border-radius: 999px !important;
+        border: 1px solid rgba(37,99,235,.14);
+        background: radial-gradient(120px 80px at 10% 0%, rgba(59,130,246,.16), transparent 70%), linear-gradient(135deg, rgba(255,255,255,.92), rgba(239,246,255,.82));
+        color: #0f172a !important;
+        font-weight: 900 !important;
+        box-shadow: 0 14px 30px rgba(2,6,23,.08);
+        transition: all .16s ease;
+        max-width: 240px;
+    }
+
+        .as-user-toggle:hover {
+            transform: translateY(-1px);
+            border-color: rgba(37,99,235,.24);
+            background: radial-gradient(120px 80px at 10% 0%, rgba(59,130,246,.22), transparent 70%), linear-gradient(135deg, rgba(255,255,255,.98), rgba(219,234,254,.90));
+        }
+
+    .as-user-avatar,
+    .as-user-initials {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        border-radius: 50%;
+    }
+
+    .as-user-avatar {
+        object-fit: cover;
+        border: 2px solid rgba(255,255,255,.95);
+        box-shadow: 0 8px 18px rgba(37,99,235,.18);
+    }
+
+    .as-user-initials {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 950;
+        box-shadow: 0 8px 18px rgba(37,99,235,.18);
+    }
+
+    .as-user-name {
+        max-width: 145px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1;
+    }
+
+    .as-user-dropdown {
+        min-width: 330px;
+        border-radius: 24px;
+        border: 1px solid rgba(15,23,42,.10);
+        padding: 12px;
+        overflow: hidden;
+        background: radial-gradient(520px 240px at 0% 0%, rgba(59,130,246,.13), transparent 58%), radial-gradient(420px 220px at 100% 0%, rgba(168,85,247,.10), transparent 58%), linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.96));
+        box-shadow: 0 26px 65px rgba(2,6,23,.18);
+    }
+
+    .as-user-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(239,246,255,.92), rgba(255,255,255,.86));
+        border: 1px solid rgba(37,99,235,.10);
+    }
+
+    .as-user-header-avatar {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        border-radius: 18px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+        color: #fff;
+        font-weight: 950;
+    }
+
+        .as-user-header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .as-user-header-content {
+        min-width: 0;
+    }
+
+        .as-user-header-content strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 950;
+            color: #0f172a;
+        }
+
+        .as-user-header-content small {
+            display: block;
+            margin-top: 2px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+    .as-user-dropdown .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        border-radius: 14px;
+        padding: 10px 11px;
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 800;
+        transition: all .14s ease;
+    }
+
+        .as-user-dropdown .dropdown-item i {
+            width: 20px;
+            color: rgba(37,99,235,.88);
+        }
+
+        .as-user-dropdown .dropdown-item:hover {
+            background: rgba(37,99,235,.10);
+            transform: translateX(2px);
+        }
+
+    .as-dd-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px 5px;
+        font-size: 11px;
+        font-weight: 950;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: rgba(15,23,42,.58);
+    }
+
+    .as-dd-divider {
+        margin: 9px 0;
+        border-color: rgba(15,23,42,.09);
+    }
+
+    .as-logout-btn {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: #dc2626 !important;
+    }
+
+        .as-logout-btn i {
+            color: #dc2626 !important;
+        }
+
+        .as-logout-btn:hover {
+            background: rgba(220,38,38,.09) !important;
+        }
+
+    .as-auth-link {
+        min-height: 44px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 999px !important;
+        padding: .58rem .95rem !important;
+        font-weight: 950 !important;
+        transition: all .16s ease;
+    }
+
+    .as-register-link {
+        border: 1px solid rgba(37,99,235,.16);
+        background: radial-gradient(110px 70px at 10% 0%, rgba(59,130,246,.16), transparent 70%), rgba(255,255,255,.82);
+        color: #0f172a !important;
+    }
+
+    .as-login-link {
+        border: 1px solid rgba(37,99,235,.18);
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+        color: #fff !important;
+        box-shadow: 0 14px 28px rgba(37,99,235,.24);
+    }
+
+    .as-register-link i {
+        color: #2563eb;
+    }
+
+    .as-login-link i {
+        color: #fff;
+    }
+
+    .as-auth-link:hover {
+        transform: translateY(-1px);
+    }
+
+    @@media (max-width: 991.98px) {
+        .as-login-nav {
+            width: 100%;
+            gap: 8px;
+        }
+
+        .as-user-toggle {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .as-user-dropdown {
+            min-width: 100%;
+            width: 100%;
+            margin-top: 8px;
+            box-shadow: none;
+        }
+
+        .as-auth-link {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+</style>
+
+@{
+    ApplicationUser? currentUser = null;
+
+    var displayName = "Account";
+    string? avatarUrl = null;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        currentUser = await UserManager.GetUserAsync(User);
+
+        if (currentUser != null)
+        {
+            displayName =
+                (!string.IsNullOrWhiteSpace(currentUser.DisplayName)
+                    ? currentUser.DisplayName
+                    : null)
+                ?? currentUser.UserName
+                ?? User.Identity?.Name
+                ?? "Account";
+
+            if (!string.IsNullOrWhiteSpace(currentUser.AvatarUrl))
+            {
+                avatarUrl = Url.Content(currentUser.AvatarUrl);
+            }
+        }
+    }
+
+    var initials = "A";
+
+    if (!string.IsNullOrWhiteSpace(displayName) && displayName != "Account")
+    {
+        var parts = displayName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        initials = parts.Length >= 2
+            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
+            : displayName.Substring(0, 1).ToUpper();
+    }
+}
+
+<ul class="navbar-nav as-login-nav ms-lg-2">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li class="nav-item dropdown as-user-nav-item">
+
+            <a class="nav-link dropdown-toggle as-user-toggle"
+               href="#"
+               id="userDropdown"
+               role="button"
+               data-bs-toggle="dropdown"
+               aria-expanded="false">
+
+                @if (!string.IsNullOrWhiteSpace(avatarUrl))
+                {
+                    <img src="@avatarUrl"
+                         alt="@displayName"
+                         class="as-user-avatar"
+                         loading="lazy" />
+                }
+                else
+                {
+                    <span class="as-user-initials">
+                        @initials
+                    </span>
+                }
+
+                <span class="as-user-name">
+                    @displayName
+                </span>
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-end as-user-dropdown"
+                aria-labelledby="userDropdown">
+
+                <li class="as-user-header">
+                    <div class="as-user-header-avatar">
+
+                        @if (!string.IsNullOrWhiteSpace(avatarUrl))
+                        {
+                            <img src="@avatarUrl"
+                                 alt="@displayName"
+                                 loading="lazy" />
+                        }
+                        else
+                        {
+                            <span>@initials</span>
+                        }
+
+                    </div>
+
+                    <div class="as-user-header-content">
+                        <strong>@displayName</strong>
+                        <small>@(User.Identity?.Name ?? "Signed in")</small>
+                    </div>
+                </li>
+
+                <li>
+                    <hr class="dropdown-divider as-dd-divider" />
+                </li>
+
+                <li>
+                    <a class="dropdown-item"
+                       asp-area="Identity"
+                       asp-page="/Account/Manage/Index">
+
+                        <i class="fa-regular fa-id-card"></i>
+                        <span>My Profile</span>
+
+                    </a>
+                </li>
+
+                <li>
+                    <a class="dropdown-item"
+                       asp-area=""
+                       asp-controller="MyProducts"
+                       asp-action="Wishlist">
+
+                        <i class="fa-regular fa-heart"></i>
+                        <span>Wishlist</span>
+
+                    </a>
+                </li>
+
+                <li>
+                    <a class="dropdown-item"
+                       asp-area=""
+                       asp-controller="MyProducts"
+                       asp-action="Purchases">
+
+                        <i class="fa-solid fa-bag-shopping"></i>
+                        <span>Purchases</span>
+
+                    </a>
+                </li>
+
+                <li>
+                    <a class="dropdown-item"
+                       asp-area=""
+                       asp-controller="Blog"
+                       asp-action="MyPosts">
+
+                        <i class="fa-regular fa-pen-to-square"></i>
+                        <span>My Posts</span>
+
+                    </a>
+                </li>
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <li>
+                        <hr class="dropdown-divider as-dd-divider" />
+                    </li>
+
+                    <li class="dropdown-header as-dd-header">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Admin Tools</span>
+                    </li>
+
+                    <li>
+                        <a class="dropdown-item"
+                           asp-area="Admin"
+                           asp-controller="Dashboard"
+                           asp-action="Index">
+
+                            <i class="fa-solid fa-gauge-high"></i>
+                            <span>Dashboard</span>
+
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="dropdown-item"
+                           asp-area="Admin"
+                           asp-controller="Users"
+                           asp-action="Index">
+
+                            <i class="fa-solid fa-users"></i>
+                            <span>Manage Users</span>
+
+                        </a>
+                    </li>
+                }
+
+                <li>
+                    <hr class="dropdown-divider as-dd-divider" />
+                </li>
+
+                <li>
+                    <form asp-area="Identity"
+                          asp-page="/Account/Logout"
+                          asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
+                          method="post"
+                          class="m-0">
+
+                        <button type="submit"
+                                class="dropdown-item as-logout-btn">
+
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Logout</span>
+
+                        </button>
+
+                    </form>
+                </li>
+
+            </ul>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link as-auth-link as-register-link"
+               asp-area="Identity"
+               asp-page="/Account/Register">
+
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Register</span>
+
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link as-auth-link as-login-link"
+               asp-area="Identity"
+               asp-page="/Account/Login">
+
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Login</span>
+
+            </a>
+        </li>
+    }
+</ul>

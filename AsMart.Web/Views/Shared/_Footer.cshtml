@@ -1,0 +1,384 @@
+﻿<style>
+    .as-footer {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        background: radial-gradient(circle at 10% 10%, rgba(37,99,235,.12), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        border-top: 1px solid rgba(15,23,42,.08);
+        color: #475569;
+    }
+
+    .as-footer-inner {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 44px 18px 22px;
+    }
+
+    .as-footer-main {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+        gap: 30px;
+        padding: 26px;
+        border-radius: 30px;
+        background: rgba(255,255,255,.72);
+        border: 1px solid rgba(15,23,42,.08);
+        box-shadow: 0 24px 70px rgba(15,23,42,.08);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+    .as-footer-logo-row {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin-bottom: 16px;
+    }
+
+    .as-footer-logo {
+        width: 58px;
+        height: 58px;
+        border-radius: 20px;
+        background: rgba(37,99,235,.10);
+        border: 1px solid rgba(37,99,235,.16);
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .as-footer-name {
+        color: #0f172a;
+        font-size: 26px;
+        line-height: 1;
+        font-weight: 950;
+        letter-spacing: -.035em;
+    }
+
+    .as-footer-tag {
+        margin-top: 6px;
+        display: inline-flex;
+        width: fit-content;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(37,99,235,.08);
+        border: 1px solid rgba(37,99,235,.14);
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .as-footer-text {
+        max-width: 560px;
+        margin: 0;
+        color: #475569;
+        font-size: 15px;
+        line-height: 1.75;
+        font-weight: 650;
+    }
+
+    .as-footer-disclosure {
+        margin-top: 15px;
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255,247,237,.88);
+        border: 1px solid rgba(245,158,11,.24);
+        color: #92400e;
+        font-size: 13px;
+        line-height: 1.65;
+        font-weight: 700;
+    }
+
+        .as-footer-disclosure strong {
+            font-weight: 950;
+        }
+
+    .as-footer-badges {
+        margin-top: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+        .as-footer-badges span {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 11px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid rgba(15,23,42,.08);
+            color: #334155;
+            font-size: 12px;
+            font-weight: 900;
+            box-shadow: 0 8px 18px rgba(15,23,42,.04);
+        }
+
+        .as-footer-badges i {
+            color: #2563eb;
+        }
+
+    .as-footer-links {
+        display: grid;
+        grid-template-columns: .8fr .8fr 1.2fr;
+        gap: 20px;
+    }
+
+    .as-footer h6 {
+        margin: 0 0 13px;
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 950;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .as-footer ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+        .as-footer ul li {
+            margin-bottom: 9px;
+        }
+
+    .as-footer a {
+        color: #475569;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 750;
+    }
+
+        .as-footer a:hover {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+    .as-footer-email {
+        width: fit-content;
+        max-width: 100%;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 11px;
+        border-radius: 999px;
+        background: rgba(37,99,235,.07);
+        border: 1px solid rgba(37,99,235,.14);
+        color: #1d4ed8 !important;
+        font-size: 13px !important;
+        font-weight: 900 !important;
+    }
+
+    .as-footer-search {
+        margin-top: 13px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+        .as-footer-search input {
+            flex: 1;
+            min-width: 0;
+            height: 44px;
+            border-radius: 999px;
+            border: 1px solid rgba(15,23,42,.12);
+            background: #fff;
+            color: #0f172a;
+            padding: 0 15px;
+            outline: none;
+            font-size: 14px;
+            font-weight: 750;
+        }
+
+            .as-footer-search input:focus {
+                border-color: rgba(37,99,235,.45);
+                box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
+            }
+
+        .as-footer-search button {
+            width: 46px;
+            height: 44px;
+            border: 0;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 14px 28px rgba(37,99,235,.22);
+        }
+
+    .as-footer-social {
+        margin-top: 13px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+        .as-footer-social a {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 11px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid rgba(15,23,42,.08);
+            color: #334155;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+    .as-footer-bottom {
+        margin-top: 16px;
+        padding: 0 4px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    @@media (max-width: 991.98px) {
+        .as-footer-main {
+            grid-template-columns: 1fr;
+            padding: 22px;
+            border-radius: 26px;
+        }
+
+        .as-footer-links {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .as-footer-support {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .as-footer-inner {
+            padding: 30px 12px 18px;
+        }
+
+        .as-footer-main {
+            padding: 18px;
+            border-radius: 22px;
+        }
+
+        .as-footer-links {
+            grid-template-columns: 1fr;
+        }
+
+        .as-footer-search {
+            flex-direction: column;
+        }
+
+            .as-footer-search input,
+            .as-footer-search button {
+                width: 100%;
+            }
+
+        .as-footer-social a,
+        .as-footer-badges span {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .as-footer-bottom {
+            text-align: center;
+            justify-content: center;
+        }
+    }
+</style>
+
+<footer class="as-footer">
+    <div class="as-footer-inner container-fluid">
+
+        <div class="as-footer-main">
+            <div class="as-footer-brand">
+                <div class="as-footer-logo-row">
+                    <div class="as-footer-logo">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                    </div>
+
+                    <div>
+                        <div class="as-footer-name">As-Mart</div>
+                        <div class="as-footer-tag">Amazon Affiliate Store</div>
+                    </div>
+                </div>
+
+                <p class="as-footer-text">
+                    Curated product guides, smart comparisons, and organized shopping pages for electronics, kids products, home essentials, and everyday deals.
+                </p>
+
+                <div class="as-footer-disclosure">
+                    <strong>Affiliate disclosure:</strong>
+                    As an Amazon Associate, As-Mart may earn from qualifying purchases at no extra cost to you.
+                </div>
+
+                <div class="as-footer-badges">
+                    <span><i class="fa-solid fa-bolt"></i> SEO-first</span>
+                    <span><i class="fa-solid fa-shield-heart"></i> Trusted</span>
+                    <span><i class="fa-solid fa-gauge-high"></i> Fast</span>
+                </div>
+            </div>
+
+            <div class="as-footer-links">
+                <div class="as-footer-col">
+                    <h6>Explore</h6>
+                    <ul>
+                        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li><a asp-controller="Catalog" asp-action="Index">Shop</a></li>
+                        <li><a asp-controller="Blog" asp-action="Index">Blog</a></li>
+                        <li><a asp-controller="Collections" asp-action="Index">Collections</a></li>
+                        <li><a asp-controller="Home" asp-action="About">About</a></li>
+                        <li><a asp-controller="Home" asp-action="Privacy">Privacy</a></li>
+                    </ul>
+                </div>
+
+                <div class="as-footer-col">
+                    <h6>Quick</h6>
+                    <ul>
+                        <li><a href="/sitemap.xml">Sitemap</a></li>
+                        <li><a href="/robots.txt">Robots</a></li>
+                        <li><a href="/guides">Guides</a></li>
+                        <li><a asp-controller="Catalog" asp-action="Search">Search</a></li>
+                    </ul>
+                </div>
+
+                <div class="as-footer-support">
+                    <h6>Support</h6>
+
+                    <a class="as-footer-email" href="mailto:support@as-mart.com">
+                        <i class="fa-solid fa-envelope"></i>
+                        support@as-mart.com
+                    </a>
+
+                    <form asp-controller="Catalog" asp-action="Search" method="get" class="as-footer-search">
+                        <input type="search"
+                               name="q"
+                               placeholder="Search products..."
+                               autocomplete="off" />
+
+                        <button type="submit" aria-label="Search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </form>
+
+                    <div class="as-footer-social">
+                        <a href="#"><i class="fa-brands fa-facebook-f"></i> Facebook</a>
+                        <a href="#"><i class="fa-brands fa-instagram"></i> Instagram</a>
+                        <a href="#"><i class="fa-brands fa-youtube"></i> YouTube</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="as-footer-bottom">
+            <div>© @DateTime.Now.Year As-Mart. All rights reserved.</div>
+            <div>SEO-first • Fast • Trusted buying guides</div>
+        </div>
+
+    </div>
+</footer>

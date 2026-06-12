@@ -1,0 +1,564 @@
+﻿@model AsMart.Web.Models.ViewModels.Marketing.MarketingAnalyticsViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="ma-page">
+    <div class="ma-hero">
+        <div>
+            <span class="ma-kicker">
+                <i class="fa-solid fa-chart-line"></i>
+                Marketing Analytics
+            </span>
+            <h1>Social Marketing Performance</h1>
+            <p>Track campaign completion, target performance, queue status, and Facebook posting workflow health.</p>
+        </div>
+
+        <div class="ma-actions">
+            <a asp-area="Admin" asp-controller="MarketingQueue" asp-action="Index" class="btn btn-light">
+                <i class="fa-solid fa-list-check"></i>
+                Queue
+            </a>
+            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Create" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i>
+                New Campaign
+            </a>
+        </div>
+    </div>
+
+    <div class="ma-stats">
+        <div class="ma-stat primary">
+            <span>Total Campaigns</span>
+            <strong>@Model.TotalCampaigns</strong>
+        </div>
+        <div class="ma-stat info">
+            <span>Total Queue</span>
+            <strong>@Model.TotalQueueItems</strong>
+        </div>
+        <div class="ma-stat success">
+            <span>Posted</span>
+            <strong>@Model.PostedItems</strong>
+        </div>
+        <div class="ma-stat danger">
+            <span>Failed</span>
+            <strong>@Model.FailedItems</strong>
+        </div>
+        <div class="ma-stat warning">
+            <span>Scheduled</span>
+            <strong>@Model.ScheduledItems</strong>
+        </div>
+        <div class="ma-stat purple">
+            <span>Success Rate</span>
+            <strong>@Model.SuccessRate%</strong>
+        </div>
+    </div>
+
+    <div class="ma-mini-stats">
+        <div>
+            <span>Posts Today</span>
+            <strong>@Model.PostsToday</strong>
+        </div>
+        <div>
+            <span>Last 7 Days</span>
+            <strong>@Model.PostsLast7Days</strong>
+        </div>
+        <div>
+            <span>Last 30 Days</span>
+            <strong>@Model.PostsLast30Days</strong>
+        </div>
+        <div>
+            <span>Failure Rate</span>
+            <strong>@Model.FailureRate%</strong>
+        </div>
+    </div>
+
+    <div class="ma-grid">
+        <section class="ma-card">
+            <div class="ma-card-head">
+                <div>
+                    <h2>Campaign Performance</h2>
+                    <p>Top recent campaigns with queue, posted, failed, and success rate metrics.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table ma-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Campaign</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Posted</th>
+                            <th>Failed</th>
+                            <th>Scheduled</th>
+                            <th>Success</th>
+                            <th class="text-end">Open</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.CampaignPerformance.Any())
+                        {
+                            foreach (var item in Model.CampaignPerformance)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@item.CampaignTitle</td>
+                                    <td><span class="status-pill status-@item.CampaignStatus.ToString().ToLower()">@item.CampaignStatus</span></td>
+                                    <td>@item.TotalQueueItems</td>
+                                    <td class="text-success fw-bold">@item.PostedItems</td>
+                                    <td class="text-danger fw-bold">@item.FailedItems</td>
+                                    <td class="text-primary fw-bold">@item.ScheduledItems</td>
+                                    <td>@item.SuccessRate%</td>
+                                    <td class="text-end">
+                                        <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Details" asp-route-id="@item.CampaignId" class="btn btn-sm btn-outline-primary rounded-pill">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="8" class="empty-cell">No campaign performance data yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="ma-card">
+            <div class="ma-card-head">
+                <div>
+                    <h2>Target Performance</h2>
+                    <p>Facebook groups/pages ranked by posting activity and completion.</p>
+                </div>
+            </div>
+
+            <div class="target-list">
+                @if (Model.TargetPerformance.Any())
+                {
+                    foreach (var item in Model.TargetPerformance)
+                    {
+                        <div class="target-row">
+                            <div class="target-icon">
+                                <i class="fa-brands fa-facebook-f"></i>
+                            </div>
+                            <div class="target-info">
+                                <strong>@item.TargetName</strong>
+                                <span>@item.TargetType • Success @item.SuccessRate%</span>
+                                <small>Last posted: @(item.LastPostedAt?.ToString("dd MMM yyyy hh:mm tt") ?? "-")</small>
+                            </div>
+                            <div class="target-counts">
+                                <span>Total @item.TotalQueueItems</span>
+                                <span class="text-success">Posted @item.PostedItems</span>
+                                <span class="text-danger">Failed @item.FailedItems</span>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-cell">No target performance data yet.</div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <section class="ma-card">
+        <div class="ma-card-head">
+            <div>
+                <h2>Last 30 Days Queue Activity</h2>
+                <p>Daily count of posted, failed, and scheduled queue items.</p>
+            </div>
+        </div>
+
+        <div class="daily-grid">
+            @if (Model.DailyPostingStats.Any())
+            {
+                foreach (var day in Model.DailyPostingStats)
+                {
+                    <div class="daily-item">
+                        <strong>@day.Date.ToString("dd MMM")</strong>
+                        <span class="text-success">Posted: @day.PostedItems</span>
+                        <span class="text-danger">Failed: @day.FailedItems</span>
+                        <span class="text-primary">Scheduled: @day.ScheduledItems</span>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-cell">No daily posting activity yet.</div>
+            }
+        </div>
+    </section>
+</div>
+
+@section Styles {
+    <style>
+        .ma-page {
+            padding: 18px 0 42px;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .ma-hero {
+            border-radius: 30px;
+            padding: 30px;
+            margin-bottom: 18px;
+            background: radial-gradient(circle at top left, rgba(37,99,235,.20), transparent 38%), radial-gradient(circle at top right, rgba(16,185,129,.14), transparent 34%), linear-gradient(135deg, rgba(255,255,255,.96), rgba(239,246,255,.92));
+            border: 1px solid rgba(15,23,42,.10);
+            box-shadow: 0 24px 60px rgba(2,6,23,.10);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .ma-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #2563eb;
+            background: rgba(37,99,235,.10);
+            border: 1px solid rgba(37,99,235,.14);
+            border-radius: 999px;
+            padding: 8px 13px;
+            font-weight: 900;
+            font-size: 13px;
+            margin-bottom: 14px;
+        }
+
+        .ma-hero h1 {
+            font-size: clamp(28px, 4vw, 44px);
+            line-height: 1;
+            font-weight: 950;
+            color: #0f172a;
+            margin: 0 0 10px;
+            letter-spacing: -.04em;
+        }
+
+        .ma-hero p {
+            margin: 0;
+            max-width: 780px;
+            color: #64748b;
+            font-weight: 650;
+            font-size: 16px;
+        }
+
+        .ma-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+            .ma-actions .btn {
+                border-radius: 999px;
+                font-weight: 900;
+                padding: 11px 18px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+            }
+
+        .ma-stats {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .ma-stat {
+            border-radius: 22px;
+            background: rgba(255,255,255,.90);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 14px 30px rgba(2,6,23,.06);
+            padding: 16px;
+        }
+
+            .ma-stat span,
+            .ma-mini-stats span {
+                display: block;
+                color: #64748b;
+                font-size: 13px;
+                font-weight: 850;
+            }
+
+            .ma-stat strong,
+            .ma-mini-stats strong {
+                display: block;
+                color: #0f172a;
+                font-size: 28px;
+                font-weight: 950;
+                line-height: 1;
+                margin-top: 6px;
+            }
+
+            .ma-stat.primary {
+                border-color: rgba(37,99,235,.18);
+            }
+
+            .ma-stat.info {
+                border-color: rgba(8,145,178,.18);
+            }
+
+            .ma-stat.success {
+                border-color: rgba(16,185,129,.18);
+            }
+
+            .ma-stat.danger {
+                border-color: rgba(239,68,68,.18);
+            }
+
+            .ma-stat.warning {
+                border-color: rgba(245,158,11,.18);
+            }
+
+            .ma-stat.purple {
+                border-color: rgba(124,58,237,.18);
+            }
+
+        .ma-mini-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+            .ma-mini-stats div {
+                border-radius: 18px;
+                background: rgba(255,255,255,.84);
+                border: 1px solid rgba(15,23,42,.08);
+                padding: 14px;
+                text-align: center;
+            }
+
+        .ma-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(340px, .7fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .ma-card {
+            border-radius: 26px;
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 18px 44px rgba(2,6,23,.08);
+            padding: 18px;
+            overflow: hidden;
+        }
+
+        .ma-card-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .ma-card h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #0f172a;
+            font-weight: 950;
+        }
+
+        .ma-card p {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-weight: 650;
+        }
+
+        .ma-table {
+            min-width: 820px;
+            margin: 0;
+        }
+
+            .ma-table thead th {
+                color: #475569;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: .06em;
+                border-bottom: 1px solid rgba(15,23,42,.10);
+                background: rgba(248,250,252,.86);
+                font-weight: 950;
+                white-space: nowrap;
+            }
+
+            .ma-table td {
+                color: #334155;
+                font-weight: 650;
+                border-bottom: 1px solid rgba(15,23,42,.07);
+                vertical-align: middle;
+            }
+
+        .status-pill {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 950;
+            background: rgba(100,116,139,.12);
+            color: #475569;
+        }
+
+        .status-posted,
+        .status-completed,
+        .status-ready {
+            background: rgba(16,185,129,.12);
+            color: #047857;
+        }
+
+        .status-failed {
+            background: rgba(239,68,68,.12);
+            color: #dc2626;
+        }
+
+        .status-scheduled,
+        .status-running {
+            background: rgba(37,99,235,.12);
+            color: #1d4ed8;
+        }
+
+        .status-draft,
+        .status-pending {
+            background: rgba(245,158,11,.14);
+            color: #b45309;
+        }
+
+        .target-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .target-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 13px;
+            border-radius: 18px;
+            background: rgba(248,250,252,.88);
+            border: 1px solid rgba(15,23,42,.08);
+        }
+
+        .target-icon {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #1877f2, #60a5fa);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .target-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+            .target-info strong,
+            .target-info span,
+            .target-info small {
+                display: block;
+            }
+
+            .target-info strong {
+                color: #0f172a;
+                font-weight: 950;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .target-info span,
+            .target-info small {
+                color: #64748b;
+                font-size: 12px;
+                font-weight: 800;
+            }
+
+        .target-counts {
+            text-align: right;
+            font-size: 12px;
+            font-weight: 850;
+            color: #64748b;
+            display: grid;
+            gap: 1px;
+        }
+
+        .daily-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .daily-item {
+            border-radius: 18px;
+            background: rgba(248,250,252,.86);
+            border: 1px solid rgba(15,23,42,.08);
+            padding: 12px;
+        }
+
+            .daily-item strong,
+            .daily-item span {
+                display: block;
+            }
+
+            .daily-item strong {
+                color: #0f172a;
+                font-weight: 950;
+                margin-bottom: 5px;
+            }
+
+            .daily-item span {
+                font-size: 12px;
+                font-weight: 850;
+            }
+
+        .empty-cell {
+            text-align: center;
+            color: #64748b;
+            font-weight: 850;
+            padding: 28px;
+            background: rgba(248,250,252,.75);
+            border-radius: 18px;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .ma-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .ma-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .daily-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .ma-hero {
+                padding: 22px;
+                border-radius: 24px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .ma-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .ma-stats,
+            .ma-mini-stats,
+            .daily-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}

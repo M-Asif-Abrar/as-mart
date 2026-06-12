@@ -1,0 +1,310 @@
+﻿@model AsMart.Web.Models.DTOs.ParentCategoryFormDto
+
+<style>
+    .modern-form-wrap {
+        width: 100%;
+    }
+
+    .modern-form-card {
+        border-radius: 30px;
+        background: rgba(255,255,255,.96);
+        border: 1px solid rgba(15,23,42,.08);
+        box-shadow: 0 18px 45px rgba(15,23,42,.08);
+        padding: 1.5rem;
+        overflow: hidden;
+    }
+
+    .modern-form-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.8rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid rgba(15,23,42,.08);
+    }
+
+    .modern-form-icon {
+        width: 68px;
+        height: 68px;
+        border-radius: 22px;
+        background: linear-gradient(135deg,#2563eb,#3b82f6);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex: 0 0 auto;
+        box-shadow: 0 12px 30px rgba(37,99,235,.22);
+    }
+
+    .modern-form-title {
+        color: #0f172a;
+        font-size: 1.3rem;
+        font-weight: 900;
+        margin-bottom: .35rem;
+    }
+
+    .modern-form-subtitle {
+        color: #64748b;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .modern-label {
+        color: #0f172a;
+        font-weight: 800;
+        margin-bottom: .65rem;
+        display: block;
+    }
+
+    .modern-input-wrap {
+        display: flex;
+        align-items: stretch;
+        border-radius: 18px;
+        border: 1px solid rgba(15,23,42,.12);
+        overflow: hidden;
+        background: #fff;
+        transition: .2s ease;
+    }
+
+        .modern-input-wrap:focus-within,
+        .modern-textarea-wrap:focus-within {
+            border-color: rgba(37,99,235,.45);
+            box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
+        }
+
+    .modern-input-icon {
+        width: 58px;
+        min-width: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        border-right: 1px solid rgba(15,23,42,.08);
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .modern-control {
+        border: 0 !important;
+        box-shadow: none !important;
+        min-height: 54px;
+        font-size: .96rem;
+        padding: .9rem 1rem;
+        background: transparent;
+    }
+
+    .modern-textarea-wrap {
+        border-radius: 18px;
+        border: 1px solid rgba(15,23,42,.12);
+        overflow: hidden;
+        background: #fff;
+        transition: .2s ease;
+    }
+
+    .modern-textarea {
+        resize: vertical;
+        min-height: 140px;
+    }
+
+    .modern-help-text {
+        margin-top: .55rem;
+        color: #64748b;
+        font-size: .84rem;
+    }
+
+    .modern-switch-card {
+        border-radius: 22px;
+        border: 1px solid rgba(15,23,42,.08);
+        background: #f8fafc;
+        padding: 1rem;
+        min-height: 100%;
+    }
+
+    .modern-switch-wrap {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin: 0;
+    }
+
+    .modern-switch {
+        width: 3rem !important;
+        height: 1.5rem !important;
+        margin-top: 0;
+    }
+
+    .modern-switch-label {
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .modern-switch-help {
+        margin-top: .6rem;
+        color: #64748b;
+        font-size: .84rem;
+        line-height: 1.5;
+    }
+
+    @@media (max-width: 767.98px) {
+
+        .modern-form-card {
+            border-radius: 24px;
+            padding: 1.15rem;
+        }
+
+        .modern-form-header {
+            flex-direction: column;
+        }
+
+        .modern-form-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 18px;
+        }
+    }
+</style>
+
+<div class="modern-form-wrap">
+
+    <div class="modern-form-card">
+
+        <div class="modern-form-header">
+
+            <div class="modern-form-icon">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+
+            <div>
+                <h3 class="modern-form-title">
+                    Parent Category Information
+                </h3>
+
+                <p class="modern-form-subtitle">
+                    Configure category structure, SEO slug,
+                    sorting order, and visibility settings.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-12">
+
+                <label asp-for="Name" class="modern-label"></label>
+
+                <div class="modern-input-wrap">
+
+                    <span class="modern-input-icon">
+                        <i class="fa-solid fa-folder-tree"></i>
+                    </span>
+
+                    <input asp-for="Name"
+                           class="form-control modern-control"
+                           placeholder="Enter parent category name" />
+
+                </div>
+
+                <span asp-validation-for="Name"
+                      class="text-danger small mt-1 d-block"></span>
+
+            </div>
+
+            <div class="col-12">
+
+                <label asp-for="Slug" class="modern-label"></label>
+
+                <div class="modern-input-wrap">
+
+                    <span class="modern-input-icon">
+                        <i class="fa-solid fa-link"></i>
+                    </span>
+
+                    <input asp-for="Slug"
+                           class="form-control modern-control"
+                           placeholder="example-category-slug" />
+
+                </div>
+
+                <div class="modern-help-text">
+                    Leave empty to auto-generate from category name.
+                </div>
+
+                <span asp-validation-for="Slug"
+                      class="text-danger small mt-1 d-block"></span>
+
+            </div>
+
+            <div class="col-12">
+
+                <label asp-for="Description" class="modern-label"></label>
+
+                <div class="modern-textarea-wrap">
+
+                    <textarea asp-for="Description"
+                              class="form-control modern-control modern-textarea"
+                              rows="5"
+                              placeholder="Write a short description about this category..."></textarea>
+
+                </div>
+
+                <span asp-validation-for="Description"
+                      class="text-danger small mt-1 d-block"></span>
+
+            </div>
+
+            <div class="col-12 col-md-6">
+
+                <label asp-for="DisplayOrder" class="modern-label"></label>
+
+                <div class="modern-input-wrap">
+
+                    <span class="modern-input-icon">
+                        <i class="fa-solid fa-arrow-down-1-9"></i>
+                    </span>
+
+                    <input asp-for="DisplayOrder"
+                           class="form-control modern-control"
+                           placeholder="0" />
+
+                </div>
+
+                <span asp-validation-for="DisplayOrder"
+                      class="text-danger small mt-1 d-block"></span>
+
+            </div>
+
+            <div class="col-12 col-md-6">
+
+                <label class="modern-label d-block">
+                    Category Status
+                </label>
+
+                <div class="modern-switch-card">
+
+                    <div class="form-check form-switch modern-switch-wrap">
+
+                        <input asp-for="IsActive"
+                               class="form-check-input modern-switch" />
+
+                        <label asp-for="IsActive"
+                               class="form-check-label modern-switch-label">
+                            Active Category
+                        </label>
+
+                    </div>
+
+                    <div class="modern-switch-help">
+                        Enable this category to make it visible across the storefront.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

@@ -1,0 +1,366 @@
+﻿@model IEnumerable<AsMart.Web.Models.Entities.Marketing.MarketingCampaign>
+@using AsMart.Web.Models.Entities.Marketing
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+<div class="mc-page">
+    <div class="mc-hero">
+        <div>
+            <span class="mc-kicker">
+                <i class="fa-solid fa-bullhorn"></i>
+                Social Campaigns
+            </span>
+            <h1>Marketing Campaigns</h1>
+            <p>Create, schedule, and track As-Mart blog/product promotions for Facebook groups and pages.</p>
+        </div>
+
+        <div class="mc-actions">
+            <a asp-area="Admin" asp-controller="MarketingDashboard" asp-action="Index" class="btn btn-light">
+                <i class="fa-solid fa-chart-line"></i>
+                Dashboard
+            </a>
+            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Create" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i>
+                New Campaign
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success rounded-4 fw-bold">
+            <i class="fa-solid fa-circle-check me-1"></i>
+            @TempData["Success"]
+        </div>
+    }
+
+    <div class="mc-card">
+        <div class="mc-card-head">
+            <div>
+                <h2>All Campaigns</h2>
+                <p>Campaigns generated from products, blog posts, or custom social content.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table mc-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>Queue</th>
+                        <th>Posted</th>
+                        <th>Failed</th>
+                        <th>Scheduled Start</th>
+                        <th>Created</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            var totalQueue = item.PostingQueueItems?.Count ?? 0;
+                            var posted = item.PostingQueueItems?.Count(x => x.Status == MarketingQueueStatus.Posted) ?? 0;
+                            var failed = item.PostingQueueItems?.Count(x => x.Status == MarketingQueueStatus.Failed) ?? 0;
+
+                            <tr>
+                                <td>
+                                    <div class="campaign-main">
+                                        @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                        {
+                                            <img src="@item.ImageUrl" alt="@item.Title" />
+                                        }
+                                        else
+                                        {
+                                            <div class="campaign-placeholder">
+                                                <i class="fa-solid fa-bullhorn"></i>
+                                            </div>
+                                        }
+
+                                        <div>
+                                            <strong>@item.Title</strong>
+                                            <span>@item.Slug</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge-soft">@item.SourceType</span>
+                                </td>
+                                <td>
+                                    <span class="status-pill status-@item.Status.ToString().ToLower()">@item.Status</span>
+                                </td>
+                                <td>@totalQueue</td>
+                                <td class="text-success fw-bold">@posted</td>
+                                <td class="text-danger fw-bold">@failed</td>
+                                <td>@(item.ScheduledStartAt?.ToString("dd MMM yyyy hh:mm tt") ?? "-")</td>
+                                <td>@item.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td class="text-end">
+                                    <div class="campaign-row-actions">
+                                        <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary action-btn">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+
+                                        <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning action-btn">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+
+                                        <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger action-btn">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="empty-cell">
+                                No marketing campaigns created yet.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .campaign-row-actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 7px;
+            flex-wrap: nowrap;
+        }
+
+        .mc-page {
+            padding: 18px 0 42px;
+            font-family: Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+        }
+
+        .mc-hero {
+            border-radius: 30px;
+            padding: 30px;
+            margin-bottom: 18px;
+            background: radial-gradient(circle at top left,rgba(37,99,235,.20),transparent 38%),radial-gradient(circle at top right,rgba(168,85,247,.16),transparent 34%),linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,246,255,.92));
+            border: 1px solid rgba(15,23,42,.10);
+            box-shadow: 0 24px 60px rgba(2,6,23,.10);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px
+        }
+
+        .mc-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #2563eb;
+            background: rgba(37,99,235,.10);
+            border: 1px solid rgba(37,99,235,.14);
+            border-radius: 999px;
+            padding: 8px 13px;
+            font-weight: 900;
+            font-size: 13px;
+            margin-bottom: 14px
+        }
+
+        .mc-hero h1 {
+            font-size: clamp(28px,4vw,44px);
+            line-height: 1;
+            font-weight: 950;
+            color: #0f172a;
+            margin: 0 0 10px;
+            letter-spacing: -.04em
+        }
+
+        .mc-hero p {
+            margin: 0;
+            max-width: 760px;
+            color: #64748b;
+            font-weight: 650;
+            font-size: 16px
+        }
+
+        .mc-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end
+        }
+
+            .mc-actions .btn {
+                border-radius: 999px;
+                font-weight: 900;
+                padding: 11px 18px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap
+            }
+
+        .mc-card {
+            border-radius: 26px;
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 18px 44px rgba(2,6,23,.08);
+            padding: 18px;
+            overflow: hidden
+        }
+
+        .mc-card-head {
+            margin-bottom: 14px
+        }
+
+        .mc-card h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #0f172a;
+            font-weight: 950
+        }
+
+        .mc-card p {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-weight: 650
+        }
+
+        .mc-table {
+            min-width: 1080px;
+            margin: 0
+        }
+
+            .mc-table thead th {
+                color: #475569;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: .06em;
+                border-bottom: 1px solid rgba(15,23,42,.10);
+                background: rgba(248,250,252,.86);
+                font-weight: 950;
+                white-space: nowrap
+            }
+
+            .mc-table td {
+                color: #334155;
+                font-weight: 650;
+                border-bottom: 1px solid rgba(15,23,42,.07);
+                vertical-align: middle
+            }
+
+        .campaign-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px
+        }
+
+            .campaign-main img, .campaign-placeholder {
+                width: 58px;
+                height: 58px;
+                min-width: 58px;
+                border-radius: 18px;
+                object-fit: cover;
+                background: linear-gradient(135deg,#2563eb,#60a5fa);
+                color: #fff;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px
+            }
+
+            .campaign-main strong {
+                display: block;
+                color: #0f172a;
+                font-weight: 950
+            }
+
+            .campaign-main span {
+                display: block;
+                color: #64748b;
+                font-size: 12px;
+                font-weight: 800
+            }
+
+        .badge-soft {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 6px 10px;
+            background: rgba(37,99,235,.09);
+            color: #1d4ed8;
+            font-weight: 850;
+            font-size: 12px;
+            white-space: nowrap
+        }
+
+        .status-pill {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 950;
+            background: rgba(100,116,139,.12);
+            color: #475569
+        }
+
+        .status-posted, .status-completed, .status-ready {
+            background: rgba(16,185,129,.12);
+            color: #047857
+        }
+
+        .status-failed {
+            background: rgba(239,68,68,.12);
+            color: #dc2626
+        }
+
+        .status-scheduled, .status-running {
+            background: rgba(37,99,235,.12);
+            color: #1d4ed8
+        }
+
+        .status-draft, .status-pending {
+            background: rgba(245,158,11,.14);
+            color: #b45309
+        }
+
+        .action-btn {
+            border-radius: 999px;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .empty-cell {
+            text-align: center;
+            color: #64748b;
+            font-weight: 850;
+            padding: 34px;
+            background: rgba(248,250,252,.75);
+            border-radius: 18px
+        }
+
+        @@media(max-width:767.98px) {
+            .mc-hero {
+                padding: 22px;
+                border-radius: 24px;
+                flex-direction: column;
+                align-items: stretch
+            }
+
+            .mc-actions .btn {
+                width: 100%;
+                justify-content: center
+            }
+        }
+    </style>
+}

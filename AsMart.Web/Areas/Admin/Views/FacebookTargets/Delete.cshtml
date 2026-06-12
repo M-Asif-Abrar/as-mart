@@ -1,0 +1,157 @@
+﻿@model AsMart.Web.Models.Entities.Marketing.SocialTarget
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="delete-page">
+    <div class="delete-card">
+        <div class="delete-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+
+        <h1>Delete Facebook Target?</h1>
+        <p>
+            You are about to delete <strong>@Model.Name</strong>. If this target has queue history, the controller will deactivate it instead.
+        </p>
+
+        <div class="delete-info">
+            <div>
+                <span>Type</span>
+                <strong>@Model.TargetType</strong>
+            </div>
+            <div>
+                <span>Account</span>
+                <strong>@(Model.SocialAccount?.DisplayName ?? "-")</strong>
+            </div>
+            <div>
+                <span>Status</span>
+                <strong>@(Model.IsActive ? "Active" : "Inactive")</strong>
+            </div>
+        </div>
+
+        <form asp-area="Admin" asp-controller="FacebookTargets" asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="delete-actions">
+                <a asp-area="Admin" asp-controller="FacebookTargets" asp-action="Index" class="btn btn-light">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fa-solid fa-trash"></i>
+                    Delete / Deactivate
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .delete-page {
+            min-height: 70vh;
+            display: grid;
+            place-items: center;
+            padding: 26px 0;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .delete-card {
+            width: min(760px, 100%);
+            border-radius: 30px;
+            background: radial-gradient(circle at top left, rgba(239,68,68,.16), transparent 38%), rgba(255,255,255,.94);
+            border: 1px solid rgba(239,68,68,.16);
+            box-shadow: 0 24px 60px rgba(2,6,23,.12);
+            padding: 32px;
+            text-align: center;
+        }
+
+        .delete-icon {
+            width: 74px;
+            height: 74px;
+            margin: 0 auto 16px;
+            border-radius: 24px;
+            background: rgba(239,68,68,.12);
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .delete-card h1 {
+            font-size: clamp(26px, 4vw, 40px);
+            font-weight: 950;
+            color: #0f172a;
+            margin: 0 0 10px;
+            letter-spacing: -.04em;
+        }
+
+        .delete-card p {
+            color: #64748b;
+            font-weight: 650;
+            max-width: 600px;
+            margin: 0 auto 18px;
+        }
+
+        .delete-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 22px 0;
+        }
+
+            .delete-info div {
+                border-radius: 18px;
+                background: rgba(248,250,252,.86);
+                border: 1px solid rgba(15,23,42,.08);
+                padding: 14px;
+            }
+
+            .delete-info span {
+                display: block;
+                color: #64748b;
+                font-size: 12px;
+                font-weight: 900;
+            }
+
+            .delete-info strong {
+                display: block;
+                color: #0f172a;
+                font-weight: 950;
+                margin-top: 4px;
+            }
+
+        .delete-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+            .delete-actions .btn {
+                border-radius: 999px;
+                font-weight: 900;
+                padding: 11px 18px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+        @@media (max-width: 767.98px) {
+            .delete-card {
+                padding: 24px;
+                border-radius: 24px;
+            }
+
+            .delete-info {
+                grid-template-columns: 1fr;
+            }
+
+            .delete-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+}

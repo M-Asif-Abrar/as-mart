@@ -1,0 +1,193 @@
+﻿@model List<AsMart.Web.Models.ViewModels.CollectionProductItem>
+
+<style>
+    .cp-empty {
+        border-radius: 18px;
+        border: 1px dashed rgba(15,23,42,.14);
+        background: #f8fafc;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        color: #64748b;
+    }
+
+    .cp-empty-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: #fff;
+        color: #94a3b8;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+
+    .cp-empty-title {
+        font-weight: 900;
+        color: #0f172a;
+    }
+
+    .cp-empty-text {
+        font-size: .88rem;
+    }
+
+    .cp-list {
+        display: grid;
+        gap: .75rem;
+    }
+
+    .cp-item {
+        border-radius: 18px;
+        border: 1px solid rgba(15,23,42,.08);
+        background: #fff;
+        padding: .85rem;
+        display: grid;
+        grid-template-columns: auto auto minmax(0,1fr) auto;
+        align-items: center;
+        gap: .75rem;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+        .cp-item:hover {
+            border-color: rgba(37,99,235,.26);
+            background: rgba(37,99,235,.03);
+            transform: translateY(-1px);
+        }
+
+        .cp-item.is-selected {
+            border-color: rgba(22,101,52,.22);
+            background: rgba(22,101,52,.04);
+        }
+
+    .cp-checkbox {
+        width: 1.05rem;
+        height: 1.05rem;
+        accent-color: #2563eb;
+    }
+
+    .cp-checkmark {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        background: #f1f5f9;
+        color: #94a3b8;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .cp-item.is-selected .cp-checkmark {
+        background: rgba(22,101,52,.1);
+        color: #16a34a;
+    }
+
+    .cp-content {
+        min-width: 0;
+        display: grid;
+        gap: .2rem;
+    }
+
+    .cp-title {
+        color: #0f172a;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+        .cp-title i {
+            color: #64748b;
+            margin-right: .45rem;
+        }
+
+    .cp-meta {
+        color: #64748b;
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .cp-badge {
+        border-radius: 999px;
+        padding: .42rem .72rem;
+        background: rgba(22,101,52,.08);
+        color: #166534;
+        border: 1px solid rgba(22,101,52,.18);
+        font-size: .76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    @@media (max-width: 575.98px) {
+        .cp-item {
+            grid-template-columns: auto minmax(0,1fr);
+        }
+
+        .cp-checkmark {
+            display: none;
+        }
+
+        .cp-badge {
+            grid-column: 2;
+            width: fit-content;
+        }
+    }
+</style>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="cp-empty">
+        <div class="cp-empty-icon">
+            <i class="fa-regular fa-circle-xmark"></i>
+        </div>
+
+        <div>
+            <div class="cp-empty-title">No Products Found</div>
+            <div class="cp-empty-text">No products match the selected categories or price range.</div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="cp-list">
+
+        @foreach (var p in Model)
+        {
+            <label class="cp-item @(p.IsSelected ? "is-selected" : "")" for="prod_@p.Id">
+
+                <input class="cp-checkbox"
+                       type="checkbox"
+                       name="SelectedProductIds"
+                       value="@p.Id"
+                       id="prod_@p.Id"
+                       @(p.IsSelected ? "checked" : null) />
+
+                <span class="cp-checkmark">
+                    <i class="fa-solid fa-check"></i>
+                </span>
+
+                <span class="cp-content">
+                    <span class="cp-title">
+                        <i class="fa-solid fa-box"></i>
+                        @p.Title
+                    </span>
+
+                    <span class="cp-meta">
+                        Product ID: @p.Id
+                    </span>
+                </span>
+
+                @if (p.IsSelected)
+                {
+                    <span class="cp-badge">
+                        Selected
+                    </span>
+                }
+
+            </label>
+        }
+
+    </div>
+}

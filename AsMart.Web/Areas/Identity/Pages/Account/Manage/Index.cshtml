@@ -1,0 +1,588 @@
+﻿@* /Areas/Identity/Pages/Account/Manage/Index.cshtml *@
+@page
+@model AsMart.Web.Areas.Identity.Pages.Account.Manage.IndexModel
+
+@{
+    ViewData["Title"] = "My Profile";
+    ViewData["ActivePage"] = ManageNavPages.Index;
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<div class="as-profile-card">
+    <div class="as-profile-hero">
+        <div class="as-avatar-wrap">
+            @if (!string.IsNullOrEmpty(Model.CurrentAvatarUrl))
+            {
+                <img src="@Model.CurrentAvatarUrl" class="as-avatar-img" alt="Profile picture" />
+            }
+            else
+            {
+                <div class="as-avatar-fallback">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+            }
+        </div>
+
+        <div class="as-profile-meta">
+            <div class="as-profile-kicker">
+                <i class="fa-solid fa-id-card"></i>
+                Profile Information
+            </div>
+
+            <h2 class="as-profile-name">@Model.Username</h2>
+            <div class="as-profile-email">@User.Identity?.Name</div>
+
+            <div class="as-profile-badges">
+                <span><i class="fa-solid fa-user-check"></i> Profile</span>
+                <span><i class="fa-solid fa-shield-halved"></i> Secure</span>
+                <span><i class="fa-solid fa-pen"></i> Editable</span>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="as-profile-form">
+        <div class="as-form-section">
+            <div class="as-section-heading">
+                <i class="fa-solid fa-user"></i>
+                <div>
+                    <h3>Personal Information</h3>
+                    <p>Update your basic account profile details.</p>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label asp-for="Input.FirstName" class="form-label as-label"></label>
+                    <input asp-for="Input.FirstName" class="form-control as-input" />
+                    <span asp-validation-for="Input.FirstName" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Input.LastName" class="form-label as-label"></label>
+                    <input asp-for="Input.LastName" class="form-control as-input" />
+                    <span asp-validation-for="Input.LastName" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Input.PhoneNumber" class="form-label as-label"></label>
+                    <input asp-for="Input.PhoneNumber" class="form-control as-input" />
+                    <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Input.Gender" class="form-label as-label"></label>
+                    <select asp-for="Input.Gender" class="form-select as-input">
+                        <option value="">Select</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
+                    </select>
+                    <span asp-validation-for="Input.Gender" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Input.DateOfBirth" class="form-label as-label"></label>
+                    <input asp-for="Input.DateOfBirth" class="form-control as-input" />
+                    <span asp-validation-for="Input.DateOfBirth" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="as-divider"></div>
+
+        <div class="as-form-section">
+            <div class="as-section-heading">
+                <i class="fa-solid fa-location-dot"></i>
+                <div>
+                    <h3>Address</h3>
+                    <p>Keep your address information updated.</p>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="Input.AddressLine1" class="form-label as-label"></label>
+                    <input asp-for="Input.AddressLine1" class="form-control as-input" />
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Input.AddressLine2" class="form-label as-label"></label>
+                    <input asp-for="Input.AddressLine2" class="form-control as-input" />
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="Input.City" class="form-label as-label"></label>
+                    <input asp-for="Input.City" class="form-control as-input" />
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="Input.StateOrProvince" class="form-label as-label"></label>
+                    <input asp-for="Input.StateOrProvince" class="form-control as-input" />
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label asp-for="Input.PostalCode" class="form-label as-label"></label>
+                    <input asp-for="Input.PostalCode" class="form-control as-input" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Input.Country" class="form-label as-label"></label>
+                    <input asp-for="Input.Country" class="form-control as-input" />
+                </div>
+            </div>
+        </div>
+
+        <div class="as-divider"></div>
+
+        <div class="as-form-section">
+            <div class="as-section-heading">
+                <i class="fa-solid fa-bell"></i>
+                <div>
+                    <h3>Preferences</h3>
+                    <p>Control account communication preferences.</p>
+                </div>
+            </div>
+
+            <label class="as-check-card">
+                <input asp-for="Input.IsMarketingOptIn" class="form-check-input" />
+                <span>
+                    <strong>Marketing updates</strong>
+                    <small>Receive product updates, offers, and important announcements.</small>
+                </span>
+            </label>
+        </div>
+
+        <div class="as-divider"></div>
+
+        <div class="as-form-section">
+            <div class="as-section-heading">
+                <i class="fa-solid fa-image"></i>
+                <div>
+                    <h3>Profile Picture</h3>
+                    <p>Upload a clear square image for best display.</p>
+                </div>
+            </div>
+
+            <input asp-for="Input.Avatar" type="file" class="form-control as-input" />
+        </div>
+
+        <div class="as-profile-actions">
+            <a class="btn btn-light border as-action-btn" href="/">
+                <i class="fa-solid fa-xmark"></i>
+                Cancel
+            </a>
+
+            <button type="submit" class="btn btn-primary as-action-btn">
+                <i class="fa-solid fa-save"></i>
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade as-delete-modal" id="asDeleteConfirmModal" tabindex="-1" aria-labelledby="asDeleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content as-delete-modal-content">
+            <div class="modal-header as-delete-modal-header">
+                <div>
+                    <div class="as-delete-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+                    <h5 class="modal-title as-delete-title" id="asDeleteConfirmModalLabel">Confirm Delete</h5>
+
+                    <p class="as-delete-text">
+                        This action cannot be undone. Please confirm before deleting.
+                    </p>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-footer as-delete-modal-footer">
+                <button type="button" class="btn btn-light as-action-btn" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-danger as-action-btn" id="asDeleteConfirmButton">
+                    <i class="fa-solid fa-trash"></i>
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .as-profile-card {
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, .08);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, .88);
+        box-shadow: 0 18px 50px rgba(15, 23, 42, .08);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .as-profile-hero {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 24px;
+        background: radial-gradient(620px 260px at 0% 0%, rgba(37, 99, 235, .13), transparent 60%), linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.86));
+        border-bottom: 1px solid rgba(15, 23, 42, .08);
+    }
+
+    .as-avatar-wrap {
+        flex: 0 0 auto;
+    }
+
+    .as-avatar-img,
+    .as-avatar-fallback {
+        display: grid;
+        width: 124px;
+        height: 124px;
+        place-items: center;
+        border: 4px solid #fff;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #64748b;
+        object-fit: cover;
+        font-size: 44px;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, .13);
+    }
+
+    .as-profile-meta {
+        min-width: 0;
+    }
+
+    .as-profile-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        margin-bottom: 10px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, .10);
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .as-profile-name {
+        margin: 0;
+        color: #0f172a;
+        font-size: clamp(24px, 3vw, 34px);
+        font-weight: 950;
+        letter-spacing: -.045em;
+        line-height: 1.08;
+    }
+
+    .as-profile-email {
+        max-width: 100%;
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .as-profile-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 13px;
+    }
+
+        .as-profile-badges span {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 11px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 999px;
+            background: #fff;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+    .as-profile-form {
+        padding: 24px;
+    }
+
+    .as-form-section {
+        margin-bottom: 18px;
+    }
+
+    .as-section-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+        .as-section-heading > i {
+            display: inline-grid;
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            place-items: center;
+            border-radius: 16px;
+            background: rgba(37, 99, 235, .10);
+            color: #2563eb;
+            font-size: 16px;
+        }
+
+        .as-section-heading h3 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 17px;
+            font-weight: 950;
+            letter-spacing: -.025em;
+        }
+
+        .as-section-heading p {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+    .as-label {
+        margin-bottom: 7px;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .as-input {
+        min-height: 46px;
+        border: 1px solid rgba(15, 23, 42, .13);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, .94);
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 750;
+        box-shadow: none;
+    }
+
+        .as-input:focus {
+            border-color: rgba(37, 99, 235, .68);
+            box-shadow: 0 0 0 .22rem rgba(37, 99, 235, .12);
+        }
+
+    .as-divider {
+        height: 1px;
+        margin: 22px 0;
+        background: linear-gradient(90deg, transparent, rgba(15,23,42,.16), transparent);
+    }
+
+    .as-check-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 15px;
+        border: 1px solid rgba(15, 23, 42, .09);
+        border-radius: 20px;
+        background: rgba(248, 250, 252, .82);
+        cursor: pointer;
+    }
+
+        .as-check-card input {
+            margin-top: 4px;
+        }
+
+        .as-check-card span {
+            display: grid;
+            gap: 3px;
+        }
+
+        .as-check-card strong {
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 950;
+        }
+
+        .as-check-card small {
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+    .as-profile-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding-top: 20px;
+        border-top: 1px solid rgba(15,23,42,.08);
+    }
+
+    .as-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: .62rem 1rem;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 850;
+    }
+
+    .as-delete-modal-content {
+        overflow: hidden;
+        border: 0;
+        border-radius: 26px;
+        box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
+    }
+
+    .as-delete-modal-header {
+        position: relative;
+        padding: 24px 24px 10px;
+        border-bottom: 0;
+        background: radial-gradient(520px 220px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
+    }
+
+    .as-delete-icon {
+        display: inline-grid;
+        width: 54px;
+        height: 54px;
+        place-items: center;
+        margin-bottom: 14px;
+        border-radius: 18px;
+        background: rgba(220, 38, 38, .10);
+        color: #dc2626;
+        font-size: 22px;
+    }
+
+    .as-delete-title {
+        color: #0f172a;
+        font-weight: 900;
+        letter-spacing: -.03em;
+    }
+
+    .as-delete-text {
+        max-width: 420px;
+        margin: 8px 0 0;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .as-delete-modal-footer {
+        gap: 10px;
+        padding: 18px 24px 24px;
+        border-top: 0;
+        background: #f8fafc;
+    }
+
+    @@media (max-width: 767.98px) {
+        .as-profile-hero {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .as-profile-badges {
+            justify-content: center;
+        }
+
+        .as-profile-form {
+            padding: 18px;
+        }
+
+        .as-profile-actions {
+            flex-direction: column-reverse;
+        }
+
+            .as-profile-actions .btn,
+            .as-delete-modal-footer .btn {
+                width: 100%;
+            }
+
+        .as-delete-modal-footer {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .as-avatar-img,
+        .as-avatar-fallback {
+            width: 104px;
+            height: 104px;
+            font-size: 38px;
+        }
+
+        .as-section-heading {
+            align-items: center;
+        }
+    }
+</style>
+
+<script>
+    (() => {
+        let pendingDeleteForm = null;
+        let pendingDeleteUrl = null;
+
+        const modalElement = document.getElementById('asDeleteConfirmModal');
+        const confirmButton = document.getElementById('asDeleteConfirmButton');
+
+        if (!modalElement || !confirmButton || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        const modal = new bootstrap.Modal(modalElement);
+
+        document.addEventListener('click', function (event) {
+            const deleteTrigger = event.target.closest('[data-delete-confirm="true"]');
+
+            if (!deleteTrigger) {
+                return;
+            }
+
+            event.preventDefault();
+
+            pendingDeleteForm = deleteTrigger.closest('form');
+            pendingDeleteUrl = deleteTrigger.getAttribute('href') || deleteTrigger.dataset.deleteUrl || null;
+
+            const customMessage = deleteTrigger.dataset.deleteMessage;
+            const textElement = modalElement.querySelector('.as-delete-text');
+
+            if (customMessage && textElement) {
+                textElement.textContent = customMessage;
+            }
+
+            modal.show();
+        });
+
+        confirmButton.addEventListener('click', function () {
+            if (pendingDeleteForm) {
+                pendingDeleteForm.submit();
+                return;
+            }
+
+            if (pendingDeleteUrl) {
+                window.location.href = pendingDeleteUrl;
+            }
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            pendingDeleteForm = null;
+            pendingDeleteUrl = null;
+        });
+    })();
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

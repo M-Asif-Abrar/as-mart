@@ -1,0 +1,528 @@
+﻿@model (string title, IEnumerable<AsMart.Web.Models.ViewModels.ProductCardViewModel> products)
+
+@{
+    var products = Model.products ?? Enumerable.Empty<AsMart.Web.Models.ViewModels.ProductCardViewModel>();
+    var productCount = products.Count();
+}
+
+<style>
+    .rp-shell {
+        width: 100%;
+        margin: 22px 0 0;
+    }
+
+    .rp-panel {
+        border-radius: 28px;
+        padding: 22px;
+        border: 1px solid rgba(15, 23, 42, .08);
+        background: radial-gradient(700px 300px at 0% 0%, rgba(59, 130, 246, .12), transparent 60%), radial-gradient(620px 280px at 100% 0%, rgba(168, 85, 247, .10), transparent 58%), linear-gradient(135deg, rgba(255, 255, 255, .94), rgba(248, 250, 252, .90));
+        box-shadow: 0 24px 60px rgba(2, 6, 23, .08);
+        backdrop-filter: blur(16px);
+    }
+
+    .rp-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .rp-heading {
+        min-width: 0;
+    }
+
+    .rp-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        margin-bottom: 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(37, 99, 235, .16);
+        background: rgba(219, 234, 254, .72);
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .rp-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: clamp(1.25rem, 2vw, 1.75rem);
+        font-weight: 950;
+        letter-spacing: -.035em;
+        line-height: 1.08;
+    }
+
+    .rp-sub {
+        margin: 7px 0 0;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 650;
+    }
+
+    .rp-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(15, 23, 42, .10);
+        background: rgba(255, 255, 255, .82);
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 900;
+        box-shadow: 0 12px 26px rgba(2, 6, 23, .05);
+    }
+
+        .rp-count i {
+            color: #2563eb;
+        }
+
+    .rp-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .rp-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 24px;
+        border: 1px solid rgba(15, 23, 42, .08);
+        background: radial-gradient(420px 180px at 50% 0%, rgba(239, 246, 255, .95), transparent 62%), rgba(255, 255, 255, .92);
+        box-shadow: 0 16px 36px rgba(2, 6, 23, .07);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+        .rp-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(37, 99, 235, .18);
+            box-shadow: 0 24px 50px rgba(2, 6, 23, .12);
+        }
+
+    .rp-img-wrap {
+        position: relative;
+        width: 100%;
+        height: 172px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.90));
+    }
+
+    .rp-img {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        display: block;
+        filter: drop-shadow(0 12px 18px rgba(15, 23, 42, .10));
+        transition: transform .18s ease;
+    }
+
+    .rp-card:hover .rp-img {
+        transform: scale(1.035);
+    }
+
+    .rp-img-placeholder {
+        width: 72px;
+        height: 72px;
+        border-radius: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(219, 234, 254, .72);
+        color: #2563eb;
+        font-size: 26px;
+    }
+
+    .rp-floating-discount {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        padding: 6px 9px;
+        border-radius: 999px;
+        border: 1px solid rgba(220, 38, 38, .16);
+        background: rgba(254, 226, 226, .94);
+        color: #dc2626;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 950;
+        box-shadow: 0 10px 22px rgba(220, 38, 38, .10);
+    }
+
+    .rp-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 14px;
+    }
+
+    .rp-title-link {
+        color: #0f172a;
+        font-size: .94rem;
+        font-weight: 900;
+        line-height: 1.28;
+        text-decoration: none;
+        text-align: left;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        hyphens: auto;
+        transition: color .15s ease;
+    }
+
+        .rp-title-link:hover {
+            color: #2563eb;
+        }
+
+    @@supports (-webkit-line-clamp: 3) {
+        .rp-title-link {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            overflow: hidden;
+        }
+    }
+
+    .rp-rating {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+        font-size: 12px;
+        line-height: 1;
+    }
+
+    .rp-rating-score {
+        color: #dc2626;
+        font-weight: 950;
+    }
+
+    .rp-stars {
+        display: inline-flex;
+        gap: 1px;
+        color: #f59e0b;
+        font-size: 12px;
+    }
+
+    .rp-star.on {
+        color: #f59e0b;
+    }
+
+    .rp-star.off {
+        color: rgba(245, 158, 11, .32);
+    }
+
+    .rp-reviews {
+        color: #64748b;
+        font-weight: 750;
+    }
+
+    .rp-price {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    .rp-price-now {
+        color: #0f172a;
+        font-size: 1.06rem;
+        font-weight: 950;
+        letter-spacing: -.02em;
+    }
+
+    .rp-price-was {
+        color: #94a3b8;
+        font-size: .86rem;
+        font-weight: 800;
+        text-decoration: line-through;
+    }
+
+    .rp-actions {
+        margin-top: auto;
+        padding-top: 14px;
+    }
+
+    .rp-btn {
+        width: 100%;
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 13px;
+        border-radius: 16px;
+        border: 1px solid rgba(37, 99, 235, .18);
+        background: linear-gradient(135deg, rgba(239, 246, 255, .98), rgba(219, 234, 254, .92));
+        color: #1d4ed8;
+        font-size: 13px;
+        font-weight: 950;
+        text-decoration: none;
+        transition: all .16s ease;
+    }
+
+        .rp-btn:hover {
+            color: #fff;
+            background: linear-gradient(135deg, #60a5fa, #2563eb);
+            box-shadow: 0 16px 30px rgba(37, 99, 235, .24);
+            transform: translateY(-1px);
+        }
+
+    .rp-empty {
+        padding: 38px 18px;
+        text-align: center;
+        border-radius: 24px;
+        border: 1px dashed rgba(37, 99, 235, .22);
+        background: rgba(255, 255, 255, .66);
+    }
+
+        .rp-empty i {
+            width: 58px;
+            height: 58px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            margin-bottom: 14px;
+            background: rgba(219, 234, 254, .78);
+            color: #2563eb;
+            font-size: 24px;
+        }
+
+        .rp-empty h3 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 1.15rem;
+            font-weight: 950;
+        }
+
+        .rp-empty p {
+            margin: 7px 0 0;
+            color: #64748b;
+            font-weight: 650;
+        }
+
+    @@media (max-width: 1399.98px) {
+        .rp-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 1199.98px) {
+        .rp-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 991.98px) {
+        .rp-panel {
+            padding: 18px;
+            border-radius: 24px;
+        }
+
+        .rp-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .rp-img-wrap {
+            height: 190px;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .rp-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .rp-head {
+            align-items: flex-start;
+        }
+
+        .rp-count {
+            width: fit-content;
+        }
+
+        .rp-img-wrap {
+            height: 210px;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .rp-shell {
+            margin-top: 16px;
+        }
+
+        .rp-panel {
+            padding: 14px;
+            border-radius: 22px;
+        }
+
+        .rp-grid {
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .rp-img-wrap {
+            height: 255px;
+        }
+
+        .rp-title-link {
+            font-size: .98rem;
+        }
+
+        @@supports (-webkit-line-clamp: 4) {
+            .rp-title-link {
+                -webkit-line-clamp: 4;
+            }
+        }
+    }
+</style>
+
+<section class="rp-shell">
+    <div class="rp-panel">
+        <div class="rp-head">
+            <div class="rp-heading">
+                <span class="rp-kicker">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    Recommended Picks
+                </span>
+
+                <h2 class="rp-title">@Model.title</h2>
+                <p class="rp-sub">You may also like these carefully selected products.</p>
+            </div>
+
+            <div class="rp-count">
+                <i class="fa-solid fa-box-open"></i>
+                <span>@productCount items</span>
+            </div>
+        </div>
+
+        @if (productCount > 0)
+        {
+            <div class="rp-grid">
+                @foreach (var p in products)
+                {
+                    <article class="rp-card">
+                        <a asp-controller="Product"
+                           asp-action="Details"
+                           asp-route-slug="@p.Slug"
+                           class="rp-img-wrap"
+                           aria-label="@p.Title">
+
+                            @if (!string.IsNullOrWhiteSpace(p.MainImageUrl))
+                            {
+                                <img src="@p.MainImageUrl"
+                                     class="rp-img"
+                                     alt="@p.Title"
+                                     loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="rp-img-placeholder">
+                                    <i class="fa-solid fa-image"></i>
+                                </div>
+                            }
+
+                            @if (p.ListPrice.HasValue && p.Price.HasValue && p.ListPrice.Value > p.Price.Value)
+                            {
+                                var discount = Math.Round(((p.ListPrice.Value - p.Price.Value) / p.ListPrice.Value) * 100m, 0);
+
+                                <span class="rp-floating-discount">
+                                    -@discount%
+                                </span>
+                            }
+                        </a>
+
+                        <div class="rp-body">
+                            <a asp-controller="Product"
+                               asp-action="Details"
+                               asp-route-slug="@p.Slug"
+                               class="rp-title-link">
+                                @p.Title
+                            </a>
+
+                            @if (p.Rating.HasValue && p.RatingCount.HasValue && p.RatingCount.Value > 0)
+                            {
+                                var rating = p.Rating.Value;
+                                var stars = (int)Math.Round((double)rating, MidpointRounding.AwayFromZero);
+
+                                if (stars < 0) { stars = 0; }
+                                if (stars > 5) { stars = 5; }
+
+                                <div class="rp-rating">
+                                    <span class="rp-rating-score">@rating.ToString("0.0")</span>
+
+                                    <span class="rp-stars" aria-label="Rating @rating.ToString("0.0") out of 5">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= stars)
+                                            {
+                                                <span class="rp-star on">&#9733;</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="rp-star off">&#9733;</span>
+                                            }
+                                        }
+                                    </span>
+
+                                    <span class="rp-reviews">@p.RatingCount.Value.ToString("N0") reviews</span>
+                                </div>
+                            }
+
+                            @if (p.Price.HasValue)
+                            {
+                                <div class="rp-price">
+                                    <span class="rp-price-now">
+                                        @p.Price.Value.ToString("0.00") @p.Currency
+                                    </span>
+
+                                    @if (p.ListPrice.HasValue && p.ListPrice.Value > p.Price.Value)
+                                    {
+                                        <span class="rp-price-was">
+                                            @p.ListPrice.Value.ToString("0.00") @p.Currency
+                                        </span>
+                                    }
+                                </div>
+                            }
+
+                            <div class="rp-actions">
+                                <a asp-controller="Product"
+                                   asp-action="Details"
+                                   asp-route-slug="@p.Slug"
+                                   class="rp-btn">
+                                    <span>View details</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="rp-empty">
+                <i class="fa-solid fa-box-open"></i>
+                <h3>No related products found</h3>
+                <p>More recommendations will appear here once matching products are available.</p>
+            </div>
+        }
+    </div>
+</section>

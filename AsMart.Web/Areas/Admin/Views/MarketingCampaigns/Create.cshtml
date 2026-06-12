@@ -1,0 +1,471 @@
+﻿@model AsMart.Web.Models.ViewModels.Marketing.MarketingCampaignCreateViewModel
+@using AsMart.Web.Models.Entities.Marketing
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mcc-page">
+    <div class="mcc-hero">
+        <div>
+            <span class="mcc-kicker">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                Create Campaign
+            </span>
+            <h1>New Social Marketing Campaign</h1>
+            <p>Select a blog/product, write captions, choose Facebook groups/pages, and generate the posting queue.</p>
+        </div>
+
+        <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Index" class="btn btn-light">
+            <i class="fa-solid fa-arrow-left"></i>
+            Back
+        </a>
+    </div>
+
+    <form asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Create" method="post" class="mcc-card">
+        @Html.AntiForgeryToken()
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="alert alert-danger rounded-4 fw-bold"></div>
+        }
+
+        <div class="source-help-box">
+            <div class="source-help-title">
+                <i class="fa-solid fa-circle-info"></i>
+                Source Type Instructions
+            </div>
+            <ul>
+                <li><strong>Blog Post:</strong> Use only when you select an existing blog post from the Blog Post dropdown.</li>
+                <li><strong>Product:</strong> Use only when you select an existing product from the Product dropdown.</li>
+                <li><strong>Custom:</strong> Use when you manually add the campaign URL, image URL, description, and captions.</li>
+            </ul>
+        </div>
+
+        <div class="section-title">
+            <i class="fa-solid fa-layer-group"></i>
+            Campaign Source
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="SourceType">Source Type</label>
+                <select asp-for="SourceType" class="form-select" id="sourceType">
+                    <option value="@MarketingCampaignSourceType.Custom">Custom</option>
+                    <option value="@MarketingCampaignSourceType.Product">Product</option>
+                    <option value="@MarketingCampaignSourceType.BlogPost">Blog Post</option>
+                </select>
+                <span asp-validation-for="SourceType" class="text-danger"></span>
+            </div>
+
+            <div class="form-group source-product">
+                <label asp-for="ProductId">Product</label>
+                <select asp-for="ProductId" asp-items="Model.ProductOptions" class="form-select">
+                    <option value="">Select Product</option>
+                </select>
+                <span asp-validation-for="ProductId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group source-blog">
+                <label asp-for="BlogPostId">Blog Post</label>
+                <select asp-for="BlogPostId" asp-items="Model.BlogPostOptions" class="form-select">
+                    <option value="">Select Blog Post</option>
+                </select>
+                <span asp-validation-for="BlogPostId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="Title">Campaign Title</label>
+                <input asp-for="Title" class="form-control" placeholder="Example: Best Dash Cams 2026 Facebook Push" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Slug">Slug</label>
+                <input asp-for="Slug" class="form-control" placeholder="Optional, auto-generated if empty" />
+                <span asp-validation-for="Slug" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ScheduledStartAt">Scheduled Start</label>
+                <input asp-for="ScheduledStartAt" class="form-control" type="datetime-local" />
+                <span asp-validation-for="ScheduledStartAt" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="CampaignUrl">Campaign URL</label>
+                <input asp-for="CampaignUrl" class="form-control" placeholder="https://as-mart.com/blog/best-dash-cams-2026" />
+                <span asp-validation-for="CampaignUrl" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="ImageUrl">Image URL</label>
+                <input asp-for="ImageUrl" class="form-control" placeholder="Product/blog image URL" />
+                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="ShortDescription">Short Description</label>
+                <textarea asp-for="ShortDescription" class="form-control" rows="3" placeholder="Short campaign note for admin use"></textarea>
+                <span asp-validation-for="ShortDescription" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fa-solid fa-quote-left"></i>
+            Caption Variations
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group full">
+                <label asp-for="CaptionText">Caption 1</label>
+                <textarea asp-for="CaptionText" class="form-control" rows="5" placeholder="Main Facebook caption"></textarea>
+                <span asp-validation-for="CaptionText" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="CaptionText2">Caption 2</label>
+                <textarea asp-for="CaptionText2" class="form-control" rows="4" placeholder="Optional variation"></textarea>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="CaptionText3">Caption 3</label>
+                <textarea asp-for="CaptionText3" class="form-control" rows="4" placeholder="Optional variation"></textarea>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fa-solid fa-link"></i>
+            UTM Tracking
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="UTMSource">UTM Source</label>
+                <input asp-for="UTMSource" class="form-control" />
+                <span asp-validation-for="UTMSource" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="UTMMedium">UTM Medium</label>
+                <input asp-for="UTMMedium" class="form-control" />
+                <span asp-validation-for="UTMMedium" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="UTMCampaign">UTM Campaign</label>
+                <input asp-for="UTMCampaign" class="form-control" placeholder="Optional, campaign slug used if empty" />
+                <span asp-validation-for="UTMCampaign" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fa-brands fa-facebook"></i>
+            Facebook Targets
+        </div>
+
+        <div class="target-box">
+            @if (Model.TargetOptions.Any())
+            {
+                foreach (var target in Model.TargetOptions)
+                {
+                    <label class="target-check">
+                        <input type="checkbox" name="SelectedTargetIds" value="@target.Value" @(target.Selected ? "checked" : "") />
+                        <span>
+                            <i class="fa-brands fa-facebook-f"></i>
+                            @target.Text
+                        </span>
+                    </label>
+                }
+            }
+            else
+            {
+                <div class="empty-targets">
+                    No Facebook targets found.
+                    <a asp-area="Admin" asp-controller="FacebookTargets" asp-action="Create">Add Facebook Target</a>
+                </div>
+            }
+        </div>
+        <span asp-validation-for="SelectedTargetIds" class="text-danger"></span>
+
+        <div class="section-title">
+            <i class="fa-solid fa-clock"></i>
+            Posting Delay
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="MinDelayMinutes">Minimum Delay Minutes</label>
+                <input asp-for="MinDelayMinutes" class="form-control" type="number" min="1" />
+                <span asp-validation-for="MinDelayMinutes" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="MaxDelayMinutes">Maximum Delay Minutes</label>
+                <input asp-for="MaxDelayMinutes" class="form-control" type="number" min="1" />
+                <span asp-validation-for="MaxDelayMinutes" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Index" class="btn btn-light">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-gears"></i>
+                Create Campaign & Queue
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Styles {
+    <style>
+        .source-help-box {
+            margin-bottom: 18px;
+            border-radius: 20px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(37,99,235,.08), rgba(168,85,247,.07));
+            border: 1px solid rgba(37,99,235,.14);
+            color: #334155;
+        }
+
+        .source-help-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1d4ed8;
+            font-weight: 950;
+            margin-bottom: 8px;
+        }
+
+        .source-help-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .source-help-box li {
+            margin: 5px 0;
+            font-weight: 700;
+        }
+
+        .mcc-page {
+            padding: 18px 0 42px;
+            font-family: Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+        }
+
+        .mcc-hero, .mcc-card {
+            border-radius: 30px;
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 18px 44px rgba(2,6,23,.08)
+        }
+
+        .mcc-hero {
+            padding: 30px;
+            margin-bottom: 18px;
+            background: radial-gradient(circle at top left,rgba(37,99,235,.20),transparent 38%),radial-gradient(circle at top right,rgba(168,85,247,.15),transparent 34%),linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,246,255,.92));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px
+        }
+
+        .mcc-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #2563eb;
+            background: rgba(37,99,235,.10);
+            border: 1px solid rgba(37,99,235,.14);
+            border-radius: 999px;
+            padding: 8px 13px;
+            font-weight: 900;
+            font-size: 13px;
+            margin-bottom: 14px
+        }
+
+        .mcc-hero h1 {
+            font-size: clamp(28px,4vw,42px);
+            line-height: 1;
+            font-weight: 950;
+            color: #0f172a;
+            margin: 0 0 10px;
+            letter-spacing: -.04em
+        }
+
+        .mcc-hero p {
+            margin: 0;
+            color: #64748b;
+            font-weight: 650
+        }
+
+        .mcc-hero .btn, .form-actions .btn {
+            border-radius: 999px;
+            font-weight: 900;
+            padding: 11px 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .mcc-card {
+            padding: 24px
+        }
+
+        .section-title {
+            margin: 8px 0 16px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: linear-gradient(135deg,rgba(37,99,235,.10),rgba(168,85,247,.08));
+            border: 1px solid rgba(37,99,235,.12);
+            color: #0f172a;
+            font-weight: 950;
+            display: flex;
+            align-items: center;
+            gap: 9px
+        }
+
+            .section-title:not(:first-child) {
+                margin-top: 26px
+            }
+
+            .section-title i {
+                color: #2563eb
+            }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 16px
+        }
+
+        .form-group.full {
+            grid-column: 1/-1
+        }
+
+        .form-group label {
+            color: #0f172a;
+            font-weight: 900;
+            margin-bottom: 7px
+        }
+
+        .form-control, .form-select {
+            border-radius: 16px;
+            border: 1px solid rgba(15,23,42,.12);
+            padding: 12px 14px;
+            font-weight: 650;
+            box-shadow: none
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: rgba(37,99,235,.45);
+                box-shadow: 0 0 0 .2rem rgba(37,99,235,.12)
+            }
+
+        .target-box {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 10px
+        }
+
+        .target-check {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,.10);
+            background: rgba(248,250,252,.86);
+            padding: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer
+        }
+
+            .target-check input {
+                width: 18px;
+                height: 18px
+            }
+
+            .target-check span {
+                font-weight: 850;
+                color: #0f172a;
+                display: flex;
+                align-items: center;
+                gap: 8px
+            }
+
+            .target-check i {
+                color: #1877f2
+            }
+
+        .empty-targets {
+            grid-column: 1/-1;
+            text-align: center;
+            color: #64748b;
+            font-weight: 850;
+            background: rgba(248,250,252,.75);
+            border-radius: 18px;
+            padding: 24px
+        }
+
+            .empty-targets a {
+                color: #2563eb;
+                text-decoration: none;
+                font-weight: 950
+            }
+
+        .form-actions {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(15,23,42,.08);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap
+        }
+
+        @@media(max-width:767.98px) {
+            .mcc-hero {
+                padding: 22px;
+                border-radius: 24px;
+                flex-direction: column;
+                align-items: stretch
+            }
+
+            .form-grid, .target-box {
+                grid-template-columns: 1fr
+            }
+
+            .form-actions .btn, .mcc-hero .btn {
+                width: 100%;
+                justify-content: center
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const sourceType = document.getElementById("sourceType");
+            const productBox = document.querySelector(".source-product");
+            const blogBox = document.querySelector(".source-blog");
+
+            function syncSourceBoxes() {
+                const value = sourceType ? sourceType.value : "0";
+
+                if (productBox) {
+                    productBox.style.display = value === "@((int)MarketingCampaignSourceType.Product)" ? "" : "none";
+                }
+
+                if (blogBox) {
+                    blogBox.style.display = value === "@((int)MarketingCampaignSourceType.BlogPost)" ? "" : "none";
+                }
+            }
+
+            if (sourceType) {
+                sourceType.addEventListener("change", syncSourceBoxes);
+                syncSourceBoxes();
+            }
+        })();
+    </script>
+}

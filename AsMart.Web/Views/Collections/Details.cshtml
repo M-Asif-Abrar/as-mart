@@ -1,0 +1,537 @@
+﻿@using AsMart.Web.Models.ViewModels
+@model CollectionDetailsViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var productsCount = Model.Products?.Count ?? 0;
+}
+
+@section Styles {
+    <style>
+        .collection-page {
+            min-height: calc(100vh - 90px);
+            padding: 24px 0 42px;
+            background: radial-gradient(circle at 10% 8%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .collection-shell {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        .collection-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 30px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.93)), radial-gradient(circle at top right, rgba(37,99,235,.17), transparent 36%);
+            box-shadow: 0 24px 70px rgba(15,23,42,.08);
+            margin-bottom: 22px;
+        }
+
+            .collection-hero::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 16% 20%, rgba(37,99,235,.10), transparent 28%), radial-gradient(circle at 85% 80%, rgba(14,165,233,.13), transparent 30%);
+                pointer-events: none;
+            }
+
+        .collection-hero-body {
+            position: relative;
+            z-index: 1;
+            padding: 28px;
+        }
+
+        .collection-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: 13px;
+        }
+
+        .collection-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(32px, 4vw, 56px);
+            line-height: 1.04;
+            letter-spacing: -.045em;
+            font-weight: 950;
+            overflow-wrap: anywhere;
+        }
+
+        .collection-sub {
+            margin: 13px 0 0;
+            max-width: 780px;
+            color: #475569;
+            font-size: 15px;
+            line-height: 1.75;
+            font-weight: 650;
+        }
+
+        .collection-actions-card {
+            width: 100%;
+            max-width: 330px;
+            margin-left: auto;
+            padding: 19px;
+            border-radius: 26px;
+            background: rgba(255,255,255,.78);
+            border: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 18px 44px rgba(15,23,42,.07);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .collection-stat-label {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .collection-stat-value {
+            color: #0f172a;
+            font-size: 34px;
+            font-weight: 950;
+            line-height: 1.1;
+            margin-top: 5px;
+        }
+
+        .collection-actions {
+            display: flex;
+            gap: 9px;
+            margin-top: 14px;
+        }
+
+        .collection-btn {
+            flex: 1;
+            min-height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .collection-product-card {
+            height: 100%;
+            overflow: hidden;
+            border-radius: 24px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.96);
+            box-shadow: 0 18px 48px rgba(15,23,42,.07);
+            display: flex;
+            flex-direction: column;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+            .collection-product-card:hover {
+                transform: translateY(-4px);
+                border-color: rgba(37,99,235,.22);
+                box-shadow: 0 26px 70px rgba(15,23,42,.12);
+            }
+
+        .collection-product-media {
+            height: 210px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+            border-bottom: 1px solid rgba(15,23,42,.07);
+            text-decoration: none;
+        }
+
+        .collection-product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .collection-product-body {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 12px;
+        }
+
+        .collection-product-title {
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 950;
+            line-height: 1.35;
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: calc(1.35em * 3);
+        }
+
+            .collection-product-title:hover {
+                color: #2563eb;
+            }
+
+        .collection-product-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 9px;
+            flex-wrap: wrap;
+        }
+
+        .collection-rating-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .collection-rating-num {
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 950;
+            padding: 5px 8px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+        }
+
+        .collection-rating-stars {
+            color: #f59f00;
+            letter-spacing: 1px;
+            font-size: 13px;
+            line-height: 1;
+        }
+
+        .star-dim {
+            opacity: .35;
+        }
+
+        .collection-no-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+
+        .collection-price-pill {
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(16,185,129,.10);
+            color: #047857;
+            font-size: 12px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .collection-view-btn {
+            margin-top: auto;
+            min-height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+        .collection-empty {
+            border-radius: 28px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.94);
+            box-shadow: 0 20px 60px rgba(15,23,42,.08);
+            padding: 42px 22px;
+            text-align: center;
+        }
+
+        .collection-empty-icon {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 16px;
+            border-radius: 26px;
+            background: rgba(37,99,235,.09);
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 29px;
+        }
+
+        .collection-empty h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 25px;
+            font-weight: 950;
+            letter-spacing: -.03em;
+        }
+
+        .collection-empty p {
+            margin: 9px auto 0;
+            max-width: 620px;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.7;
+            font-weight: 650;
+        }
+
+        @@media (max-width: 1399.98px) {
+            .collection-grid {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .collection-page {
+                padding: 18px 0 34px;
+            }
+
+            .collection-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .collection-actions-card {
+                max-width: none;
+                margin-left: 0;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .collection-hero-body {
+                padding: 22px;
+            }
+
+            .collection-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .collection-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .collection-page {
+                padding: 14px 0 28px;
+            }
+
+            .collection-hero {
+                border-radius: 22px;
+            }
+
+            .collection-hero-body {
+                padding: 17px;
+            }
+
+            .collection-actions-card {
+                border-radius: 21px;
+            }
+
+            .collection-actions {
+                flex-direction: column;
+            }
+
+            .collection-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .collection-product-media {
+                height: 275px;
+            }
+
+            .collection-product-title {
+                font-size: 15px;
+                -webkit-line-clamp: 4;
+                min-height: auto;
+            }
+
+            .collection-empty {
+                border-radius: 22px;
+                padding: 34px 18px;
+            }
+        }
+    </style>
+}
+
+<section class="collection-page">
+    <div class="container-fluid collection-shell">
+
+        <header class="collection-hero">
+            <div class="collection-hero-body">
+                <div class="row align-items-center g-3">
+                    <div class="col-12 col-lg-8">
+                        <div class="collection-kicker">
+                            <i class="fa-solid fa-layer-group"></i>
+                            Product Collection
+                        </div>
+
+                        <h1 class="collection-title">@Model.Name</h1>
+
+                        <p class="collection-sub">
+                            Explore selected products from this curated As-Mart collection.
+                        </p>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="collection-actions-card">
+                            <div class="collection-stat-label">Products</div>
+                            <div class="collection-stat-value">
+                                @productsCount
+                            </div>
+
+                            <div class="collection-actions">
+                                <a asp-controller="Collections"
+                                   asp-action="Index"
+                                   class="btn btn-light collection-btn">
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    Back
+                                </a>
+
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a asp-area="Admin"
+                                       asp-controller="Collections"
+                                       asp-action="Edit"
+                                       asp-route-id="@Model.CollectionId"
+                                       class="btn btn-primary collection-btn">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        Edit
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        @if (Model.Products == null || !Model.Products.Any())
+        {
+            <div class="collection-empty">
+                <div class="collection-empty-icon">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                </div>
+
+                <h2>No products in this collection yet</h2>
+
+                <p>
+                    Add products to this collection from the admin panel. Once products are added, they will appear here in a responsive modern grid.
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="collection-grid">
+                @foreach (var p in Model.Products)
+                {
+                    var imageUrl = string.IsNullOrWhiteSpace(p.MainImageUrl)
+                    ? Url.Content("~/images/no-image.png")
+                    : p.MainImageUrl;
+
+                    <article class="collection-product-card">
+
+                        <a asp-controller="Product"
+                           asp-action="Details"
+                           asp-route-slug="@p.ProductSlug"
+                           class="collection-product-media">
+                            <img src="@imageUrl"
+                                 class="collection-product-img"
+                                 alt="@p.Title"
+                                 loading="lazy" />
+                        </a>
+
+                        <div class="collection-product-body">
+                            <a asp-controller="Product"
+                               asp-action="Details"
+                               asp-route-slug="@p.ProductSlug"
+                               class="collection-product-title">
+                                @p.Title
+                            </a>
+
+                            <div class="collection-product-meta">
+                                @if (p.Rating.HasValue && p.Rating.Value > 0)
+                                {
+                                    var ratingValue = (double)p.Rating.Value;
+                                    var stars = (int)Math.Round(ratingValue, MidpointRounding.AwayFromZero);
+
+                                    if (stars < 0) stars = 0;
+                                    if (stars > 5) stars = 5;
+
+                                    <div class="collection-rating-row">
+                                        <span class="collection-rating-num">@ratingValue.ToString("0.0")</span>
+
+                                        <span class="collection-rating-stars" aria-label="Rating @ratingValue.ToString("0.0") out of 5">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= stars)
+                                                {
+                                                    <span>&#9733;</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="star-dim">&#9733;</span>
+                                                }
+                                            }
+                                        </span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="collection-no-rating">
+                                        <i class="fa-regular fa-star"></i>
+                                        No rating
+                                    </span>
+                                }
+
+                                @if (p.Price.HasValue)
+                                {
+                                    <span class="collection-price-pill">
+                                        @p.Price.Value.ToString("0.00") @p.Currency
+                                    </span>
+                                }
+                            </div>
+
+                            <a asp-controller="Product"
+                               asp-action="Details"
+                               asp-route-slug="@p.ProductSlug"
+                               class="btn btn-outline-primary collection-view-btn">
+                                <i class="fa-regular fa-eye"></i>
+                                View Product
+                            </a>
+                        </div>
+
+                    </article>
+                }
+            </div>
+        }
+
+    </div>
+</section>
+

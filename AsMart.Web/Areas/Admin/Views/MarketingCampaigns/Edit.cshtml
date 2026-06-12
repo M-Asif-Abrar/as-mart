@@ -1,0 +1,362 @@
+﻿@model AsMart.Web.Models.ViewModels.Marketing.MarketingCampaignEditViewModel
+@using AsMart.Web.Models.Entities.Marketing
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mce-page">
+    <div class="mce-hero">
+        <div>
+            <span class="mce-kicker">
+                <i class="fa-solid fa-pen-to-square"></i>
+                Edit Campaign
+            </span>
+            <h1>Edit Marketing Campaign</h1>
+            <p>Update campaign source, URL, schedule, status, UTM values, and display information.</p>
+        </div>
+
+        <div class="mce-hero-actions">
+            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-light">
+                <i class="fa-solid fa-circle-info"></i>
+                Details
+            </a>
+            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Index" class="btn btn-outline-primary">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back
+            </a>
+        </div>
+    </div>
+
+    <form asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Edit" asp-route-id="@Model.Id" method="post" class="mce-card">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="alert alert-danger rounded-4 fw-bold"></div>
+        }
+
+        <div class="section-title">
+            <i class="fa-solid fa-layer-group"></i>
+            Campaign Source
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="SourceType">Source Type</label>
+                <select asp-for="SourceType" class="form-select" id="sourceType">
+                    <option value="@MarketingCampaignSourceType.Custom">Custom</option>
+                    <option value="@MarketingCampaignSourceType.Product">Product</option>
+                    <option value="@MarketingCampaignSourceType.BlogPost">Blog Post</option>
+                </select>
+                <span asp-validation-for="SourceType" class="text-danger"></span>
+            </div>
+
+            <div class="form-group source-product">
+                <label asp-for="ProductId">Product</label>
+                <select asp-for="ProductId" asp-items="Model.ProductOptions" class="form-select">
+                    <option value="">Select Product</option>
+                </select>
+                <span asp-validation-for="ProductId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group source-blog">
+                <label asp-for="BlogPostId">Blog Post</label>
+                <select asp-for="BlogPostId" asp-items="Model.BlogPostOptions" class="form-select">
+                    <option value="">Select Blog Post</option>
+                </select>
+                <span asp-validation-for="BlogPostId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="Title">Campaign Title</label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Slug">Slug</label>
+                <input asp-for="Slug" class="form-control" />
+                <span asp-validation-for="Slug" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Status">Status</label>
+                <select asp-for="Status" asp-items="Model.StatusOptions" class="form-select"></select>
+                <span asp-validation-for="Status" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ScheduledStartAt">Scheduled Start</label>
+                <input asp-for="ScheduledStartAt" class="form-control" type="datetime-local" />
+                <span asp-validation-for="ScheduledStartAt" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="CampaignUrl">Campaign URL</label>
+                <input asp-for="CampaignUrl" class="form-control" />
+                <span asp-validation-for="CampaignUrl" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="ImageUrl">Image URL</label>
+                <input asp-for="ImageUrl" class="form-control" />
+                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="ShortDescription">Short Description</label>
+                <textarea asp-for="ShortDescription" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="ShortDescription" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fa-solid fa-link"></i>
+            UTM Tracking
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="UTMSource">UTM Source</label>
+                <input asp-for="UTMSource" class="form-control" />
+                <span asp-validation-for="UTMSource" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="UTMMedium">UTM Medium</label>
+                <input asp-for="UTMMedium" class="form-control" />
+                <span asp-validation-for="UTMMedium" class="text-danger"></span>
+            </div>
+
+            <div class="form-group full">
+                <label asp-for="UTMCampaign">UTM Campaign</label>
+                <input asp-for="UTMCampaign" class="form-control" />
+                <span asp-validation-for="UTMCampaign" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fa-solid fa-clock"></i>
+            Posting Delay
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="MinDelayMinutes">Minimum Delay Minutes</label>
+                <input asp-for="MinDelayMinutes" class="form-control" type="number" min="1" />
+                <span asp-validation-for="MinDelayMinutes" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="MaxDelayMinutes">Maximum Delay Minutes</label>
+                <input asp-for="MaxDelayMinutes" class="form-control" type="number" min="1" />
+                <span asp-validation-for="MaxDelayMinutes" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Index" class="btn btn-light">
+                Cancel
+            </a>
+
+            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                <i class="fa-solid fa-trash-can"></i>
+                Delete
+            </a>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk"></i>
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Styles {
+    <style>
+        .mce-page {
+            padding: 18px 0 42px;
+            font-family: Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        }
+
+        .mce-hero,
+        .mce-card {
+            border-radius: 30px;
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 18px 44px rgba(2,6,23,.08);
+        }
+
+        .mce-hero {
+            padding: 30px;
+            margin-bottom: 18px;
+            background: radial-gradient(circle at top left,rgba(37,99,235,.20),transparent 38%),radial-gradient(circle at top right,rgba(168,85,247,.15),transparent 34%),linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,246,255,.92));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .mce-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #2563eb;
+            background: rgba(37,99,235,.10);
+            border: 1px solid rgba(37,99,235,.14);
+            border-radius: 999px;
+            padding: 8px 13px;
+            font-weight: 900;
+            font-size: 13px;
+            margin-bottom: 14px;
+        }
+
+        .mce-hero h1 {
+            font-size: clamp(28px,4vw,42px);
+            line-height: 1;
+            font-weight: 950;
+            color: #0f172a;
+            margin: 0 0 10px;
+            letter-spacing: -.04em;
+        }
+
+        .mce-hero p {
+            margin: 0;
+            color: #64748b;
+            font-weight: 650;
+        }
+
+        .mce-hero-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+            .mce-hero-actions .btn,
+            .form-actions .btn {
+                border-radius: 999px;
+                font-weight: 900;
+                padding: 11px 18px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+        .mce-card {
+            padding: 24px;
+        }
+
+        .section-title {
+            margin: 8px 0 16px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: linear-gradient(135deg,rgba(37,99,235,.10),rgba(168,85,247,.08));
+            border: 1px solid rgba(37,99,235,.12);
+            color: #0f172a;
+            font-weight: 950;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+            .section-title:not(:first-child) {
+                margin-top: 26px;
+            }
+
+            .section-title i {
+                color: #2563eb;
+            }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 16px;
+        }
+
+        .form-group.full {
+            grid-column: 1/-1;
+        }
+
+        .form-group label {
+            color: #0f172a;
+            font-weight: 900;
+            margin-bottom: 7px;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 16px;
+            border: 1px solid rgba(15,23,42,.12);
+            padding: 12px 14px;
+            font-weight: 650;
+            box-shadow: none;
+        }
+
+            .form-control:focus,
+            .form-select:focus {
+                border-color: rgba(37,99,235,.45);
+                box-shadow: 0 0 0 .2rem rgba(37,99,235,.12);
+            }
+
+        .form-actions {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(15,23,42,.08);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        @@media(max-width:767.98px) {
+            .mce-hero {
+                padding: 22px;
+                border-radius: 24px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .mce-hero-actions .btn,
+            .form-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const sourceType = document.getElementById("sourceType");
+            const productBox = document.querySelector(".source-product");
+            const blogBox = document.querySelector(".source-blog");
+
+            function syncSourceBoxes() {
+                const value = sourceType ? sourceType.value : "0";
+
+                if (productBox) {
+                    productBox.style.display = value === "@((int)MarketingCampaignSourceType.Product)" ? "" : "none";
+                }
+
+                if (blogBox) {
+                    blogBox.style.display = value === "@((int)MarketingCampaignSourceType.BlogPost)" ? "" : "none";
+                }
+            }
+
+            if (sourceType) {
+                sourceType.addEventListener("change", syncSourceBoxes);
+                syncSourceBoxes();
+            }
+        })();
+    </script>
+}

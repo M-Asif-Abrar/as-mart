@@ -1,0 +1,436 @@
+﻿@* /Areas/Identity/Pages/Account/Manage/PersonalData.cshtml *@
+@page
+@model PersonalDataModel
+
+@{
+    ViewData["Title"] = "Personal Data";
+    ViewData["ActivePage"] = ManageNavPages.PersonalData;
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<div class="as-pdata-card">
+    <div class="as-pdata-hero">
+        <div class="as-pdata-icon">
+            <i class="fa-solid fa-database"></i>
+        </div>
+
+        <div>
+            <div class="as-pdata-kicker">
+                <i class="fa-solid fa-user-shield"></i>
+                Account Data
+            </div>
+
+            <h2 class="as-pdata-title">Personal Data</h2>
+
+            <p class="as-pdata-subtitle">
+                Download a copy of your account data or continue to the permanent account deletion page.
+            </p>
+        </div>
+    </div>
+
+    <div class="as-pdata-warning">
+        <div class="as-warning-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+
+        <div>
+            <h3>Permanent deletion warning</h3>
+            <p>
+                Deleting your personal data will permanently remove your account and cannot be recovered.
+                Download your data first if you need a backup.
+            </p>
+        </div>
+    </div>
+
+    <div class="as-pdata-info-grid">
+        <div class="as-info-box">
+            <i class="fa-solid fa-file-arrow-down"></i>
+            <div>
+                <strong>Download data</strong>
+                <span>Export a copy of your saved account information.</span>
+            </div>
+        </div>
+
+        <div class="as-info-box danger">
+            <i class="fa-solid fa-user-xmark"></i>
+            <div>
+                <strong>Delete account</strong>
+                <span>Continue only when you are sure you want permanent deletion.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="as-pdata-actions">
+        <form asp-page-handler="Download" method="post" class="as-inline-form">
+            <button type="submit" class="btn btn-primary as-action-btn">
+                <i class="fa-solid fa-download"></i>
+                Download Data
+            </button>
+        </form>
+
+        <a asp-page="DeletePersonalData"
+           class="btn btn-outline-danger as-action-btn"
+           data-delete-confirm="true"
+           data-delete-message="Are you sure you want to continue to account deletion? Your account can be permanently removed on the next page.">
+            <i class="fa-solid fa-trash"></i>
+            Delete Account
+        </a>
+    </div>
+</div>
+
+<div class="modal fade as-delete-modal" id="asDeleteConfirmModal" tabindex="-1" aria-labelledby="asDeleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content as-delete-modal-content">
+            <div class="modal-header as-delete-modal-header">
+                <div>
+                    <div class="as-delete-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+                    <h5 class="modal-title as-delete-title" id="asDeleteConfirmModalLabel">
+                        Confirm Delete
+                    </h5>
+
+                    <p class="as-delete-text">
+                        This action cannot be undone. Please confirm before deleting.
+                    </p>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-footer as-delete-modal-footer">
+                <button type="button" class="btn btn-light as-action-btn" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-danger as-action-btn" id="asDeleteConfirmButton">
+                    <i class="fa-solid fa-trash"></i>
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .as-pdata-card {
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, .08);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, .88);
+        box-shadow: 0 18px 50px rgba(15, 23, 42, .08);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .as-pdata-hero {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 24px;
+        border-bottom: 1px solid rgba(15, 23, 42, .08);
+        background: radial-gradient(620px 260px at 0% 0%, rgba(37, 99, 235, .13), transparent 60%), linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.86));
+    }
+
+    .as-pdata-icon {
+        display: inline-grid;
+        width: 72px;
+        height: 72px;
+        min-width: 72px;
+        place-items: center;
+        border-radius: 24px;
+        background: rgba(37, 99, 235, .10);
+        color: #2563eb;
+        font-size: 28px;
+        box-shadow: 0 16px 32px rgba(37, 99, 235, .10);
+    }
+
+    .as-pdata-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        margin-bottom: 10px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, .10);
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .as-pdata-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: clamp(24px, 3vw, 34px);
+        font-weight: 950;
+        letter-spacing: -.045em;
+        line-height: 1.08;
+    }
+
+    .as-pdata-subtitle {
+        max-width: 760px;
+        margin: 8px 0 0;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.75;
+    }
+
+    .as-pdata-warning {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin: 22px 24px 0;
+        padding: 18px;
+        border: 1px solid rgba(220, 38, 38, .18);
+        border-radius: 24px;
+        background: radial-gradient(560px 220px at 0% 0%, rgba(239, 68, 68, .12), transparent 62%), linear-gradient(135deg, rgba(254, 242, 242, .95), rgba(255, 255, 255, .92));
+    }
+
+    .as-warning-icon {
+        display: inline-grid;
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        place-items: center;
+        border-radius: 18px;
+        background: rgba(220, 38, 38, .10);
+        color: #dc2626;
+        font-size: 20px;
+    }
+
+    .as-pdata-warning h3 {
+        margin: 0;
+        color: #991b1b;
+        font-size: 18px;
+        font-weight: 950;
+        letter-spacing: -.025em;
+    }
+
+    .as-pdata-warning p {
+        margin: 7px 0 0;
+        color: #7f1d1d;
+        font-size: 14px;
+        line-height: 1.7;
+        font-weight: 750;
+    }
+
+    .as-pdata-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        padding: 22px 24px 0;
+    }
+
+    .as-info-box {
+        display: flex;
+        align-items: flex-start;
+        gap: 13px;
+        padding: 16px;
+        border: 1px solid rgba(15, 23, 42, .08);
+        border-radius: 22px;
+        background: rgba(248, 250, 252, .82);
+    }
+
+        .as-info-box > i {
+            display: inline-grid;
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            place-items: center;
+            border-radius: 16px;
+            background: rgba(37, 99, 235, .10);
+            color: #2563eb;
+            font-size: 16px;
+        }
+
+        .as-info-box.danger > i {
+            background: rgba(220, 38, 38, .10);
+            color: #dc2626;
+        }
+
+        .as-info-box strong {
+            display: block;
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 950;
+        }
+
+        .as-info-box span {
+            display: block;
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+    .as-pdata-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+        padding: 20px 24px 24px;
+        border-top: 1px solid rgba(15, 23, 42, .08);
+        background: rgba(248, 250, 252, .72);
+    }
+
+    .as-inline-form {
+        margin: 0;
+    }
+
+    .as-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: .62rem 1rem;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 850;
+    }
+
+    .as-delete-modal-content {
+        overflow: hidden;
+        border: 0;
+        border-radius: 26px;
+        box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
+    }
+
+    .as-delete-modal-header {
+        position: relative;
+        padding: 24px 24px 10px;
+        border-bottom: 0;
+        background: radial-gradient(520px 220px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
+    }
+
+    .as-delete-icon {
+        display: inline-grid;
+        width: 54px;
+        height: 54px;
+        place-items: center;
+        margin-bottom: 14px;
+        border-radius: 18px;
+        background: rgba(220, 38, 38, .10);
+        color: #dc2626;
+        font-size: 22px;
+    }
+
+    .as-delete-title {
+        color: #0f172a;
+        font-weight: 900;
+        letter-spacing: -.03em;
+    }
+
+    .as-delete-text {
+        max-width: 420px;
+        margin: 8px 0 0;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .as-delete-modal-footer {
+        gap: 10px;
+        padding: 18px 24px 24px;
+        border-top: 0;
+        background: #f8fafc;
+    }
+
+    @@media (max-width: 767.98px) {
+        .as-pdata-hero {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .as-pdata-warning {
+            flex-direction: column;
+            margin: 18px 18px 0;
+        }
+
+        .as-pdata-info-grid {
+            grid-template-columns: 1fr;
+            padding: 18px 18px 0;
+        }
+
+        .as-pdata-actions {
+            flex-direction: column;
+            padding: 18px;
+        }
+
+            .as-inline-form,
+            .as-pdata-actions .btn,
+            .as-delete-modal-footer .btn {
+                width: 100%;
+            }
+
+        .as-delete-modal-footer {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+    }
+</style>
+
+<script>
+    (() => {
+        let pendingDeleteForm = null;
+        let pendingDeleteUrl = null;
+
+        const modalElement = document.getElementById('asDeleteConfirmModal');
+        const confirmButton = document.getElementById('asDeleteConfirmButton');
+
+        if (!modalElement || !confirmButton || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        const modal = new bootstrap.Modal(modalElement);
+
+        document.addEventListener('click', function (event) {
+            const deleteTrigger = event.target.closest('[data-delete-confirm="true"]');
+
+            if (!deleteTrigger) {
+                return;
+            }
+
+            event.preventDefault();
+
+            pendingDeleteForm = deleteTrigger.closest('form');
+            pendingDeleteUrl = deleteTrigger.getAttribute('href') || deleteTrigger.dataset.deleteUrl || null;
+
+            const customMessage = deleteTrigger.dataset.deleteMessage;
+            const textElement = modalElement.querySelector('.as-delete-text');
+
+            if (customMessage && textElement) {
+                textElement.textContent = customMessage;
+            }
+
+            modal.show();
+        });
+
+        confirmButton.addEventListener('click', function () {
+            if (pendingDeleteForm) {
+                pendingDeleteForm.submit();
+                return;
+            }
+
+            if (pendingDeleteUrl) {
+                window.location.href = pendingDeleteUrl;
+            }
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            pendingDeleteForm = null;
+            pendingDeleteUrl = null;
+        });
+    })();
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

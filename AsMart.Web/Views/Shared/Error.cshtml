@@ -1,0 +1,542 @@
+﻿@model ErrorViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .errx-page {
+        position: relative;
+        min-height: calc(100vh - 110px);
+        padding: 34px 0 42px;
+        overflow: hidden;
+        background: radial-gradient(850px 420px at 5% 0%, rgba(59,130,246,.16), transparent 62%), radial-gradient(780px 400px at 100% 10%, rgba(168,85,247,.13), transparent 60%), linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    }
+
+    .errx-bg {
+        position: absolute;
+        border-radius: 999px;
+        filter: blur(4px);
+        pointer-events: none;
+        opacity: .8;
+    }
+
+    .errx-bg-one {
+        width: 280px;
+        height: 280px;
+        left: -120px;
+        top: 80px;
+        background: rgba(96,165,250,.16);
+    }
+
+    .errx-bg-two {
+        width: 260px;
+        height: 260px;
+        right: -100px;
+        bottom: 30px;
+        background: rgba(168,85,247,.14);
+    }
+
+    .errx-container {
+        position: relative;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .errx-card {
+        display: grid;
+        grid-template-columns: 360px minmax(0, 1fr);
+        overflow: hidden;
+        border-radius: 34px;
+        border: 1px solid rgba(15,23,42,.09);
+        background: radial-gradient(700px 320px at 0% 0%, rgba(59,130,246,.12), transparent 60%), linear-gradient(135deg, rgba(255,255,255,.94), rgba(248,250,252,.90));
+        box-shadow: 0 28px 70px rgba(2,6,23,.10);
+        backdrop-filter: blur(18px);
+    }
+
+    .errx-left {
+        padding: 28px;
+        border-right: 1px solid rgba(15,23,42,.08);
+        background: radial-gradient(420px 260px at 50% 0%, rgba(219,234,254,.90), transparent 62%), rgba(255,255,255,.50);
+    }
+
+    .errx-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 13px;
+        border-radius: 999px;
+        border: 1px solid rgba(220,38,38,.16);
+        background: rgba(254,226,226,.68);
+        color: #b91c1c;
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .errx-status-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #dc2626;
+        box-shadow: 0 0 0 5px rgba(220,38,38,.12);
+    }
+
+    .errx-code-wrap {
+        margin-top: 28px;
+        height: 190px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 30px;
+        border: 1px solid rgba(37,99,235,.12);
+        background: radial-gradient(240px 120px at 50% 0%, rgba(96,165,250,.22), transparent 65%), rgba(255,255,255,.72);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.70);
+    }
+
+    .errx-code {
+        font-size: clamp(4.3rem, 8vw, 7rem);
+        line-height: 1;
+        font-weight: 1000;
+        letter-spacing: -.08em;
+        background: linear-gradient(135deg, #0f172a, #2563eb);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .errx-mini-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .errx-mini-card {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-height: 54px;
+        padding: 12px;
+        border-radius: 18px;
+        border: 1px solid rgba(15,23,42,.08);
+        background: rgba(255,255,255,.74);
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+        .errx-mini-card i {
+            color: #2563eb;
+        }
+
+    .errx-right {
+        padding: 34px;
+        min-width: 0;
+    }
+
+    .errx-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 13px;
+        margin-bottom: 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(37,99,235,.15);
+        background: rgba(219,234,254,.70);
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .errx-title {
+        max-width: 760px;
+        margin: 0;
+        color: #0f172a;
+        font-size: clamp(1.8rem, 3vw, 3rem);
+        line-height: 1.04;
+        font-weight: 1000;
+        letter-spacing: -.055em;
+    }
+
+    .errx-desc {
+        max-width: 760px;
+        margin: 14px 0 0;
+        color: #64748b;
+        font-size: 1rem;
+        line-height: 1.7;
+        font-weight: 650;
+    }
+
+    .errx-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 22px;
+    }
+
+    .errx-btn {
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 11px 16px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 950;
+        text-decoration: none;
+        transition: all .16s ease;
+    }
+
+        .errx-btn:hover {
+            transform: translateY(-1px);
+        }
+
+    .errx-btn-primary {
+        border: 1px solid rgba(37,99,235,.18);
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+        color: #fff;
+        box-shadow: 0 16px 32px rgba(37,99,235,.24);
+    }
+
+        .errx-btn-primary:hover {
+            color: #fff;
+            box-shadow: 0 20px 38px rgba(37,99,235,.30);
+        }
+
+    .errx-btn-soft {
+        border: 1px solid rgba(15,23,42,.10);
+        background: rgba(255,255,255,.76);
+        color: #0f172a;
+    }
+
+        .errx-btn-soft:hover {
+            background: rgba(239,246,255,.92);
+            color: #1d4ed8;
+        }
+
+    .errx-search {
+        margin-top: 22px;
+    }
+
+    .errx-search-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 22px;
+        border: 1px solid rgba(15,23,42,.10);
+        background: rgba(255,255,255,.78);
+        box-shadow: 0 16px 34px rgba(2,6,23,.06);
+    }
+
+        .errx-search-box i {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background: rgba(219,234,254,.78);
+            color: #2563eb;
+        }
+
+        .errx-search-box input {
+            flex: 1;
+            min-width: 120px;
+            border: 0;
+            outline: none;
+            background: transparent;
+            color: #0f172a;
+            font-weight: 800;
+            padding: 9px 4px;
+        }
+
+            .errx-search-box input::placeholder {
+                color: #94a3b8;
+            }
+
+        .errx-search-box button {
+            min-height: 42px;
+            border: 0;
+            border-radius: 16px;
+            padding: 9px 16px;
+            background: #0f172a;
+            color: #fff;
+            font-weight: 950;
+            transition: all .16s ease;
+        }
+
+            .errx-search-box button:hover {
+                background: #1d4ed8;
+            }
+
+    .errx-search-help {
+        margin-top: 9px;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .errx-request {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px dashed rgba(15,23,42,.14);
+    }
+
+        .errx-request span {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .errx-request code {
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            padding: 9px 12px;
+            border-radius: 14px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+    .errx-dev-box {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 20px;
+        border: 1px solid rgba(245,158,11,.28);
+        background: rgba(255,251,235,.90);
+        color: #92400e;
+    }
+
+    .errx-dev-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 950;
+    }
+
+    .errx-dev-box p {
+        margin: 7px 0 0;
+        line-height: 1.6;
+        font-weight: 650;
+    }
+
+    .errx-footer-note {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+        color: #94a3b8;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+        .errx-footer-note a {
+            color: #64748b;
+            font-weight: 950;
+            text-decoration: none;
+        }
+
+            .errx-footer-note a:hover {
+                color: #2563eb;
+            }
+
+    @@media (max-width: 991.98px) {
+        .errx-page {
+            padding-top: 22px;
+        }
+
+        .errx-card {
+            grid-template-columns: 1fr;
+            border-radius: 28px;
+        }
+
+        .errx-left {
+            border-right: 0;
+            border-bottom: 1px solid rgba(15,23,42,.08);
+        }
+
+        .errx-code-wrap {
+            height: 140px;
+        }
+
+        .errx-right {
+            padding: 26px;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .errx-container {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        .errx-left,
+        .errx-right {
+            padding: 18px;
+        }
+
+        .errx-card {
+            border-radius: 24px;
+        }
+
+        .errx-mini-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .errx-actions {
+            flex-direction: column;
+        }
+
+        .errx-btn {
+            width: 100%;
+        }
+
+        .errx-search-box {
+            flex-wrap: wrap;
+            border-radius: 20px;
+        }
+
+            .errx-search-box i {
+                display: none;
+            }
+
+            .errx-search-box input,
+            .errx-search-box button {
+                width: 100%;
+            }
+
+        .errx-title {
+            letter-spacing: -.035em;
+        }
+    }
+</style>
+
+<section class="errx-page">
+    <div class="errx-bg errx-bg-one"></div>
+    <div class="errx-bg errx-bg-two"></div>
+
+    <div class="container-fluid errx-container">
+        <div class="errx-card">
+            <div class="errx-left">
+                <div class="errx-status-pill">
+                    <span class="errx-status-dot"></span>
+                    <span>Server Error</span>
+                </div>
+
+                <div class="errx-code-wrap">
+                    <span class="errx-code">500</span>
+                </div>
+
+                <div class="errx-mini-grid">
+                    <div class="errx-mini-card">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Safe page</span>
+                    </div>
+
+                    <div class="errx-mini-card">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Try again</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="errx-right">
+                <span class="errx-kicker">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Something went wrong
+                </span>
+
+                <h1 class="errx-title">
+                    An error occurred while processing your request.
+                </h1>
+
+                <p class="errx-desc">
+                    Please try again in a moment. If the problem continues, use the Request ID below when contacting support.
+                </p>
+
+                <div class="errx-actions">
+                    <a class="errx-btn errx-btn-primary" asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Go Home</span>
+                    </a>
+
+                    <a class="errx-btn errx-btn-soft" asp-area="" asp-controller="Catalog" asp-action="Index">
+                        <i class="fa-solid fa-store"></i>
+                        <span>Shop Products</span>
+                    </a>
+
+                    <a class="errx-btn errx-btn-soft" asp-area="" asp-controller="Home" asp-action="Privacy">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Privacy</span>
+                    </a>
+                </div>
+
+                <form class="errx-search" asp-area="" asp-controller="Catalog" asp-action="Search" method="get" autocomplete="off">
+                    <div class="errx-search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="search"
+                               name="q"
+                               placeholder="Search products, brands, or guides..."
+                               aria-label="Search products" />
+                        <button type="submit">
+                            Search
+                        </button>
+                    </div>
+
+                    <div class="errx-search-help">
+                        Try searching for a product name, category, brand, or buying guide.
+                    </div>
+                </form>
+
+                @if (Model.ShowRequestId && !string.IsNullOrWhiteSpace(Model.RequestId))
+                {
+                    <div class="errx-request">
+                        <span>Request ID</span>
+                        <code>@Model.RequestId</code>
+                    </div>
+                }
+
+                @if (Context.RequestServices.GetService(typeof(IWebHostEnvironment)) is IWebHostEnvironment env && env.IsDevelopment())
+                {
+                    <div class="errx-dev-box">
+                        <div class="errx-dev-title">
+                            <i class="fa-solid fa-code"></i>
+                            Development Mode
+                        </div>
+
+                        <p>
+                            Detailed exception information is available in Development mode.
+                            Do not enable Development mode in production.
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="errx-footer-note">
+            <span>© @DateTime.UtcNow.Year As-Mart</span>
+            <span>•</span>
+            <a asp-area="" asp-controller="Home" asp-action="About">About</a>
+            <span>•</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </div>
+</section>

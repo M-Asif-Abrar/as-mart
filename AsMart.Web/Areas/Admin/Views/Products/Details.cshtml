@@ -1,0 +1,1034 @@
+﻿@model AsMart.Web.Models.DTOs.ProductDetailsDto
+@using System.Text.Json
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    List<string> ParseAdditional(string? raw)
+    {
+        var list = new List<string>();
+        if (string.IsNullOrWhiteSpace(raw)) return list;
+
+        try
+        {
+            var arr = JsonSerializer.Deserialize<List<string>>(raw);
+            if (arr != null) list.AddRange(arr);
+        }
+        catch
+        {
+            list.AddRange(
+                raw.Split(new[] { '\r', '\n', ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                   .Select(x => x.Trim())
+            );
+        }
+
+        return list.Where(x => !string.IsNullOrWhiteSpace(x))
+                   .Distinct(StringComparer.OrdinalIgnoreCase)
+                   .ToList();
+    }
+
+    var additionalImages = ParseAdditional(Model.AdditionalImagesJson);
+}
+
+@section Styles {
+    <style>
+        .as-product-details-page {
+            min-height: calc(100vh - 76px);
+            padding: 24px;
+            background: radial-gradient(900px 420px at 8% 0%, rgba(37, 99, 235, .12), transparent 60%), radial-gradient(760px 380px at 100% 8%, rgba(14, 165, 233, .10), transparent 60%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+        }
+
+        .as-product-details-shell {
+            width: 100%;
+            max-width: 1540px;
+            margin: 0 auto;
+        }
+
+        .as-product-hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+            padding: 24px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 30px;
+            background: rgba(255, 255, 255, .82);
+            box-shadow: 0 18px 50px rgba(15, 23, 42, .08);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .as-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            margin-bottom: 12px;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, .10);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .as-page-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(26px, 3vw, 42px);
+            font-weight: 950;
+            letter-spacing: -.055em;
+            line-height: 1.05;
+        }
+
+        .as-page-subtitle {
+            max-width: 760px;
+            margin: 10px 0 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.75;
+        }
+
+        .as-hero-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .as-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: .62rem 1rem;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 850;
+        }
+
+        .as-details-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.55fr) minmax(360px, .8fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .as-main-card,
+        .as-side-card {
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 28px;
+            background: rgba(255,255,255,.88);
+            box-shadow: 0 18px 50px rgba(15,23,42,.08);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .as-main-card {
+            padding: 22px;
+        }
+
+        .as-side-column {
+            display: grid;
+            gap: 18px;
+            position: sticky;
+            top: 88px;
+        }
+
+        .as-side-card {
+            padding: 18px;
+        }
+
+        .as-status-row,
+        .as-meta-row,
+        .as-date-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+        }
+
+            .as-pill,
+            .as-meta-row span,
+            .as-date-row span {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                border-radius: 999px;
+                font-size: 12px;
+                font-weight: 850;
+            }
+
+        .as-pill {
+            padding: 8px 12px;
+        }
+
+        .as-pill-id {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .as-pill-success {
+            background: rgba(22, 163, 74, .10);
+            color: #15803d;
+        }
+
+        .as-pill-danger {
+            background: rgba(220, 38, 38, .10);
+            color: #dc2626;
+        }
+
+        .as-pill-warning {
+            background: rgba(245, 158, 11, .16);
+            color: #92400e;
+        }
+
+        .as-pill-info {
+            background: rgba(14, 165, 233, .12);
+            color: #0369a1;
+        }
+
+        .as-product-title {
+            margin: 16px 0 12px;
+            color: #0f172a;
+            font-size: clamp(22px, 2.4vw, 34px);
+            font-weight: 950;
+            letter-spacing: -.045em;
+            line-height: 1.15;
+            text-align: justify;
+        }
+
+        .as-meta-row span {
+            padding: 8px 11px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .as-date-row {
+            margin-top: 12px;
+        }
+
+            .as-date-row span {
+                color: #64748b;
+            }
+
+        .as-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .as-info-box {
+            padding: 16px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 22px;
+            background: rgba(248, 250, 252, .78);
+        }
+
+        .as-wide {
+            grid-column: 1 / -1;
+        }
+
+        .as-info-label {
+            margin-bottom: 8px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+        }
+
+        .as-info-value,
+        .as-info-text {
+            color: #0f172a;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .as-price {
+            color: #0f172a;
+            font-size: 24px;
+            font-weight: 950;
+        }
+
+        .as-currency {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .as-list-price {
+            color: #334155;
+            font-size: 19px;
+            font-weight: 900;
+            text-decoration: line-through;
+            opacity: .82;
+        }
+
+        .as-discount {
+            display: inline-flex;
+            margin-left: 8px;
+            padding: 5px 8px;
+            border-radius: 999px;
+            background: rgba(22, 163, 74, .12);
+            color: #15803d;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .as-description {
+            color: #0f172a;
+            font-weight: 500;
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+            .as-description p {
+                margin: 0 0 .7rem;
+            }
+
+                .as-description p:last-child {
+                    margin-bottom: 0;
+                }
+
+            .as-description ul,
+            .as-description ol {
+                margin: .4rem 0 .75rem;
+                padding-left: 1.15rem;
+            }
+
+        .as-category-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .as-category-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 11px;
+            border: 1px solid rgba(37, 99, 235, .14);
+            border-radius: 999px;
+            background: rgba(37, 99, 235, .08);
+            color: #1d4ed8;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .as-affiliate-link {
+            color: #2563eb;
+            font-weight: 850;
+            text-decoration: none;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+            .as-affiliate-link:hover {
+                text-decoration: underline;
+            }
+
+        .as-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+            .as-card-head h3 {
+                margin: 0;
+                color: #0f172a;
+                font-size: 15px;
+                font-weight: 900;
+            }
+
+        .as-mini-btn {
+            border-radius: 12px;
+        }
+
+        .as-main-image-wrap {
+            position: relative;
+            display: grid;
+            min-height: 340px;
+            place-items: center;
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 22px;
+            background: #fff;
+        }
+
+        .as-main-image {
+            width: 100%;
+            height: 340px;
+            object-fit: contain;
+            padding: 14px;
+            background: #fff;
+        }
+
+        .as-image-fallback {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .as-image-error .as-image-fallback {
+            display: flex;
+        }
+
+        .as-empty-box {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 14px;
+            border: 1px dashed rgba(15,23,42,.16);
+            border-radius: 18px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+        .as-count {
+            display: inline-flex;
+            min-width: 30px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .as-additional-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .as-additional-item {
+            position: relative;
+            display: block;
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, .10);
+            border-radius: 16px;
+            background: #fff;
+            aspect-ratio: 1 / 1;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+            .as-additional-item img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                padding: 8px;
+            }
+
+            .as-additional-item span {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                display: inline-grid;
+                width: 30px;
+                height: 30px;
+                place-items: center;
+                border-radius: 999px;
+                background: rgba(15,23,42,.72);
+                color: #fff;
+                font-size: 12px;
+                opacity: 0;
+                transform: translateY(-2px);
+                transition: opacity .18s ease, transform .18s ease;
+            }
+
+            .as-additional-item:hover {
+                transform: translateY(-2px);
+                border-color: rgba(37, 99, 235, .35);
+                box-shadow: 0 12px 24px rgba(15,23,42,.12);
+            }
+
+                .as-additional-item:hover span {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+
+        .as-quick-actions {
+            display: grid;
+            gap: 10px;
+        }
+
+        .as-delete-modal-content {
+            overflow: hidden;
+            border: 0;
+            border-radius: 26px;
+            box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
+        }
+
+        .as-delete-modal-header {
+            position: relative;
+            padding: 24px 24px 10px;
+            border-bottom: 0;
+            background: radial-gradient(520px 220px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
+        }
+
+        .as-delete-icon {
+            display: inline-grid;
+            width: 54px;
+            height: 54px;
+            place-items: center;
+            margin-bottom: 14px;
+            border-radius: 18px;
+            background: rgba(220, 38, 38, .10);
+            color: #dc2626;
+            font-size: 22px;
+        }
+
+        .as-delete-title {
+            color: #0f172a;
+            font-weight: 900;
+            letter-spacing: -.03em;
+        }
+
+        .as-delete-text {
+            max-width: 420px;
+            margin: 8px 0 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .as-delete-modal-footer {
+            gap: 10px;
+            padding: 18px 24px 24px;
+            border-top: 0;
+            background: #f8fafc;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .as-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .as-side-column {
+                position: static;
+                top: auto;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .as-product-details-page {
+                padding: 12px;
+            }
+
+            .as-product-hero {
+                flex-direction: column;
+                padding: 18px;
+                border-radius: 24px;
+            }
+
+            .as-hero-actions {
+                width: 100%;
+            }
+
+                .as-hero-actions .btn {
+                    width: 100%;
+                }
+
+            .as-main-card,
+            .as-side-card {
+                border-radius: 24px;
+                padding: 16px;
+            }
+
+            .as-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .as-main-image-wrap,
+            .as-main-image {
+                min-height: 260px;
+                height: 260px;
+            }
+
+            .as-additional-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .as-delete-modal-footer {
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
+
+                .as-delete-modal-footer .btn {
+                    width: 100%;
+                }
+        }
+    </style>
+}
+
+<div class="as-product-details-page">
+    <div class="as-product-details-shell">
+
+        <div class="as-product-hero">
+            <div>
+                <div class="as-kicker">
+                    <i class="fa-solid fa-box-open"></i>
+                    Admin Product Details
+                </div>
+
+                <h1 class="as-page-title">Product Details</h1>
+
+                <p class="as-page-subtitle">
+                    View product content, pricing, status, categories, affiliate information, and media.
+                </p>
+            </div>
+
+            <div class="as-hero-actions">
+                <a asp-action="Index" class="btn btn-light border as-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Back
+                </a>
+
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary as-btn">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Edit
+                </a>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Slug))
+                {
+                    <a asp-area=""
+                       asp-controller="Product"
+                       asp-action="Details"
+                       asp-route-slug="@Model.Slug"
+                       class="btn btn-outline-success as-btn"
+                       target="_blank"
+                       rel="noopener">
+                        <i class="fa-solid fa-eye"></i>
+                        Public
+                    </a>
+                }
+
+                <a asp-action="Delete"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-danger as-btn"
+                   data-delete-confirm="true"
+                   data-delete-message="Are you sure you want to delete this product? You will be taken to the final delete page before permanent deletion.">
+                    <i class="fa-solid fa-trash"></i>
+                    Delete
+                </a>
+            </div>
+        </div>
+
+        <div class="as-details-grid">
+            <div class="as-main-card">
+                <div class="as-status-row">
+                    <span class="as-pill as-pill-id">
+                        <i class="fa-solid fa-hashtag"></i>
+                        Id: @Model.Id
+                    </span>
+
+                    @if (Model.IsActive)
+                    {
+                        <span class="as-pill as-pill-success">
+                            <i class="fa-solid fa-circle-check"></i>
+                            Active
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="as-pill as-pill-danger">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                            Inactive
+                        </span>
+                    }
+
+                    @if (Model.IsFeatured)
+                    {
+                        <span class="as-pill as-pill-warning">
+                            <i class="fa-solid fa-star"></i>
+                            Featured
+                        </span>
+                    }
+
+                    @if (Model.IsDealOfTheDay)
+                    {
+                        <span class="as-pill as-pill-info">
+                            <i class="fa-solid fa-bolt"></i>
+                            Deal
+                        </span>
+                    }
+                </div>
+
+                <h2 class="as-product-title">@Model.Title</h2>
+
+                <div class="as-meta-row">
+                    @if (!string.IsNullOrWhiteSpace(Model.Brand))
+                    {
+                        <span>
+                            <i class="fa-solid fa-tag"></i>
+                            @Model.Brand
+                        </span>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ASIN))
+                    {
+                        <span>
+                            <i class="fa-solid fa-barcode"></i>
+                            @Model.ASIN
+                        </span>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Slug))
+                    {
+                        <span>
+                            <i class="fa-solid fa-link"></i>
+                            @Model.Slug
+                        </span>
+                    }
+
+                    <span>
+                        <i class="fa-regular fa-hand-pointer"></i>
+                        Clicks: @Model.ClickCount
+                    </span>
+                </div>
+
+                <div class="as-date-row">
+                    <span>
+                        <i class="fa-regular fa-calendar-plus"></i>
+                        Created: @Model.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                    </span>
+
+                    <span>
+                        <i class="fa-regular fa-calendar-check"></i>
+                        Updated: @Model.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                    </span>
+                </div>
+
+                <div class="as-info-grid">
+                    <div class="as-info-box">
+                        <div class="as-info-label">Price</div>
+                        <div class="as-info-value">
+                            @if (Model.Price.HasValue)
+                            {
+                                <span class="as-price">@Model.Price.Value.ToString("0.00")</span>
+                                <span class="as-currency">@Model.Currency</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="as-info-box">
+                        <div class="as-info-label">List Price</div>
+                        <div class="as-info-value">
+                            @if (Model.ListPrice.HasValue)
+                            {
+                                <span class="as-list-price">@Model.ListPrice.Value.ToString("0.00")</span>
+                                <span class="as-currency">@Model.Currency</span>
+
+                                @if (Model.Price.HasValue && Model.ListPrice.Value > 0 && Model.ListPrice.Value > Model.Price.Value)
+                                {
+                                    var off = (int)Math.Round(((Model.ListPrice.Value - Model.Price.Value) / Model.ListPrice.Value) * 100m, MidpointRounding.AwayFromZero);
+                                    <span class="as-discount">-@off%</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="as-info-box as-wide">
+                        <div class="as-info-label">Short Description</div>
+                        <div class="as-info-text">
+                            @if (!string.IsNullOrWhiteSpace(Model.ShortDescription))
+                            {
+                                @Model.ShortDescription
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="as-info-box as-wide">
+                        <div class="as-info-label">Description</div>
+                        <div class="as-description">
+                            @if (!string.IsNullOrWhiteSpace(Model.Description))
+                            {
+                                @Html.Raw(Model.Description)
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="as-info-box as-wide">
+                        <div class="as-info-label">Categories</div>
+
+                        @if (Model.CategoryNames != null && Model.CategoryNames.Any())
+                        {
+                            <div class="as-category-list">
+                                @foreach (var c in Model.CategoryNames)
+                                {
+                                    <span class="as-category-chip">
+                                        <i class="fa-solid fa-folder-open"></i>
+                                        @c
+                                    </span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">None</span>
+                        }
+                    </div>
+
+                    <div class="as-info-box as-wide">
+                        <div class="as-info-label">Affiliate URL</div>
+
+                        @if (!string.IsNullOrEmpty(Model.AffiliateUrlOverride))
+                        {
+                            <a href="@Model.AffiliateUrlOverride"
+                               target="_blank"
+                               rel="nofollow sponsored noopener"
+                               class="as-affiliate-link">
+                                @Model.AffiliateUrlOverride
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Generated from ASIN at runtime.</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <aside class="as-side-column">
+                <div class="as-side-card">
+                    <div class="as-card-head">
+                        <h3>Main Image</h3>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.MainImageUrl))
+                        {
+                            <a href="@Model.MainImageUrl"
+                               target="_blank"
+                               rel="noopener"
+                               class="btn btn-sm btn-outline-secondary as-mini-btn">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.MainImageUrl))
+                    {
+                        <div class="as-main-image-wrap">
+                            <img src="@Model.MainImageUrl"
+                                 alt="@Model.Title"
+                                 class="as-main-image"
+                                 loading="lazy"
+                                 onerror="this.closest('.as-main-image-wrap').classList.add('as-image-error'); this.remove();" />
+
+                            <div class="as-image-fallback">
+                                <i class="fa-regular fa-image"></i>
+                                <span>Image not available</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="as-empty-box">
+                            <i class="fa-regular fa-image"></i>
+                            No main image URL set.
+                        </div>
+                    }
+                </div>
+
+                <div class="as-side-card">
+                    <div class="as-card-head">
+                        <h3>Additional Images</h3>
+                        <span class="as-count">@additionalImages.Count</span>
+                    </div>
+
+                    @if (additionalImages.Any())
+                    {
+                        <div class="as-additional-grid">
+                            @foreach (var url in additionalImages)
+                            {
+                                <a class="as-additional-item"
+                                   href="@url"
+                                   target="_blank"
+                                   rel="noopener">
+                                    <img src="@url" alt="@Model.Title" loading="lazy" />
+                                    <span>
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="as-empty-box">
+                            <i class="fa-regular fa-images"></i>
+                            No additional images found.
+                        </div>
+                    }
+                </div>
+
+                <div class="as-side-card">
+                    <div class="as-card-head">
+                        <h3>Quick Actions</h3>
+                    </div>
+
+                    <div class="as-quick-actions">
+                        @if (!string.IsNullOrWhiteSpace(Model.Slug))
+                        {
+                            <a asp-area=""
+                               asp-controller="Product"
+                               asp-action="Details"
+                               asp-route-slug="@Model.Slug"
+                               class="btn btn-outline-success as-btn"
+                               target="_blank"
+                               rel="noopener">
+                                <i class="fa-solid fa-globe"></i>
+                                Open Public Page
+                            </a>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.AffiliateUrlOverride))
+                        {
+                            <a href="@Model.AffiliateUrlOverride"
+                               target="_blank"
+                               rel="nofollow sponsored noopener"
+                               class="btn btn-primary as-btn">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                                Open Affiliate Link
+                            </a>
+                        }
+
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary as-btn">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            Edit Product
+                        </a>
+
+                        <a asp-action="Delete"
+                           asp-route-id="@Model.Id"
+                           class="btn btn-outline-danger as-btn"
+                           data-delete-confirm="true"
+                           data-delete-message="Are you sure you want to delete this product? You will be taken to the final delete page before permanent deletion.">
+                            <i class="fa-solid fa-trash"></i>
+                            Delete Product
+                        </a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade as-delete-modal" id="asDeleteConfirmModal" tabindex="-1" aria-labelledby="asDeleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content as-delete-modal-content">
+            <div class="modal-header as-delete-modal-header">
+                <div>
+                    <div class="as-delete-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+                    <h5 class="modal-title as-delete-title" id="asDeleteConfirmModalLabel">Confirm Delete</h5>
+
+                    <p class="as-delete-text">
+                        This action cannot be undone. Please confirm before deleting.
+                    </p>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-footer as-delete-modal-footer">
+                <button type="button" class="btn btn-light as-btn" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-danger as-btn" id="asDeleteConfirmButton">
+                    <i class="fa-solid fa-trash"></i>
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let pendingDeleteForm = null;
+        let pendingDeleteUrl = null;
+
+        const modalElement = document.getElementById('asDeleteConfirmModal');
+        const confirmButton = document.getElementById('asDeleteConfirmButton');
+
+        if (!modalElement || !confirmButton || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        const modal = new bootstrap.Modal(modalElement);
+
+        document.addEventListener('click', function (event) {
+            const deleteTrigger = event.target.closest('[data-delete-confirm="true"]');
+
+            if (!deleteTrigger) {
+                return;
+            }
+
+            event.preventDefault();
+
+            pendingDeleteForm = deleteTrigger.closest('form');
+            pendingDeleteUrl = deleteTrigger.getAttribute('href') || deleteTrigger.dataset.deleteUrl || null;
+
+            const customMessage = deleteTrigger.dataset.deleteMessage;
+            const textElement = modalElement.querySelector('.as-delete-text');
+
+            if (customMessage && textElement) {
+                textElement.textContent = customMessage;
+            }
+
+            modal.show();
+        });
+
+        confirmButton.addEventListener('click', function () {
+            if (pendingDeleteForm) {
+                pendingDeleteForm.submit();
+                return;
+            }
+
+            if (pendingDeleteUrl) {
+                window.location.href = pendingDeleteUrl;
+            }
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            pendingDeleteForm = null;
+            pendingDeleteUrl = null;
+        });
+    })();
+</script>

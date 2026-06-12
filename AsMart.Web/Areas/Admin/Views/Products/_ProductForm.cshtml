@@ -1,0 +1,791 @@
+﻿@model AsMart.Web.Models.DTOs.ProductFormDto
+@using AsMart.Web.Models.Entities
+
+@{
+    var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
+    Model.SelectedCategoryIds ??= new List<int>();
+
+    var pageTitle = string.IsNullOrWhiteSpace(Model?.Title)
+        ? "Product Details"
+        : "Edit Product";
+}
+
+<style>
+    .product-form-page {
+        width: 100%;
+        min-height: calc(100vh - 90px);
+        padding: 22px;
+        background: radial-gradient(900px 420px at 5% 0%, rgba(37, 99, 235, .12), transparent 58%), radial-gradient(760px 380px at 100% 8%, rgba(14, 165, 233, .10), transparent 58%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    }
+
+    .product-form-shell {
+        max-width: 1500px;
+        margin: 0 auto;
+    }
+
+    .product-form-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+        padding: 22px;
+        border: 1px solid rgba(15, 23, 42, .08);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, .78);
+        box-shadow: 0 18px 50px rgba(15, 23, 42, .08);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+
+    .product-form-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        margin-bottom: 10px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, .10);
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .product-form-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: clamp(24px, 3vw, 38px);
+        font-weight: 900;
+        letter-spacing: -.045em;
+        line-height: 1.05;
+    }
+
+    .product-form-subtitle {
+        max-width: 760px;
+        margin: 9px 0 0;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .product-form-actions-top {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .product-form-card {
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, .08);
+        border-radius: 30px;
+        background: rgba(255, 255, 255, .88);
+        box-shadow: 0 24px 70px rgba(15, 23, 42, .10);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .product-form-body {
+        padding: 22px;
+    }
+
+    .product-form-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(360px, .85fr);
+        gap: 18px;
+        align-items: start;
+    }
+
+    .product-form-panel {
+        border: 1px solid rgba(15, 23, 42, .08);
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.92));
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .055);
+    }
+
+    .product-form-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 18px 0;
+    }
+
+    .product-form-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: -.01em;
+    }
+
+        .product-form-section-title i {
+            display: inline-grid;
+            width: 34px;
+            height: 34px;
+            place-items: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(37,99,235,.14), rgba(14,165,233,.14));
+            color: #2563eb;
+        }
+
+    .product-form-section-note {
+        color: #94a3b8;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .product-form-panel-body {
+        padding: 18px;
+    }
+
+    .product-form-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .product-form-field {
+        margin-bottom: 15px;
+    }
+
+    .product-form-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 7px;
+        color: #1e293b;
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .product-form-help {
+        margin-top: 7px;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.55;
+    }
+
+    .product-form-input,
+    .product-form-textarea {
+        width: 100%;
+        border: 1px solid rgba(15, 23, 42, .12);
+        border-radius: 16px;
+        background-color: rgba(255,255,255,.92);
+        color: #0f172a;
+        font-size: 14px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease, background-color .18s ease;
+    }
+
+    .product-form-input {
+        min-height: 46px;
+        padding: .66rem .82rem;
+    }
+
+    .product-form-textarea {
+        min-height: 116px;
+        padding: .78rem .88rem;
+        resize: vertical;
+    }
+
+        .product-form-input:focus,
+        .product-form-textarea:focus {
+            border-color: rgba(37, 99, 235, .70);
+            background-color: #fff;
+            box-shadow: 0 0 0 .24rem rgba(37, 99, 235, .13);
+        }
+
+    .product-form-divider {
+        height: 1px;
+        margin: 18px 0;
+        background: linear-gradient(90deg, transparent, rgba(15,23,42,.14), transparent);
+    }
+
+    .product-form-sticky {
+        position: sticky;
+        top: 88px;
+    }
+
+    .product-form-switches {
+        display: grid;
+        gap: 10px;
+    }
+
+    .product-form-switch {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 12px;
+        border: 1px solid rgba(15, 23, 42, .08);
+        border-radius: 18px;
+        background: rgba(248, 250, 252, .86);
+    }
+
+        .product-form-switch .form-check-input {
+            width: 2.75em;
+            height: 1.45em;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .product-form-switch .form-check-label {
+            color: #1e293b;
+            font-size: 13px;
+            font-weight: 850;
+            cursor: pointer;
+        }
+
+    .category-group {
+        margin-bottom: 14px;
+        padding: 12px;
+        border: 1px solid rgba(15,23,42,.08);
+        border-radius: 20px;
+        background: rgba(255,255,255,.68);
+    }
+
+    .category-group-title {
+        margin-bottom: 10px;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .category-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .category-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        padding: 8px 11px;
+        border: 1px solid rgba(15, 23, 42, .10);
+        border-radius: 999px;
+        background: #fff;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+        .category-chip:hover {
+            transform: translateY(-1px);
+            border-color: rgba(37, 99, 235, .34);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, .08);
+        }
+
+        .category-chip input {
+            margin: 0;
+            cursor: pointer;
+        }
+
+    .product-form-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px 22px;
+        border-top: 1px solid rgba(15, 23, 42, .08);
+        background: rgba(248, 250, 252, .80);
+    }
+
+    .product-form-footer-note {
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .product-form-footer-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .product-form-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: .62rem 1rem;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 850;
+        box-shadow: none;
+    }
+
+    .product-form-btn-primary {
+        border-color: #2563eb;
+        background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        color: #fff;
+        box-shadow: 0 12px 26px rgba(37,99,235,.22);
+    }
+
+        .product-form-btn-primary:hover {
+            color: #fff;
+            filter: brightness(.98);
+            transform: translateY(-1px);
+        }
+
+    .product-form-empty {
+        padding: 14px;
+        border: 1px dashed rgba(15,23,42,.18);
+        border-radius: 18px;
+        background: rgba(248,250,252,.8);
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .delete-confirm-modal .modal-content {
+        overflow: hidden;
+        border: 0;
+        border-radius: 24px;
+        box-shadow: 0 28px 80px rgba(15, 23, 42, .24);
+    }
+
+    .delete-confirm-modal .modal-header {
+        border: 0;
+        padding: 22px 22px 0;
+    }
+
+    .delete-confirm-icon {
+        display: inline-grid;
+        width: 52px;
+        height: 52px;
+        place-items: center;
+        border-radius: 18px;
+        background: rgba(220, 38, 38, .10);
+        color: #dc2626;
+        font-size: 22px;
+    }
+
+    .delete-confirm-modal .modal-title {
+        margin-top: 14px;
+        color: #0f172a;
+        font-weight: 900;
+        letter-spacing: -.03em;
+    }
+
+    .delete-confirm-modal .modal-body {
+        padding: 14px 22px 4px;
+        color: #64748b;
+        line-height: 1.7;
+    }
+
+    .delete-confirm-modal .modal-footer {
+        border: 0;
+        padding: 18px 22px 22px;
+        background: #f8fafc;
+    }
+
+    @@media (max-width: 1199.98px) {
+        .product-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .product-form-sticky {
+            position: static;
+            top: auto;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .product-form-page {
+            padding: 12px;
+        }
+
+        .product-form-hero {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 18px;
+            border-radius: 22px;
+        }
+
+        .product-form-actions-top {
+            width: 100%;
+            justify-content: stretch;
+        }
+
+            .product-form-actions-top .btn,
+            .product-form-footer-actions .btn {
+                width: 100%;
+            }
+
+        .product-form-body {
+            padding: 14px;
+        }
+
+        .product-form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .product-form-panel {
+            border-radius: 22px;
+        }
+
+        .product-form-panel-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .product-form-footer {
+            align-items: stretch;
+            flex-direction: column;
+            padding: 16px;
+        }
+
+        .product-form-footer-actions {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="product-form-page">
+    <div class="product-form-shell">
+
+        <div class="product-form-hero">
+            <div>
+                <div class="product-form-kicker">
+                    <i class="fa-solid fa-box-open"></i>
+                    Product Management
+                </div>
+                <h1 class="product-form-title">@pageTitle</h1>
+                <p class="product-form-subtitle">
+                    Add clean product information, pricing, affiliate links, images, status flags, and categories for your As-Mart catalog.
+                </p>
+            </div>
+
+            <div class="product-form-actions-top">
+                <a asp-action="Index" class="btn btn-light border product-form-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Back
+                </a>
+                <button type="submit" class="btn product-form-btn product-form-btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save Product
+                </button>
+            </div>
+        </div>
+
+        <div class="product-form-card">
+            <div class="product-form-body">
+                <div class="product-form-grid">
+
+                    <div class="product-form-panel">
+                        <div class="product-form-panel-header">
+                            <h2 class="product-form-section-title">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                                Core Details
+                            </h2>
+                            <span class="product-form-section-note">Required product identity</span>
+                        </div>
+
+                        <div class="product-form-panel-body">
+                            <div class="product-form-field">
+                                <label asp-for="Title" class="product-form-label">Title</label>
+                                <input asp-for="Title" class="form-control product-form-input" placeholder="e.g., Minolta 10x25 Digital Night Vision Monocular" />
+                                <span asp-validation-for="Title" class="text-danger small"></span>
+                            </div>
+
+                            <div class="product-form-field">
+                                <label asp-for="Slug" class="product-form-label">Slug</label>
+                                <input asp-for="Slug" class="form-control product-form-input" placeholder="e.g., minolta-10x25-digital-night-vision" />
+                                <div class="product-form-help">Keep slug lowercase, short, SEO-friendly, and unique.</div>
+                                <span asp-validation-for="Slug" class="text-danger small"></span>
+                            </div>
+
+                            <div class="product-form-row">
+                                <div class="product-form-field">
+                                    <label asp-for="ASIN" class="product-form-label">ASIN</label>
+                                    <input asp-for="ASIN" class="form-control product-form-input" placeholder="e.g., B0FQTKCGZ7" />
+                                    <span asp-validation-for="ASIN" class="text-danger small"></span>
+                                </div>
+
+                                <div class="product-form-field">
+                                    <label asp-for="Brand" class="product-form-label">Brand</label>
+                                    <input asp-for="Brand" class="form-control product-form-input" placeholder="e.g., Minolta" />
+                                    <span asp-validation-for="Brand" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="product-form-field">
+                                <label asp-for="ShortDescription" class="product-form-label">Short Description</label>
+                                <textarea asp-for="ShortDescription" class="form-control product-form-textarea" rows="3" placeholder="1–2 lines summary for cards and snippets"></textarea>
+                                <span asp-validation-for="ShortDescription" class="text-danger small"></span>
+                            </div>
+
+                            <div class="product-form-field">
+                                <label asp-for="Description" class="product-form-label">Full Description</label>
+                                <textarea asp-for="Description" class="form-control product-form-textarea" rows="7" placeholder="Long product description"></textarea>
+                                <span asp-validation-for="Description" class="text-danger small"></span>
+                            </div>
+
+                            <div class="product-form-divider"></div>
+
+                            <div class="product-form-panel-header px-0 pt-0">
+                                <h2 class="product-form-section-title">
+                                    <i class="fa-solid fa-image"></i>
+                                    Media & Affiliate
+                                </h2>
+                                <span class="product-form-section-note">Images and outgoing URL</span>
+                            </div>
+
+                            <div class="product-form-field mt-3">
+                                <label asp-for="MainImageUrl" class="product-form-label">Main Image URL</label>
+                                <input asp-for="MainImageUrl" class="form-control product-form-input" placeholder="https://..." />
+                                <span asp-validation-for="MainImageUrl" class="text-danger small"></span>
+                            </div>
+
+                            <div class="product-form-field">
+                                <label asp-for="AdditionalImageUrls" class="product-form-label">Additional Image URLs</label>
+                                <textarea asp-for="AdditionalImageUrls" class="form-control product-form-textarea" rows="4" placeholder="One per line OR comma-separated"></textarea>
+                                <div class="product-form-help">Use high-quality product images where possible.</div>
+                                <span asp-validation-for="AdditionalImageUrls" class="text-danger small"></span>
+                            </div>
+
+                            <div class="product-form-field mb-0">
+                                <label asp-for="AffiliateUrlOverride" class="product-form-label">Affiliate URL Override</label>
+                                <input asp-for="AffiliateUrlOverride" class="form-control product-form-input" placeholder="Optional – if empty, system can use ASIN-based URL" />
+                                <span asp-validation-for="AffiliateUrlOverride" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-form-panel product-form-sticky">
+                        <div class="product-form-panel-header">
+                            <h2 class="product-form-section-title">
+                                <i class="fa-solid fa-tags"></i>
+                                Pricing & Status
+                            </h2>
+                            <span class="product-form-section-note">Catalog visibility</span>
+                        </div>
+
+                        <div class="product-form-panel-body">
+                            <div class="product-form-row">
+                                <div class="product-form-field">
+                                    <label asp-for="Price" class="product-form-label">Price</label>
+                                    <input asp-for="Price" class="form-control product-form-input" placeholder="149.00" />
+                                    <span asp-validation-for="Price" class="text-danger small"></span>
+                                </div>
+
+                                <div class="product-form-field">
+                                    <label asp-for="ListPrice" class="product-form-label">List Price</label>
+                                    <input asp-for="ListPrice" class="form-control product-form-input" placeholder="199.00" />
+                                    <span asp-validation-for="ListPrice" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="product-form-field">
+                                <label asp-for="Currency" class="product-form-label">Currency</label>
+                                <input asp-for="Currency" class="form-control product-form-input" placeholder="USD" />
+                                <span asp-validation-for="Currency" class="text-danger small"></span>
+                            </div>
+
+                            <div class="product-form-row">
+                                <div class="product-form-field">
+                                    <label asp-for="Rating" class="product-form-label">Rating</label>
+                                    <input asp-for="Rating" class="form-control product-form-input" placeholder="4.6" />
+                                    <span asp-validation-for="Rating" class="text-danger small"></span>
+                                </div>
+
+                                <div class="product-form-field">
+                                    <label asp-for="RatingCount" class="product-form-label">Rating Count</label>
+                                    <input asp-for="RatingCount" class="form-control product-form-input" placeholder="1234" />
+                                    <span asp-validation-for="RatingCount" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="product-form-switches">
+                                <div class="form-check form-switch product-form-switch">
+                                    <label asp-for="IsFeatured" class="form-check-label"></label>
+                                    <input asp-for="IsFeatured" class="form-check-input" />
+                                </div>
+
+                                <div class="form-check form-switch product-form-switch">
+                                    <label asp-for="IsDealOfTheDay" class="form-check-label"></label>
+                                    <input asp-for="IsDealOfTheDay" class="form-check-input" />
+                                </div>
+
+                                <div class="form-check form-switch product-form-switch">
+                                    <label asp-for="IsActive" class="form-check-label"></label>
+                                    <input asp-for="IsActive" class="form-check-input" />
+                                </div>
+                            </div>
+
+                            <div class="product-form-divider"></div>
+
+                            <div class="product-form-panel-header px-0 pt-0">
+                                <h2 class="product-form-section-title">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                    Categories
+                                </h2>
+                            </div>
+
+                            <div class="mt-3">
+                                @if (categories.Any())
+                                {
+                                    var grouped = categories
+                                    .Where(c => c.IsActive)
+                                    .GroupBy(c => (c.ParentCategory?.Name ?? "Other").Trim())
+                                    .OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase)
+                                    .ToList();
+
+                                    foreach (var group in grouped)
+                                    {
+                                        <div class="category-group">
+                                            <div class="category-group-title">@group.Key</div>
+
+                                            <div class="category-chip-list">
+                                                @foreach (var cat in group.OrderBy(x => (x.Name ?? "").Trim(), StringComparer.OrdinalIgnoreCase))
+                                                {
+                                                    var isChecked = Model.SelectedCategoryIds.Contains(cat.Id);
+
+                                                    <label class="category-chip" for="cat_@cat.Id">
+                                                        <input type="checkbox"
+                                                               name="SelectedCategoryIds"
+                                                               value="@cat.Id"
+                                                               class="form-check-input"
+                                                               id="cat_@cat.Id"
+                                                               @(isChecked ? "checked" : null) />
+                                                        <span>@cat.Name</span>
+                                                    </label>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="product-form-empty">
+                                        <i class="fa-solid fa-circle-info me-1"></i>
+                                        No active categories found.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="product-form-footer">
+                <div class="product-form-footer-note">
+                    Save only after checking title, slug, ASIN, price, image URL, affiliate URL, and category selection.
+                </div>
+
+                <div class="product-form-footer-actions">
+                    <a asp-action="Index" class="btn btn-outline-secondary product-form-btn">
+                        <i class="fa-solid fa-xmark"></i>
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="btn product-form-btn product-form-btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Save Product
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade delete-confirm-modal" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header d-block">
+                <div class="delete-confirm-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                This action cannot be undone. Are you sure you want to delete this record?
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light border product-form-btn" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-danger product-form-btn" id="deleteConfirmButton">
+                    <i class="fa-solid fa-trash"></i>
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let pendingDeleteForm = null;
+        let pendingDeleteUrl = null;
+
+        const modalElement = document.getElementById('deleteConfirmModal');
+        const confirmButton = document.getElementById('deleteConfirmButton');
+
+        if (!modalElement || !confirmButton || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        const deleteModal = new bootstrap.Modal(modalElement);
+
+        document.addEventListener('click', function (event) {
+            const deleteButton = event.target.closest('[data-delete-confirm="true"]');
+
+            if (!deleteButton) {
+                return;
+            }
+
+            event.preventDefault();
+
+            pendingDeleteForm = deleteButton.closest('form');
+            pendingDeleteUrl = deleteButton.getAttribute('href') || deleteButton.dataset.deleteUrl || null;
+
+            const message = deleteButton.dataset.deleteMessage;
+
+            if (message) {
+                modalElement.querySelector('.modal-body').textContent = message;
+            }
+
+            deleteModal.show();
+        });
+
+        confirmButton.addEventListener('click', function () {
+            if (pendingDeleteForm) {
+                pendingDeleteForm.submit();
+                return;
+            }
+
+            if (pendingDeleteUrl) {
+                window.location.href = pendingDeleteUrl;
+            }
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            pendingDeleteForm = null;
+            pendingDeleteUrl = null;
+        });
+    })();
+</script>

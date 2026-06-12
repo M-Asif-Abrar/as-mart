@@ -1,0 +1,241 @@
+﻿@model AsMart.Web.Models.DTOs.CategoryFormDto
+@using AsMart.Web.Models.Entities
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    var parentCategories = ViewBag.ParentCategories as List<Category>;
+}
+
+<style>
+    .cf-card {
+        border-radius: 26px;
+        background: rgba(255,255,255,.96);
+        border: 1px solid rgba(15,23,42,.08);
+        box-shadow: 0 16px 45px rgba(15,23,42,.08);
+        overflow: hidden;
+    }
+
+    .cf-section {
+        padding: 1.5rem;
+    }
+
+    .cf-section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        border-bottom: 1px solid rgba(15,23,42,.08);
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+        .cf-section-head h4 {
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0 0 .35rem;
+        }
+
+        .cf-section-head p {
+            margin: 0;
+            color: #64748b;
+            font-size: .95rem;
+        }
+
+    .cf-label {
+        display: block;
+        font-weight: 900;
+        color: #0f172a;
+        margin-bottom: .55rem;
+    }
+
+    .cf-input-wrap {
+        display: flex;
+        border-radius: 16px;
+        border: 1px solid rgba(15,23,42,.12);
+        background: #fff;
+        overflow: hidden;
+        transition: .2s ease;
+    }
+
+        .cf-input-wrap:focus-within {
+            border-color: rgba(37,99,235,.45);
+            box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
+        }
+
+        .cf-input-wrap > span {
+            width: 54px;
+            min-width: 54px;
+            display: flex;
+            justify-content: center;
+            color: #64748b;
+            background: #f8fafc;
+            border-right: 1px solid rgba(15,23,42,.08);
+        }
+
+        .cf-input-wrap:not(.align-items-start) > span {
+            align-items: center;
+        }
+
+    .cf-control {
+        min-height: 50px;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: #fff;
+    }
+
+    .cf-textarea {
+        min-height: 125px;
+        resize: vertical;
+    }
+
+    .cf-links {
+        min-height: 220px;
+        resize: vertical;
+        line-height: 1.45;
+        white-space: pre-wrap;
+    }
+
+    .cf-help {
+        color: #64748b;
+        font-size: .86rem;
+        margin-top: .5rem;
+    }
+
+    .cf-switch-card {
+        border-radius: 18px;
+        border: 1px solid rgba(15,23,42,.08);
+        background: #f8fafc;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+
+        .cf-switch-card span {
+            color: #64748b;
+            font-size: .88rem;
+            font-weight: 600;
+        }
+
+    .cf-switch {
+        width: 3rem !important;
+        height: 1.5rem !important;
+    }
+
+    @@media (max-width: 575.98px) {
+        .cf-card {
+            border-radius: 20px;
+        }
+
+        .cf-section {
+            padding: 1rem;
+        }
+
+        .cf-input-wrap > span {
+            width: 48px;
+            min-width: 48px;
+        }
+
+        .cf-switch-card {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="cf-card">
+    <div class="cf-section">
+        <div class="cf-section-head">
+            <div>
+                <h4>Category Details</h4>
+                <p>Enter category name, slug, hierarchy, display order, links, and visibility.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12">
+                <label asp-for="Name" class="cf-label"></label>
+                <div class="cf-input-wrap">
+                    <span><i class="fa-solid fa-folder-tree"></i></span>
+                    <input asp-for="Name" class="form-control cf-control" placeholder="e.g. Binoculars" autocomplete="off" />
+                </div>
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Slug" class="cf-label"></label>
+                <div class="cf-input-wrap">
+                    <span><i class="fa-solid fa-link"></i></span>
+                    <input asp-for="Slug" class="form-control cf-control" placeholder="Optional — auto generated if empty" />
+                </div>
+                <div class="cf-help">If empty, slug will be generated from name. Must be unique.</div>
+                <span asp-validation-for="Slug" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Description" class="cf-label"></label>
+                <div class="cf-input-wrap align-items-start">
+                    <span class="pt-3"><i class="fa-solid fa-align-left"></i></span>
+                    <textarea asp-for="Description" class="form-control cf-control cf-textarea" rows="4" placeholder="Short description for SEO / UI..."></textarea>
+                </div>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label asp-for="ParentCategoryId" class="cf-label"></label>
+                <div class="cf-input-wrap">
+                    <span><i class="fa-solid fa-sitemap"></i></span>
+                    <select asp-for="ParentCategoryId"
+                            class="form-select cf-control"
+                            asp-items="@(new SelectList(parentCategories ?? new List<Category>(), "Id", "Name"))">
+                        <option value="">None — Top Level</option>
+                    </select>
+                </div>
+                <span asp-validation-for="ParentCategoryId" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label asp-for="DisplayOrder" class="cf-label"></label>
+                <div class="cf-input-wrap">
+                    <span><i class="fa-solid fa-arrow-up-1-9"></i></span>
+                    <input asp-for="DisplayOrder" class="form-control cf-control" placeholder="0" inputmode="numeric" />
+                </div>
+                <span asp-validation-for="DisplayOrder" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Links" class="cf-label"></label>
+                <div class="cf-input-wrap align-items-start">
+                    <span class="pt-3"><i class="fa-solid fa-tags"></i></span>
+                    <textarea asp-for="Links"
+                              class="form-control cf-control cf-links"
+                              rows="8"
+                              placeholder="Under $50 | /guides/best-binoculars-under-50&#10;For Hunting | /guides/best-binoculars-for-hunting&#10;10x42 | /guides/best-10x42-binoculars"></textarea>
+                </div>
+                <div class="cf-help">
+                    One per line. Format: <strong>Badge Text | URL</strong> or paste full anchor HTML.
+                </div>
+                <span asp-validation-for="Links" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12">
+                <div class="cf-switch-card">
+                    <div>
+                        <div class="form-check form-switch m-0">
+                            <input asp-for="IsActive" class="form-check-input cf-switch" role="switch" />
+                            <label asp-for="IsActive" class="form-check-label fw-bold"></label>
+                        </div>
+                    </div>
+
+                    <span>
+                        <i class="fa-regular fa-circle-check me-1"></i>
+                        Inactive categories are hidden from selection.
+                    </span>
+                </div>
+                <span asp-validation-for="IsActive" class="text-danger small"></span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,358 @@
+﻿@using AsMart.Web.Helpers
+@using AsMart.Web.Models.ViewModels
+@model IEnumerable<AsMart.Web.Models.Entities.Product>
+
+@{
+    ViewData["Title"] = "My Wishlist";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var products = Model?.ToList() ?? new List<AsMart.Web.Models.Entities.Product>();
+}
+
+@section Styles {
+    <style>
+        .wishlist-page {
+            min-height: calc(100vh - 90px);
+            padding: 24px 0 42px;
+            background: radial-gradient(circle at 10% 8%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(236,72,153,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .wishlist-shell {
+            max-width: 1480px;
+            margin: 0 auto;
+        }
+
+        .wishlist-hero,
+        .wishlist-stat-card,
+        .wishlist-empty-card {
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.96);
+            box-shadow: 0 20px 60px rgba(15,23,42,.08);
+        }
+
+        .wishlist-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(253,242,248,.93)), radial-gradient(circle at top right, rgba(236,72,153,.16), transparent 36%);
+            margin-bottom: 24px;
+        }
+
+            .wishlist-hero::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 16% 20%, rgba(37,99,235,.10), transparent 28%), radial-gradient(circle at 85% 80%, rgba(236,72,153,.13), transparent 30%);
+                pointer-events: none;
+            }
+
+        .wishlist-hero-body {
+            position: relative;
+            z-index: 1;
+            padding: 34px;
+        }
+
+        .wishlist-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(236,72,153,.09);
+            border: 1px solid rgba(236,72,153,.14);
+            color: #be185d;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .wishlist-title {
+            margin: 14px 0 0;
+            color: #0f172a;
+            font-size: clamp(34px, 5vw, 58px);
+            line-height: 1.03;
+            letter-spacing: -.05em;
+            font-weight: 950;
+        }
+
+        .wishlist-sub {
+            margin: 15px 0 0;
+            max-width: 860px;
+            color: #475569;
+            font-size: 16px;
+            line-height: 1.8;
+            font-weight: 650;
+        }
+
+        .wishlist-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 18px;
+        }
+
+            .wishlist-pills span {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 9px 12px;
+                border-radius: 999px;
+                background: rgba(255,255,255,.78);
+                border: 1px solid rgba(15,23,42,.08);
+                color: #0f172a;
+                font-size: 12px;
+                font-weight: 900;
+                box-shadow: 0 8px 18px rgba(15,23,42,.04);
+            }
+
+            .wishlist-pills i {
+                color: #be185d;
+            }
+
+        .wishlist-stat-card {
+            border-radius: 28px;
+            padding: 24px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .wishlist-stat-label {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .wishlist-stat-value {
+            margin-top: 7px;
+            color: #0f172a;
+            font-size: 56px;
+            line-height: 1;
+            font-weight: 950;
+            letter-spacing: -.05em;
+        }
+
+        .wishlist-stat-footer {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: rgba(236,72,153,.07);
+            border: 1px solid rgba(236,72,153,.14);
+            color: #be185d;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .wishlist-grid-section {
+            margin-top: 22px;
+        }
+
+        .wishlist-empty-section {
+            margin-top: 18px;
+        }
+
+        .wishlist-empty-card {
+            border-radius: 30px;
+            padding: 48px 24px;
+            text-align: center;
+        }
+
+        .wishlist-empty-icon {
+            width: 82px;
+            height: 82px;
+            margin: 0 auto 18px;
+            border-radius: 28px;
+            background: rgba(236,72,153,.09);
+            border: 1px solid rgba(236,72,153,.14);
+            color: #be185d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .wishlist-empty-card h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(28px, 4vw, 42px);
+            line-height: 1.1;
+            font-weight: 950;
+            letter-spacing: -.04em;
+        }
+
+        .wishlist-empty-card p {
+            margin: 14px auto 0;
+            max-width: 640px;
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.8;
+            font-weight: 650;
+        }
+
+        .wishlist-empty-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .wishlist-btn {
+            min-height: 46px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            padding: 0 20px;
+            font-size: 13px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .wishlist-page {
+                padding: 18px 0 34px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .wishlist-hero-body {
+                padding: 24px;
+            }
+
+            .wishlist-stat-value {
+                font-size: 48px;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .wishlist-page {
+                padding: 14px 0 28px;
+            }
+
+            .wishlist-hero,
+            .wishlist-stat-card,
+            .wishlist-empty-card {
+                border-radius: 22px;
+            }
+
+            .wishlist-hero-body {
+                padding: 18px;
+            }
+
+            .wishlist-pills span,
+            .wishlist-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .wishlist-empty-card {
+                padding: 36px 18px;
+            }
+
+            .wishlist-empty-actions {
+                flex-direction: column;
+            }
+
+            .wishlist-stat-value {
+                font-size: 42px;
+            }
+        }
+    </style>
+}
+
+<section class="wishlist-page">
+    <div class="container-fluid wishlist-shell">
+
+        <header class="wishlist-hero">
+            <div class="wishlist-hero-body">
+                <div class="row align-items-center g-4">
+                    <div class="col-12 col-lg-8">
+                        <div class="wishlist-kicker">
+                            <i class="fa-solid fa-heart"></i>
+                            Saved Products
+                        </div>
+
+                        <h1 class="wishlist-title">My Wishlist</h1>
+
+                        <p class="wishlist-sub">
+                            Keep products you like in one place, revisit them later, compare options, and continue shopping when you are ready.
+                        </p>
+
+                        <div class="wishlist-pills">
+                            <span><i class="fa-solid fa-bookmark"></i> Saved Items</span>
+                            <span><i class="fa-solid fa-eye"></i> Quick Review</span>
+                            <span><i class="fa-solid fa-store"></i> Continue Shopping</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="wishlist-stat-card">
+                            <div class="wishlist-stat-label">Wishlist Items</div>
+                            <div class="wishlist-stat-value">@products.Count</div>
+                            <div class="wishlist-stat-footer">
+                                <i class="fa-solid fa-heart-circle-check"></i>
+                                Products saved for later
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        @if (!products.Any())
+        {
+            <section class="wishlist-empty-section">
+                <div class="wishlist-empty-card">
+                    <div class="wishlist-empty-icon">
+                        <i class="fa-regular fa-heart"></i>
+                    </div>
+
+                    <h2>Your wishlist is empty</h2>
+
+                    <p>
+                        Save products you like and come back anytime. Your saved items will appear here in a clean responsive product grid.
+                    </p>
+
+                    <div class="wishlist-empty-actions">
+                        <a asp-controller="Catalog"
+                           asp-action="Index"
+                           class="btn btn-primary wishlist-btn">
+                            <i class="fa-solid fa-store"></i>
+                            Browse Products
+                        </a>
+
+                        <a asp-controller="Collections"
+                           asp-action="Index"
+                           class="btn btn-outline-primary wishlist-btn">
+                            <i class="fa-solid fa-layer-group"></i>
+                            Explore Collections
+                        </a>
+                    </div>
+                </div>
+            </section>
+        }
+        else
+        {
+            <section class="wishlist-grid-section">
+                @{
+                    var grid = new ProductGridVm
+                    {
+                        Title = "Saved Wishlist Products",
+                        Actions = ProductGridActions.DetailsOnly,
+                        Products = products.Select(p => p.ToCardVm()).ToList()
+                    };
+                }
+
+                <partial name="~/Views/Shared/Products/_ProductGrid.cshtml" model="grid" />
+            </section>
+        }
+
+    </div>
+</section>

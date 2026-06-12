@@ -1,0 +1,1028 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using AsMart.Web.Models.Entities
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@(ViewData["MetaTitle"] ?? "As-Mart | Amazon Affiliate Store for Electronics, Kids & Smart Deals")</title>
+
+    <meta name="description" content="@(ViewData["MetaDescription"] ?? "Compare top-rated products and buy smart with As-Mart — an Amazon affiliate store.")" />
+
+    @if (ViewData["Canonical"] != null)
+    {
+        <link rel="canonical" href="@ViewData["Canonical"]" />
+    }
+
+    @if (ViewData["MetaTitle"] != null)
+    {
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content="@ViewData["MetaTitle"]" />
+        <meta property="og:description" content="@(ViewData["MetaDescription"] ?? "Compare top-rated products and buy smart with As-Mart.")" />
+
+        @if (ViewData["Canonical"] != null)
+        {
+            <meta property="og:url" content="@ViewData["Canonical"]" />
+        }
+
+        <meta property="og:site_name" content="As-Mart" />
+
+        @if (ViewData["OgImage"] != null)
+        {
+            <meta property="og:image" content="@ViewData["OgImage"]" />
+            <meta name="twitter:image" content="@ViewData["OgImage"]" />
+        }
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="@ViewData["MetaTitle"]" />
+        <meta name="twitter:description" content="@(ViewData["MetaDescription"] ?? "Compare top-rated products and buy smart with As-Mart.")" />
+    }
+
+    <link rel="preload" as="image" href="/Pictures/logo1.png" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/product-grid.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/AsMart.Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+          referrerpolicy="no-referrer" />
+
+    <style>
+        :root {
+            --as-primary: #2563eb;
+            --as-primary-dark: #1d4ed8;
+            --as-primary-soft: rgba(37, 99, 235, .10);
+            --as-indigo-soft: rgba(99, 102, 241, .11);
+            --as-purple-soft: rgba(168, 85, 247, .10);
+            --as-green-soft: rgba(16, 185, 129, .10);
+            --as-orange-soft: rgba(249, 115, 22, .10);
+            --as-text: #0f172a;
+            --as-muted: #64748b;
+            --as-border: rgba(15, 23, 42, .10);
+            --as-card: rgba(255, 255, 255, .82);
+            --as-shadow: 0 22px 55px rgba(2, 6, 23, .10);
+            --as-radius: 24px;
+        }
+
+        html {
+            min-height: 100%;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            color: var(--as-text);
+            background: radial-gradient(900px 420px at 4% 4%, rgba(59,130,246,.16), transparent 62%), radial-gradient(850px 420px at 95% 10%, rgba(168,85,247,.12), transparent 58%), radial-gradient(720px 360px at 45% 100%, rgba(16,185,129,.10), transparent 58%), linear-gradient(180deg, #f8fbff 0%, #f6f8ff 45%, #ffffff 100%);
+            overflow-x: hidden;
+        }
+
+            body::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                background-image: linear-gradient(rgba(15,23,42,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,.035) 1px, transparent 1px);
+                background-size: 42px 42px;
+                mask-image: linear-gradient(to bottom, rgba(0,0,0,.55), transparent 72%);
+                z-index: -1;
+            }
+
+        .as-nav {
+            background: radial-gradient(900px 420px at 10% 0%, rgba(59,130,246,.16), transparent 60%), radial-gradient(700px 360px at 92% 10%, rgba(168,85,247,.12), transparent 62%), linear-gradient(135deg, rgba(255,255,255,.94), rgba(248,250,252,.88));
+            border-bottom: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 12px 34px rgba(2,6,23,.08);
+            backdrop-filter: saturate(180%) blur(18px);
+            -webkit-backdrop-filter: saturate(180%) blur(18px);
+            z-index: 1100;
+            min-height: 70px;
+        }
+
+            .as-nav .container-fluid {
+                max-width: 1480px;
+                margin: 0 auto;
+            }
+
+            .as-nav .dropdown-menu {
+                z-index: 1200;
+            }
+
+        .as-brand {
+            min-height: 46px;
+            padding: 0;
+        }
+
+        .as-nav-logo {
+            height: 38px;
+            width: auto;
+            max-width: 220px;
+            object-fit: contain;
+            display: block;
+            filter: drop-shadow(0 8px 16px rgba(15,23,42,.08));
+        }
+
+        .as-nav-toggler {
+            border: 1px solid rgba(15,23,42,.12);
+            border-radius: 16px;
+            padding: 9px 11px;
+            box-shadow: 0 10px 22px rgba(2,6,23,.06);
+            background: rgba(255,255,255,.72);
+        }
+
+            .as-nav-toggler:focus {
+                box-shadow: 0 0 0 .2rem rgba(37,99,235,.14);
+            }
+
+        .as-nav-links {
+            gap: 2px;
+        }
+
+            .as-nav-links .nav-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: .58rem .82rem;
+                border-radius: 999px;
+                color: #0f172a !important;
+                font-weight: 800;
+                letter-spacing: .01em;
+                transition: all .16s ease;
+                white-space: nowrap;
+            }
+
+                .as-nav-links .nav-link i {
+                    color: rgba(37,99,235,.82);
+                    font-size: 14px;
+                    transition: all .16s ease;
+                }
+
+                .as-nav-links .nav-link:hover,
+                .as-nav-links .nav-link:focus,
+                .as-nav-links .nav-link.show {
+                    background: rgba(37,99,235,.10);
+                    color: #0f172a !important;
+                    transform: translateY(-1px);
+                }
+
+                    .as-nav-links .nav-link:hover i,
+                    .as-nav-links .nav-link.show i {
+                        color: var(--as-primary-dark);
+                    }
+
+        .as-nav-dropdown {
+            min-width: 330px;
+            border-radius: 20px;
+            border: 1px solid rgba(15,23,42,.10);
+            background: radial-gradient(520px 260px at 10% 0%, rgba(59,130,246,.11), transparent 58%), linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.96));
+            box-shadow: 0 24px 60px rgba(2,6,23,.16);
+            padding: 10px;
+            max-height: 72vh;
+            overflow: auto;
+        }
+
+            .as-nav-dropdown .dropdown-item {
+                border-radius: 14px;
+                padding: 10px 11px;
+                font-weight: 700;
+                line-height: 1.15;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                white-space: nowrap;
+                color: #0f172a;
+                transition: all .14s ease;
+            }
+
+                .as-nav-dropdown .dropdown-item i {
+                    width: 20px;
+                    min-width: 20px;
+                    color: rgba(37,99,235,.86);
+                }
+
+                .as-nav-dropdown .dropdown-item:hover {
+                    background: rgba(37,99,235,.10);
+                    transform: translateX(2px);
+                }
+
+        .as-dd-header {
+            font-size: 11px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: rgba(15,23,42,.54);
+            padding: 8px 10px 5px;
+            margin: 0;
+            font-weight: 900;
+        }
+
+        .as-dd-divider {
+            margin: 8px 0;
+            border-color: rgba(15,23,42,.09);
+        }
+
+        .as-nav-search {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            margin-left: 30px;
+            background: rgba(255,255,255,.82);
+            border: 1px solid rgba(15,23,42,.11);
+            border-radius: 999px;
+            padding: 8px 10px;
+            box-shadow: 0 12px 26px rgba(2,6,23,.07);
+            backdrop-filter: blur(14px);
+        }
+
+        .as-nav-search-icon {
+            color: rgba(15,23,42,.46);
+            padding-left: 7px;
+        }
+
+        .as-nav-search input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-weight: 700;
+            color: #0f172a;
+            padding: 6px 4px;
+            min-width: 130px;
+        }
+
+            .as-nav-search input::placeholder {
+                color: rgba(100,116,139,.86);
+            }
+
+        .as-nav-search button {
+            height: 38px;
+            width: 44px;
+            border-radius: 999px;
+            border: 1px solid rgba(37,99,235,.18);
+            background: linear-gradient(135deg, #60a5fa, #2563eb);
+            color: #fff;
+            font-weight: 900;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .14s ease;
+            box-shadow: 0 12px 22px rgba(37,99,235,.22);
+        }
+
+            .as-nav-search button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 16px 28px rgba(37,99,235,.28);
+            }
+
+        .as-nav-login {
+            display: flex;
+            align-items: center;
+        }
+
+            .as-nav-login ul {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+            }
+
+            .as-nav-login .navbar-nav {
+                flex-direction: row !important;
+                gap: 10px;
+                margin: 0 !important;
+            }
+
+            .as-nav-login .nav-link {
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                padding: .58rem .86rem !important;
+                border-radius: 999px !important;
+                border: 1px solid rgba(15,23,42,.11);
+                background: rgba(255,255,255,.78);
+                color: #0f172a !important;
+                font-weight: 900 !important;
+                white-space: nowrap !important;
+                transition: all .14s ease;
+                box-shadow: 0 10px 22px rgba(2,6,23,.05);
+            }
+
+                .as-nav-login .nav-link i {
+                    font-size: 16px;
+                    color: rgba(37,99,235,.95);
+                }
+
+                .as-nav-login .nav-link:hover {
+                    background: rgba(37,99,235,.10);
+                    border-color: rgba(37,99,235,.22);
+                    transform: translateY(-1px);
+                }
+
+        .site-content {
+            flex: 1 0 auto;
+            width: 100%;
+            padding-top: 82px;
+        }
+
+            .site-content > .container-fluid {
+                width: 100%;
+                max-width: 1480px;
+                margin: 0 auto;
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+        main[role="main"] {
+            min-height: calc(100vh - 170px);
+            padding-top: 0 !important;
+        }
+
+            main[role="main"] > *:first-child {
+                margin-top: 0 !important;
+            }
+
+        .as-delete-modal .modal-content {
+            border: 0;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 28px 70px rgba(2,6,23,.22);
+            background: radial-gradient(520px 260px at 0% 0%, rgba(248,113,113,.12), transparent 60%), linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.96));
+        }
+
+        .as-delete-modal .modal-header {
+            border: 0;
+            padding: 24px 24px 10px;
+        }
+
+        .as-delete-modal .modal-body {
+            padding: 8px 24px 22px;
+        }
+
+        .as-delete-modal .modal-footer {
+            border: 0;
+            padding: 0 24px 24px;
+        }
+
+        .as-delete-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc2626;
+            background: rgba(248,113,113,.14);
+            border: 1px solid rgba(220,38,38,.12);
+            font-size: 24px;
+        }
+
+        .as-delete-title {
+            font-weight: 950;
+            color: #0f172a;
+            margin: 16px 0 6px;
+        }
+
+        .as-delete-text {
+            color: #64748b;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .as-btn-soft {
+            border: 1px solid rgba(15,23,42,.10);
+            background: rgba(255,255,255,.82);
+            color: #0f172a;
+            font-weight: 800;
+            border-radius: 999px;
+            padding: 10px 18px;
+        }
+
+        .as-btn-danger {
+            border: 1px solid rgba(220,38,38,.18);
+            background: linear-gradient(135deg, #fb7185, #dc2626);
+            color: #fff;
+            font-weight: 900;
+            border-radius: 999px;
+            padding: 10px 18px;
+            box-shadow: 0 16px 28px rgba(220,38,38,.22);
+        }
+
+        .as-nav-dropdown::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .as-nav-dropdown::-webkit-scrollbar-track {
+            background: rgba(15,23,42,.05);
+            border-radius: 999px;
+        }
+
+        .as-nav-dropdown::-webkit-scrollbar-thumb {
+            background: rgba(15,23,42,.18);
+            border-radius: 999px;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .as-nav-links .nav-link {
+                padding-left: .66rem;
+                padding-right: .66rem;
+                font-size: 14px;
+            }
+
+            .as-nav-search {
+                max-width: 420px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .as-nav {
+                min-height: 66px;
+            }
+
+            .navbar-collapse {
+                margin-top: 12px;
+                padding: 14px;
+                border-radius: 24px;
+                border: 1px solid rgba(15,23,42,.09);
+                background: rgba(255,255,255,.88);
+                box-shadow: 0 20px 50px rgba(2,6,23,.10);
+                backdrop-filter: blur(16px);
+            }
+
+            .as-nav-links .nav-link {
+                width: 100%;
+                justify-content: flex-start;
+                padding: .72rem .85rem;
+            }
+
+            .as-nav-search {
+                max-width: 100%;
+                margin-left: 0;
+                margin-top: 4px;
+            }
+
+            .as-nav .dropdown-menu {
+                min-width: 100%;
+            }
+
+            .as-nav-dropdown {
+                max-height: 55vh;
+                box-shadow: none;
+                border-radius: 18px;
+                margin-top: 6px;
+            }
+
+            .as-nav-login .navbar-nav {
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .as-nav-right {
+                padding-top: 8px;
+                padding-bottom: 2px;
+            }
+
+            .site-content {
+                padding-top: 78px;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .as-nav-logo {
+                max-width: 168px;
+                height: 34px;
+            }
+
+            .site-content > .container-fluid {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .as-nav-search {
+                border-radius: 18px;
+            }
+
+                .as-nav-search button {
+                    width: 40px;
+                }
+
+            .as-delete-modal .modal-dialog {
+                margin: 12px;
+            }
+        }
+    </style>
+
+    @await RenderSectionAsync("Styles", required: false)
+    @await RenderSectionAsync("Head", required: false)
+
+    <script type="application/ld+json">
+        {
+            "@@context": "https://schema.org",
+            "@@type": "WebSite",
+            "name": "As-Mart",
+            "url": "https://as-mart.com/",
+            "potentialAction": {
+                "@@type": "SearchAction",
+                "target": "https://as-mart.com/Catalog/Search?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T22NLNW4"
+                height="0"
+                width="0"
+                style="display:none;visibility:hidden"></iframe>
+
+        <img height="1"
+             width="1"
+             style="display:none"
+             src="https://www.facebook.com/tr?id=1309989067621325&ev=PageView&noscript=1" />
+    </noscript>
+
+    <header>
+        <nav class="navbar navbar-expand-lg as-nav fixed-top">
+            <div class="container-fluid px-3 px-lg-4">
+                <a class="navbar-brand as-brand d-flex align-items-center gap-2"
+                   asp-area=""
+                   asp-controller="Home"
+                   asp-action="Index"
+                   aria-label="As-Mart">
+                    <img src="~/Pictures/logo1.png"
+                         asp-append-version="true"
+                         alt="As-Mart"
+                         class="as-nav-logo"
+                         width="200"
+                         height="36"
+                         loading="eager"
+                         decoding="async" />
+                </a>
+
+                <button class="navbar-toggler as-nav-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mainNav"
+                        aria-controls="mainNav"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav mb-3 mb-lg-0 as-nav-links">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="fa-solid fa-house"></i>
+                                <span>Home</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Catalog" asp-action="Index">
+                                <i class="fa-solid fa-store"></i>
+                                <span>Shop</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Blog" asp-action="Index">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                                <span>Blog</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle"
+                               href="#"
+                               id="categoriesDropdown"
+                               role="button"
+                               data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <i class="fa-solid fa-layer-group"></i><span>Categories</span>
+                            </a>
+
+                            @await Component.InvokeAsync("CategoriesMenu")
+
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Collections" asp-action="Index">
+                                <i class="fa-solid fa-grip"></i>
+                                <span>Collections</span>
+                            </a>
+                        </li>
+
+                        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle"
+                                   href="#"
+                                   id="adminDropdown"
+                                   role="button"
+                                   data-bs-toggle="dropdown"
+                                   aria-expanded="false">
+                                    <i class="fa-solid fa-lock"></i>
+                                    <span>Admin</span>
+                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-end as-nav-dropdown" aria-labelledby="adminDropdown">
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                                            <i class="fa-solid fa-gauge-high"></i>
+                                            <span>Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider as-dd-divider" /></li>
+                                    <li class="dropdown-header as-dd-header">Marketing</li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="MarketingDashboard" asp-action="Index">
+                                            <i class="fa-solid fa-chart-line"></i>
+                                            <span>Marketing Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Index">
+                                            <i class="fa-solid fa-bullhorn"></i>
+                                            <span>Marketing Campaigns</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Create">
+                                            <i class="fa-solid fa-plus"></i>
+                                            <span>Create Campaign</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="FacebookTargets" asp-action="Index">
+                                            <i class="fa-brands fa-facebook"></i>
+                                            <span>Facebook Targets</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="FacebookTargets" asp-action="Create">
+                                            <i class="fa-solid fa-plus"></i>
+                                            <span>Add Facebook Target</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="MarketingQueue" asp-action="Index">
+                                            <i class="fa-solid fa-list-check"></i>
+                                            <span>Posting Queue</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="MarketingAnalytics" asp-action="Index">
+                                            <i class="fa-solid fa-chart-simple"></i>
+                                            <span>Marketing Analytics</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="MarketingClickAnalytics" asp-action="Index">
+                                            <i class="fa-solid fa-chart-pie"></i>
+                                            <span>Click Analytics</span>
+                                        </a>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider as-dd-divider" /></li>
+                                    <li class="dropdown-header as-dd-header">SEO</li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="SeoPages" asp-action="Index">
+                                            <i class="fa-solid fa-sitemap"></i>
+                                            <span>Manage SEO Pages</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="SeoPages" asp-action="Create">
+                                            <i class="fa-solid fa-plus"></i>
+                                            <span>Add SEO Page</span>
+                                        </a>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider as-dd-divider" /></li>
+                                    <li class="dropdown-header as-dd-header">Products</li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Products" asp-action="Index">
+                                            <i class="fa-solid fa-boxes-stacked"></i>
+                                            <span>Manage Products</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Products" asp-action="Create">
+                                            <i class="fa-solid fa-plus"></i>
+                                            <span>Add Product</span>
+                                        </a>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider as-dd-divider" /></li>
+                                    <li class="dropdown-header as-dd-header">Categories</li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Categories" asp-action="Index">
+                                            <i class="fa-solid fa-tags"></i>
+                                            <span>Manage Categories</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Categories" asp-action="Create">
+                                            <i class="fa-solid fa-plus"></i>
+                                            <span>Add Category</span>
+                                        </a>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider as-dd-divider" /></li>
+                                    <li class="dropdown-header as-dd-header">Parent Categories</li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="ParentCategories" asp-action="Index">
+                                            <i class="fa-solid fa-folder-tree"></i>
+                                            <span>Manage Parent Categories</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="ParentCategories" asp-action="Create">
+                                            <i class="fa-solid fa-diagram-project"></i>
+                                            <span>Add Parent Category</span>
+                                        </a>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider as-dd-divider" /></li>
+                                    <li class="dropdown-header as-dd-header">Collections</li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Collections" asp-action="Index">
+                                            <i class="fa-solid fa-layer-group"></i>
+                                            <span>Manage Collections</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Collections" asp-action="Create">
+                                            <i class="fa-solid fa-plus"></i>
+                                            <span>Add Collection</span>
+                                        </a>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider as-dd-divider" /></li>
+                                    <li class="dropdown-header as-dd-header">Blog</li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="BlogPosts" asp-action="Index">
+                                            <i class="fa-solid fa-newspaper"></i>
+                                            <span>Manage Blog Posts</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="BlogPosts" asp-action="Create">
+                                            <i class="fa-solid fa-plus"></i>
+                                            <span>Add Blog Post</span>
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                        }
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span>Privacy</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">
+                                <i class="fa-solid fa-circle-info"></i>
+                                <span>About</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-3 ms-lg-auto as-nav-right">
+                        <form asp-controller="Catalog" asp-action="Search" method="get" class="as-nav-search" role="search">
+                            <i class="fa-solid fa-magnifying-glass as-nav-search-icon"></i>
+                            <input type="search" name="q" placeholder="Search products..." aria-label="Search products" />
+                            <button type="submit" aria-label="Search">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </form>
+
+                        <div class="as-nav-login">
+                            <partial name="_LoginPartial" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="site-content">
+        <div class="container-fluid px-3 px-lg-4">
+            <main role="main" class="py-0">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    @await Html.PartialAsync("_Footer")
+
+    <div class="modal fade as-delete-modal" id="asDeleteConfirmModal" tabindex="-1" aria-labelledby="asDeleteConfirmTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header d-block text-center">
+                    <div class="as-delete-icon mx-auto">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <h5 class="modal-title as-delete-title" id="asDeleteConfirmTitle">Confirm Delete</h5>
+                </div>
+
+                <div class="modal-body text-center">
+                    <p class="as-delete-text" id="asDeleteConfirmText">
+                        Are you sure you want to delete this record? This action cannot be undone.
+                    </p>
+                </div>
+
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn as-btn-soft" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn as-btn-danger" id="asConfirmDeleteBtn">
+                        <i class="fa-solid fa-trash-can me-1"></i>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        (function () {
+            let pendingDeleteForm = null;
+            let pendingDeleteLink = null;
+
+            const modalElement = document.getElementById("asDeleteConfirmModal");
+            const confirmButton = document.getElementById("asConfirmDeleteBtn");
+            const confirmText = document.getElementById("asDeleteConfirmText");
+
+            if (!modalElement || !confirmButton || typeof bootstrap === "undefined") {
+                return;
+            }
+
+            const deleteModal = new bootstrap.Modal(modalElement);
+
+            document.addEventListener("submit", function (event) {
+                const form = event.target;
+
+                if (!form.matches("form[data-delete-confirm='true'], form.js-delete-confirm, form.delete-form")) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                pendingDeleteForm = form;
+                pendingDeleteLink = null;
+                confirmText.textContent = form.getAttribute("data-delete-message") || "Are you sure you want to delete this record? This action cannot be undone.";
+
+                deleteModal.show();
+            });
+
+            document.addEventListener("click", function (event) {
+                const deleteButton = event.target.closest("a[data-delete-confirm='true'], button[data-delete-confirm='true'], .js-delete-confirm-link");
+
+                if (!deleteButton) {
+                    return;
+                }
+
+                const href = deleteButton.getAttribute("href");
+
+                if (!href || href === "#") {
+                    return;
+                }
+
+                event.preventDefault();
+
+                pendingDeleteLink = href;
+                pendingDeleteForm = null;
+                confirmText.textContent = deleteButton.getAttribute("data-delete-message") || "Are you sure you want to delete this record? This action cannot be undone.";
+
+                deleteModal.show();
+            });
+
+            confirmButton.addEventListener("click", function () {
+                if (pendingDeleteForm) {
+                    pendingDeleteForm.submit();
+                    return;
+                }
+
+                if (pendingDeleteLink) {
+                    window.location.href = pendingDeleteLink;
+                }
+            });
+
+            modalElement.addEventListener("hidden.bs.modal", function () {
+                pendingDeleteForm = null;
+                pendingDeleteLink = null;
+            });
+        })();
+    </script>
+
+    <script>
+        (function (w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+
+            var f = d.getElementsByTagName(s)[0];
+            var j = d.createElement(s);
+            var dl = l !== "dataLayer" ? "&l=" + l : "";
+
+            j.async = true;
+            j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, "script", "dataLayer", "GTM-T22NLNW4");
+    </script>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0JYXG5BMPS"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag("js", new Date());
+        gtag("config", "G-0JYXG5BMPS");
+    </script>
+
+    <script src="https://analytics.ahrefs.com/analytics.js" data-key="5ARAIjKliPfIT81BPTL6IQ" async></script>
+
+    <script>
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () {
+                (c[a].q = c[a].q || []).push(arguments);
+            };
+
+            t = l.createElement(r);
+            t.async = 1;
+            t.src = "https://www.clarity.ms/tag/" + i;
+
+            y = l.getElementsByTagName(r)[0];
+            y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "uvhxcyornz");
+    </script>
+
+    <script>
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return;
+
+            n = f.fbq = function () {
+                n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+            };
+
+            if (!f._fbq) f._fbq = n;
+
+            n.push = n;
+            n.loaded = true;
+            n.version = "2.0";
+            n.queue = [];
+
+            t = b.createElement(e);
+            t.async = true;
+            t.src = v;
+
+            s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s);
+        }(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+
+        fbq("init", "1309989067621325");
+        fbq("track", "PageView");
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

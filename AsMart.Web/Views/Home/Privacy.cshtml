@@ -1,0 +1,676 @@
+﻿@{
+    ViewData["Title"] = "Privacy & Affiliate Disclosure | As-Mart";
+}
+
+@section Styles {
+    <style>
+        .privacy-page {
+            min-height: calc(100vh - 90px);
+            padding: 24px 0 42px;
+            background: radial-gradient(circle at 10% 8%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .privacy-shell {
+            max-width: 1480px;
+            margin: 0 auto;
+        }
+
+        .privacy-hero,
+        .privacy-card,
+        .privacy-highlight-card,
+        .privacy-contact,
+        .privacy-side-card {
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.96);
+            box-shadow: 0 20px 60px rgba(15,23,42,.08);
+        }
+
+        .privacy-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.93)), radial-gradient(circle at top right, rgba(37,99,235,.17), transparent 36%);
+        }
+
+            .privacy-hero::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 16% 20%, rgba(37,99,235,.10), transparent 28%), radial-gradient(circle at 85% 80%, rgba(14,165,233,.13), transparent 30%);
+                pointer-events: none;
+            }
+
+        .privacy-hero-body {
+            position: relative;
+            z-index: 1;
+            padding: 34px;
+        }
+
+        .privacy-kicker,
+        .privacy-section-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .privacy-title {
+            margin: 14px 0 0;
+            color: #0f172a;
+            font-size: clamp(34px, 5vw, 60px);
+            line-height: 1.03;
+            letter-spacing: -.05em;
+            font-weight: 950;
+        }
+
+        .privacy-sub {
+            margin: 15px 0 0;
+            max-width: 860px;
+            color: #475569;
+            font-size: 16px;
+            line-height: 1.8;
+            font-weight: 650;
+        }
+
+        .privacy-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 18px;
+        }
+
+            .privacy-pills span {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 9px 12px;
+                border-radius: 999px;
+                background: rgba(255,255,255,.78);
+                border: 1px solid rgba(15,23,42,.08);
+                color: #0f172a;
+                font-size: 12px;
+                font-weight: 900;
+                box-shadow: 0 8px 18px rgba(15,23,42,.04);
+            }
+
+            .privacy-pills i {
+                color: #2563eb;
+            }
+
+        .privacy-side-card {
+            border-radius: 28px;
+            padding: 24px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .privacy-side-icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 22px;
+            background: rgba(37,99,235,.10);
+            border: 1px solid rgba(37,99,235,.16);
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin-bottom: 16px;
+        }
+
+        .privacy-side-card h2,
+        .privacy-highlight-body h2,
+        .privacy-card h2,
+        .privacy-contact h2 {
+            color: #0f172a;
+            font-weight: 950;
+            letter-spacing: -.03em;
+        }
+
+        .privacy-side-card h2 {
+            margin: 0 0 12px;
+            font-size: 25px;
+        }
+
+        .privacy-side-list {
+            margin: 0 0 18px;
+            padding-left: 18px;
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.9;
+            font-weight: 650;
+        }
+
+        .privacy-btn {
+            min-height: 44px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            font-size: 13px;
+            font-weight: 950;
+            padding: 0 18px;
+            white-space: nowrap;
+        }
+
+        .privacy-highlight {
+            margin-top: 24px;
+        }
+
+        .privacy-highlight-card {
+            border-radius: 30px;
+            padding: 28px;
+            display: grid;
+            grid-template-columns: 88px minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(255,247,237,.92));
+        }
+
+        .privacy-highlight-icon {
+            width: 78px;
+            height: 78px;
+            border-radius: 24px;
+            background: rgba(245,158,11,.12);
+            border: 1px solid rgba(245,158,11,.22);
+            color: #b45309;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+        }
+
+        .privacy-highlight-body h2 {
+            margin: 12px 0 12px;
+            font-size: clamp(24px, 3vw, 38px);
+        }
+
+        .privacy-highlight-body p {
+            color: #475569;
+            font-size: 15px;
+            line-height: 1.8;
+            font-weight: 650;
+        }
+
+        .privacy-grid-section {
+            margin-top: 24px;
+        }
+
+        .privacy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .privacy-card {
+            border-radius: 26px;
+            padding: 22px;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+            .privacy-card:hover {
+                transform: translateY(-4px);
+                border-color: rgba(37,99,235,.22);
+                box-shadow: 0 26px 70px rgba(15,23,42,.12);
+            }
+
+        .privacy-card-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 20px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .privacy-card h2 {
+            margin: 0 0 10px;
+            font-size: 21px;
+        }
+
+        .privacy-card p {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.75;
+            font-weight: 650;
+        }
+
+        .privacy-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #334155;
+            font-size: 14px;
+            line-height: 1.9;
+            font-weight: 700;
+        }
+
+        .privacy-note,
+        .privacy-warning {
+            margin-top: 15px;
+            padding: 14px;
+            border-radius: 18px;
+            font-size: 13px;
+            line-height: 1.7;
+            font-weight: 750;
+        }
+
+        .privacy-note {
+            background: rgba(37,99,235,.07);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+        }
+
+        .privacy-warning {
+            background: rgba(255,247,237,.90);
+            border: 1px solid rgba(245,158,11,.24);
+            color: #92400e;
+        }
+
+        .privacy-contact {
+            margin-top: 24px;
+            border-radius: 30px;
+            padding: 28px;
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.93)), radial-gradient(circle at top right, rgba(37,99,235,.15), transparent 36%);
+        }
+
+            .privacy-contact h2 {
+                margin: 12px 0 8px;
+                font-size: clamp(25px, 3vw, 36px);
+            }
+
+            .privacy-contact p {
+                margin: 0;
+                color: #64748b;
+                font-size: 15px;
+                line-height: 1.75;
+                font-weight: 650;
+            }
+
+        .privacy-mail-btn {
+            min-width: 240px;
+        }
+
+        .privacy-links {
+            margin-top: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 750;
+        }
+
+            .privacy-links span {
+                font-weight: 950;
+                color: #334155;
+            }
+
+            .privacy-links a {
+                color: #2563eb;
+                font-weight: 850;
+                text-decoration: none;
+            }
+
+                .privacy-links a:hover {
+                    text-decoration: underline;
+                }
+
+                .privacy-links a:not(:last-child)::after {
+                    content: "•";
+                    color: #94a3b8;
+                    margin-left: 8px;
+                }
+
+        @@media (max-width: 1199.98px) {
+            .privacy-page {
+                padding: 18px 0 34px;
+            }
+
+            .privacy-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .privacy-hero-body {
+                padding: 24px;
+            }
+
+            .privacy-highlight-card {
+                grid-template-columns: 1fr;
+            }
+
+            .privacy-mail-btn {
+                width: 100%;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .privacy-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .privacy-page {
+                padding: 14px 0 28px;
+            }
+
+            .privacy-hero,
+            .privacy-card,
+            .privacy-highlight-card,
+            .privacy-contact,
+            .privacy-side-card {
+                border-radius: 22px;
+            }
+
+            .privacy-hero-body {
+                padding: 18px;
+            }
+
+            .privacy-pills span,
+            .privacy-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .privacy-highlight-card,
+            .privacy-contact,
+            .privacy-card {
+                padding: 18px;
+            }
+
+            .privacy-links {
+                display: block;
+                line-height: 2;
+            }
+
+                .privacy-links a {
+                    display: inline-block;
+                    margin-right: 6px;
+                }
+        }
+    </style>
+}
+
+<section class="privacy-page">
+    <div class="container-fluid privacy-shell">
+
+        <!-- HERO -->
+        <header class="privacy-hero">
+            <div class="privacy-hero-body">
+                <div class="row align-items-center g-4">
+                    <div class="col-12 col-lg-8">
+
+                        <div class="privacy-kicker">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            Privacy, Transparency & Affiliate Disclosure
+                        </div>
+
+                        <h1 class="privacy-title">
+                            Privacy & Affiliate Disclosure
+                        </h1>
+
+                        <p class="privacy-sub">
+                            This page explains how As-Mart handles limited user data, uses cookies, works with Amazon affiliate links, and maintains transparency regarding shopping recommendations and third-party purchases.
+                        </p>
+
+                        <div class="privacy-pills">
+                            <span>
+                                <i class="fa-solid fa-lock"></i>
+                                Secure browsing
+                            </span>
+
+                            <span>
+                                <i class="fa-solid fa-cookie-bite"></i>
+                                Cookie transparency
+                            </span>
+
+                            <span>
+                                <i class="fa-brands fa-amazon"></i>
+                                Affiliate disclosure
+                            </span>
+
+                            <span>
+                                <i class="fa-solid fa-user-shield"></i>
+                                Limited data collection
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="privacy-side-card">
+
+                            <div class="privacy-side-icon">
+                                <i class="fa-solid fa-circle-info"></i>
+                            </div>
+
+                            <h2>Quick Overview</h2>
+
+                            <ul class="privacy-side-list">
+                                <li>We do not process payments directly</li>
+                                <li>Purchases happen on Amazon</li>
+                                <li>Affiliate links may generate commissions</li>
+                                <li>We collect minimal analytics data</li>
+                            </ul>
+
+                            <a asp-controller="Home"
+                               asp-action="About"
+                               class="btn btn-primary privacy-btn w-100">
+                                <i class="fa-solid fa-circle-info"></i>
+                                About As-Mart
+                            </a>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- AFFILIATE DISCLOSURE -->
+        <section class="privacy-highlight">
+            <div class="privacy-highlight-card">
+                <div class="privacy-highlight-icon">
+                    <i class="fa-brands fa-amazon"></i>
+                </div>
+
+                <div class="privacy-highlight-body">
+                    <div class="privacy-section-kicker">
+                        <i class="fa-solid fa-handshake"></i>
+                        Affiliate Disclosure
+                    </div>
+
+                    <h2>Amazon Associates Program Participation</h2>
+
+                    <p>
+                        As-Mart participates in the Amazon Services LLC Associates Program, an affiliate advertising program that allows websites to earn advertising fees by linking to Amazon products and related regional stores.
+                    </p>
+
+                    <p class="mb-0">
+                        If you click a qualifying affiliate link and complete a purchase on Amazon, As-Mart may earn a small commission at no additional cost to you.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAIN CONTENT -->
+        <section class="privacy-grid-section">
+            <div class="privacy-grid">
+
+                <article class="privacy-card">
+                    <div class="privacy-card-icon">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+
+                    <h2>Information We Collect</h2>
+
+                    <p>
+                        You can browse As-Mart without creating an account or providing sensitive personal information.
+                    </p>
+
+                    <ul class="privacy-list">
+                        <li>Browser type and device information</li>
+                        <li>IP address and referral sources</li>
+                        <li>Pages viewed and clicks</li>
+                        <li>Information voluntarily shared by email</li>
+                    </ul>
+                </article>
+
+                <article class="privacy-card">
+                    <div class="privacy-card-icon">
+                        <i class="fa-solid fa-cookie-bite"></i>
+                    </div>
+
+                    <h2>Cookies & Tracking</h2>
+
+                    <p>
+                        Cookies and similar technologies may be used to improve browsing experience and analyze website performance.
+                    </p>
+
+                    <ul class="privacy-list">
+                        <li>Traffic and analytics monitoring</li>
+                        <li>Performance optimization</li>
+                        <li>Affiliate tracking support</li>
+                        <li>Better content relevance</li>
+                    </ul>
+
+                    <div class="privacy-note">
+                        You can disable cookies through your browser settings. Some site functionality may be affected.
+                    </div>
+                </article>
+
+                <article class="privacy-card">
+                    <div class="privacy-card-icon">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+
+                    <h2>Third-Party Purchases</h2>
+
+                    <p>
+                        As-Mart redirects shoppers to Amazon and other third-party platforms for checkout and order fulfillment.
+                    </p>
+
+                    <ul class="privacy-list">
+                        <li>Payments are handled by Amazon</li>
+                        <li>Shipping and returns follow Amazon policies</li>
+                        <li>External websites have separate privacy policies</li>
+                    </ul>
+                </article>
+
+                <article class="privacy-card">
+                    <div class="privacy-card-icon">
+                        <i class="fa-solid fa-shield"></i>
+                    </div>
+
+                    <h2>Data Security</h2>
+
+                    <p>
+                        Standard security practices such as HTTPS, hosting security, and access controls are used to help protect limited website data.
+                    </p>
+
+                    <div class="privacy-warning">
+                        No online platform can guarantee absolute security. Users should avoid sending sensitive information through email.
+                    </div>
+                </article>
+
+                <article class="privacy-card">
+                    <div class="privacy-card-icon">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+
+                    <h2>Your Choices</h2>
+
+                    <ul class="privacy-list">
+                        <li>Disable cookies in your browser</li>
+                        <li>Avoid affiliate link usage if preferred</li>
+                        <li>Contact us regarding privacy concerns</li>
+                        <li>Stop using the website anytime</li>
+                    </ul>
+                </article>
+
+                <article class="privacy-card">
+                    <div class="privacy-card-icon">
+                        <i class="fa-solid fa-rotate"></i>
+                    </div>
+
+                    <h2>Policy Updates</h2>
+
+                    <p>
+                        This policy may be updated periodically to reflect operational, legal, or affiliate-program changes.
+                    </p>
+
+                    <div class="privacy-note">
+                        Updated versions will always appear on this page with revised information.
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+        <!-- CONTACT -->
+        <section class="privacy-contact">
+            <div class="row align-items-center g-4">
+                <div class="col-12 col-lg-8">
+
+                    <div class="privacy-section-kicker">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                        Contact
+                    </div>
+
+                    <h2>Questions about privacy or affiliate links?</h2>
+
+                    <p>
+                        If you have questions regarding this policy, affiliate disclosure, or data handling, contact As-Mart using the email below.
+                    </p>
+
+                </div>
+
+                <div class="col-12 col-lg-4 text-lg-end">
+                    <a href="mailto:privacy@as-mart.com"
+                       class="btn btn-dark privacy-btn privacy-mail-btn">
+                        <i class="fa-solid fa-envelope"></i>
+                        privacy@as-mart.com
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOT LINKS -->
+        <nav class="privacy-links" aria-label="Footer navigation">
+            <span>Popular pages:</span>
+
+            <a asp-controller="Home" asp-action="About">
+                About
+            </a>
+
+            <a asp-controller="Catalog" asp-action="Index">
+                Shop
+            </a>
+
+            <a asp-controller="Collections" asp-action="Index">
+                Collections
+            </a>
+
+            <a asp-controller="Blog" asp-action="Index">
+                Buying Guides
+            </a>
+        </nav>
+
+    </div>
+</section>

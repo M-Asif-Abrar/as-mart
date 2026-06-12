@@ -1,0 +1,393 @@
+﻿@using AsMart.Web.Helpers
+@using AsMart.Web.Models.ViewModels
+@model IEnumerable<AsMart.Web.Models.Entities.Product>
+
+@{
+    ViewData["Title"] = "My Purchases";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var products = Model?.ToList() ?? new List<AsMart.Web.Models.Entities.Product>();
+}
+
+@section Styles {
+    <style>
+        .purchases-page {
+            min-height: calc(100vh - 90px);
+            padding: 24px 0 42px;
+            background: radial-gradient(circle at 10% 8%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .purchases-shell {
+            max-width: 1480px;
+            margin: 0 auto;
+        }
+
+        .purchases-hero,
+        .purchases-stat-card,
+        .purchases-empty-card {
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.96);
+            box-shadow: 0 20px 60px rgba(15,23,42,.08);
+        }
+
+        .purchases-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.93)), radial-gradient(circle at top right, rgba(37,99,235,.17), transparent 36%);
+            margin-bottom: 24px;
+        }
+
+            .purchases-hero::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 16% 20%, rgba(37,99,235,.10), transparent 28%), radial-gradient(circle at 85% 80%, rgba(14,165,233,.13), transparent 30%);
+                pointer-events: none;
+            }
+
+        .purchases-hero-body {
+            position: relative;
+            z-index: 1;
+            padding: 34px;
+        }
+
+        .purchases-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .purchases-title {
+            margin: 14px 0 0;
+            color: #0f172a;
+            font-size: clamp(34px, 5vw, 58px);
+            line-height: 1.03;
+            letter-spacing: -.05em;
+            font-weight: 950;
+        }
+
+        .purchases-sub {
+            margin: 15px 0 0;
+            max-width: 860px;
+            color: #475569;
+            font-size: 16px;
+            line-height: 1.8;
+            font-weight: 650;
+        }
+
+        .purchases-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 18px;
+        }
+
+            .purchases-pills span {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 9px 12px;
+                border-radius: 999px;
+                background: rgba(255,255,255,.78);
+                border: 1px solid rgba(15,23,42,.08);
+                color: #0f172a;
+                font-size: 12px;
+                font-weight: 900;
+                box-shadow: 0 8px 18px rgba(15,23,42,.04);
+            }
+
+            .purchases-pills i {
+                color: #2563eb;
+            }
+
+        .purchases-stat-card {
+            border-radius: 28px;
+            padding: 24px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .purchases-stat-label {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .purchases-stat-value {
+            margin-top: 7px;
+            color: #0f172a;
+            font-size: 56px;
+            line-height: 1;
+            font-weight: 950;
+            letter-spacing: -.05em;
+        }
+
+        .purchases-stat-footer {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: rgba(37,99,235,.07);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .purchases-grid-section {
+            margin-top: 22px;
+        }
+
+        .purchases-empty-section {
+            margin-top: 18px;
+        }
+
+        .purchases-empty-card {
+            border-radius: 30px;
+            padding: 48px 24px;
+            text-align: center;
+        }
+
+        .purchases-empty-icon {
+            width: 82px;
+            height: 82px;
+            margin: 0 auto 18px;
+            border-radius: 28px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .purchases-empty-card h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(28px, 4vw, 42px);
+            line-height: 1.1;
+            font-weight: 950;
+            letter-spacing: -.04em;
+        }
+
+        .purchases-empty-card p {
+            margin: 14px auto 0;
+            max-width: 640px;
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.8;
+            font-weight: 650;
+        }
+
+        .purchases-empty-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .purchases-btn {
+            min-height: 46px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            padding: 0 20px;
+            font-size: 13px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .purchases-page {
+                padding: 18px 0 34px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .purchases-hero-body {
+                padding: 24px;
+            }
+
+            .purchases-stat-value {
+                font-size: 48px;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .purchases-page {
+                padding: 14px 0 28px;
+            }
+
+            .purchases-hero,
+            .purchases-stat-card,
+            .purchases-empty-card {
+                border-radius: 22px;
+            }
+
+            .purchases-hero-body {
+                padding: 18px;
+            }
+
+            .purchases-pills span,
+            .purchases-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .purchases-empty-card {
+                padding: 36px 18px;
+            }
+
+            .purchases-empty-actions {
+                flex-direction: column;
+            }
+
+            .purchases-stat-value {
+                font-size: 42px;
+            }
+        }
+    </style>
+}
+
+<section class="purchases-page">
+    <div class="container-fluid purchases-shell">
+
+        <header class="purchases-hero">
+            <div class="purchases-hero-body">
+                <div class="row align-items-center g-4">
+
+                    <div class="col-12 col-lg-8">
+
+                        <div class="purchases-kicker">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                            Purchase History
+                        </div>
+
+                        <h1 class="purchases-title">
+                            My Purchases
+                        </h1>
+
+                        <p class="purchases-sub">
+                            View products you previously marked as purchased. Quickly revisit product pages, compare items again, or continue browsing new recommendations from As-Mart.
+                        </p>
+
+                        <div class="purchases-pills">
+                            <span>
+                                <i class="fa-solid fa-box"></i>
+                                Purchased Products
+                            </span>
+
+                            <span>
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                Shopping History
+                            </span>
+
+                            <span>
+                                <i class="fa-solid fa-store"></i>
+                                Continue Shopping
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+
+                        <div class="purchases-stat-card">
+
+                            <div class="purchases-stat-label">
+                                Total Purchases
+                            </div>
+
+                            <div class="purchases-stat-value">
+                                @products.Count
+                            </div>
+
+                            <div class="purchases-stat-footer">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Products in your purchase history
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </header>
+
+        @if (!products.Any())
+        {
+            <section class="purchases-empty-section">
+
+                <div class="purchases-empty-card">
+
+                    <div class="purchases-empty-icon">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+
+                    <h2>No purchases yet</h2>
+
+                    <p>
+                        You haven’t marked any products as purchased yet. Browse the catalog and save products to your purchase history.
+                    </p>
+
+                    <div class="purchases-empty-actions">
+
+                        <a asp-controller="Catalog"
+                           asp-action="Index"
+                           class="btn btn-primary purchases-btn">
+                            <i class="fa-solid fa-store"></i>
+                            Browse Products
+                        </a>
+
+                        <a asp-controller="Collections"
+                           asp-action="Index"
+                           class="btn btn-outline-primary purchases-btn">
+                            <i class="fa-solid fa-layer-group"></i>
+                            Explore Collections
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </section>
+        }
+        else
+        {
+            <section class="purchases-grid-section">
+
+                @{
+                    var grid = new ProductGridVm
+                    {
+                        Title = "Purchased Products",
+                        Actions = ProductGridActions.DetailsOnly,
+                        Products = products.Select(p => p.ToCardVm()).ToList()
+                    };
+                }
+
+                <partial name="~/Views/Shared/Products/_ProductGrid.cshtml" model="grid" />
+
+            </section>
+        }
+
+    </div>
+</section>

@@ -1,0 +1,611 @@
+﻿@using System.Net
+@using AsMart.Web.Services
+@inject IColorService ColorService
+@model AsMart.Web.Models.DTOs.BlogPostDetailsDto
+
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var url = $"{Context.Request.Scheme}://{Context.Request.Host}/blog/{Model.Slug}";
+    var encodedUrl = WebUtility.UrlEncode(url);
+    var encodedTitle = WebUtility.UrlEncode(Model.Title);
+
+    var categoryNames = Model.CategoryNames ?? new List<string>();
+    var tagNames = Model.TagNames ?? new List<string>();
+
+    var categoryColors = categoryNames.Select(c => ColorService.GetRandomColor("bg-white")).ToList();
+    var tagColors = tagNames.Select(t => ColorService.GetRandomColor("bg-white")).ToList();
+
+    var publishedDate = Model.PublishedAt.HasValue
+        ? Model.PublishedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+        : "Not published";
+}
+
+@section Styles {
+    <style>
+        .blog-details-page {
+            min-height: calc(100vh - 90px);
+            padding: 24px 0 46px;
+            background: radial-gradient(circle at 10% 0%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 4%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .blog-details-shell {
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        .blog-details-hero {
+            overflow: hidden;
+            border-radius: 30px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.94)), radial-gradient(circle at top right, rgba(37,99,235,.16), transparent 36%);
+            box-shadow: 0 24px 70px rgba(15,23,42,.08);
+            margin-bottom: 22px;
+        }
+
+        .blog-details-hero-body {
+            padding: 30px;
+        }
+
+        .blog-details-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: 13px;
+        }
+
+        .blog-details-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(31px, 5vw, 58px);
+            line-height: 1.04;
+            letter-spacing: -.045em;
+            font-weight: 950;
+        }
+
+        .blog-details-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 9px 14px;
+            margin-top: 15px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+            .blog-details-meta span {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+            }
+
+        .blog-details-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+            .blog-details-badges .badge {
+                border-radius: 999px;
+                padding: 8px 11px;
+                font-size: 11px;
+                font-weight: 900;
+                border: 1px solid rgba(15,23,42,.09);
+            }
+
+        .blog-details-panel {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
+            gap: 16px;
+        }
+
+        .blog-details-card {
+            border-radius: 24px;
+            background: rgba(255,255,255,.76);
+            border: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 16px 42px rgba(15,23,42,.06);
+            padding: 17px;
+        }
+
+        .blog-details-card-title {
+            margin: 0 0 12px;
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: .045em;
+        }
+
+        .blog-rating-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .blog-rating-summary {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .blog-rating-stars {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 17px;
+        }
+
+        .blog-rating-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border-radius: 999px;
+            padding: 7px 10px;
+            background: rgba(37,99,235,.09);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 950;
+        }
+
+        .blog-rate-form {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 9px;
+        }
+
+        .blog-rate-label {
+            color: #475569;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .blog-rate-help {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .blog-share-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+        }
+
+        .blog-share-btn,
+        .blog-admin-btn,
+        .blog-amazon-btn {
+            min-height: 40px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .blog-admin-actions,
+        .blog-amazon-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 16px;
+        }
+
+        .blog-amazon-note {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .blog-content-card {
+            border-radius: 30px;
+            background: rgba(255,255,255,.96);
+            border: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 22px 65px rgba(15,23,42,.08);
+            overflow: hidden;
+        }
+
+        .blog-content {
+            padding: 30px;
+            color: #1e293b;
+            font-size: 18px;
+            line-height: 1.85;
+        }
+
+            .blog-content img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 22px;
+            }
+
+            .blog-content h1,
+            .blog-content h2,
+            .blog-content h3,
+            .blog-content h4 {
+                color: #0f172a;
+                font-weight: 950;
+                letter-spacing: -.025em;
+                line-height: 1.2;
+                margin-top: 1.4em;
+                margin-bottom: .65em;
+            }
+
+            .blog-content h2 {
+                font-size: clamp(26px, 3vw, 36px);
+            }
+
+            .blog-content h3 {
+                font-size: clamp(22px, 2.5vw, 29px);
+            }
+
+            .blog-content p {
+                margin-bottom: 1rem;
+            }
+
+            .blog-content a {
+                color: #2563eb;
+                font-weight: 800;
+                text-decoration: none;
+            }
+
+                .blog-content a:hover {
+                    text-decoration: underline;
+                }
+
+            .blog-content table {
+                width: 100%;
+                margin: 18px 0;
+                border-collapse: separate;
+                border-spacing: 0;
+                overflow: hidden;
+                border-radius: 18px;
+                border: 1px solid rgba(15,23,42,.10);
+            }
+
+                .blog-content table th {
+                    background: #f8fafc;
+                    color: #0f172a;
+                    font-weight: 950;
+                }
+
+                .blog-content table th,
+                .blog-content table td {
+                    padding: 13px 14px;
+                    border-bottom: 1px solid rgba(15,23,42,.08);
+                }
+
+            .blog-content blockquote {
+                margin: 22px 0;
+                padding: 18px 20px;
+                border-left: 5px solid #2563eb;
+                border-radius: 18px;
+                background: #eff6ff;
+                color: #334155;
+                font-weight: 700;
+            }
+
+        .blog-featured-img {
+            max-width: 100%;
+            max-height: 460px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            background-color: #fff;
+            border-radius: 24px;
+            box-shadow: 0 18px 48px rgba(15,23,42,.10);
+        }
+
+        @@media (max-width: 991.98px) {
+            .blog-details-hero-body {
+                padding: 24px;
+            }
+
+            .blog-details-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .blog-content {
+                padding: 24px;
+                font-size: 17px;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .blog-details-page {
+                padding: 14px 0 30px;
+            }
+
+            .blog-details-hero,
+            .blog-content-card {
+                border-radius: 22px;
+            }
+
+            .blog-details-hero-body {
+                padding: 18px;
+            }
+
+            .blog-details-card {
+                border-radius: 20px;
+                padding: 15px;
+            }
+
+            .blog-rate-form .btn-group {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+                .blog-rate-form .btn-group .btn {
+                    border-radius: 10px !important;
+                }
+
+            .blog-share-btn,
+            .blog-admin-btn,
+            .blog-amazon-btn {
+                width: 100%;
+            }
+
+            .blog-content {
+                padding: 18px;
+                font-size: 16px;
+                line-height: 1.75;
+            }
+
+                .blog-content table {
+                    display: block;
+                    overflow-x: auto;
+                    white-space: nowrap;
+                }
+        }
+    </style>
+}
+
+<section class="blog-details-page">
+    <div class="container-fluid blog-details-shell">
+
+        <header class="blog-details-hero">
+            <div class="blog-details-hero-body">
+
+                <div class="blog-details-kicker">
+                    <i class="fa-solid fa-newspaper"></i>
+                    Blog Article
+                </div>
+
+                <h1 class="blog-details-title">@Model.Title</h1>
+
+                <div class="blog-details-meta">
+                    <span>
+                        <i class="fa-regular fa-calendar-days text-primary"></i>
+                        @publishedDate
+                    </span>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.AuthorName))
+                    {
+                        <span>
+                            <i class="fa-regular fa-user text-primary"></i>
+                            by @Model.AuthorName
+                        </span>
+                    }
+                </div>
+
+                @if (categoryNames.Any() || tagNames.Any())
+                {
+                    <div class="blog-details-badges">
+                        @for (int i = 0; i < categoryNames.Count; i++)
+                        {
+                            <span class="badge @categoryColors[i]">
+                                <i class="fa-solid fa-folder-open me-1"></i>
+                                @categoryNames[i]
+                            </span>
+                        }
+
+                        @for (int i = 0; i < tagNames.Count; i++)
+                        {
+                            <span class="badge @tagColors[i]">
+                                #@tagNames[i]
+                            </span>
+                        }
+                    </div>
+                }
+
+                <div class="blog-details-panel">
+
+                    <div class="blog-details-card">
+                        <h2 class="blog-details-card-title">
+                            <i class="fa-solid fa-star text-warning me-1"></i>
+                            Article Rating
+                        </h2>
+
+                        <div class="blog-rating-wrap">
+                            <div class="blog-rating-summary">
+                                <div class="blog-rating-stars">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Round(Model.AverageRating))
+                                        {
+                                            <i class="fa-solid fa-star text-warning"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-regular fa-star text-muted"></i>
+                                        }
+                                    }
+                                </div>
+
+                                <span class="blog-rating-score">
+                                    @Model.AverageRating.ToString("0.0")
+                                    <span class="text-muted">(@Model.RatingCount)</span>
+                                </span>
+                            </div>
+
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <form asp-controller="Blog"
+                                      asp-action="Rate"
+                                      method="post"
+                                      class="blog-rate-form">
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden" name="postId" value="@Model.Id" />
+                                    <input type="hidden" name="returnSlug" value="@Model.Slug" />
+
+                                    <span class="blog-rate-label">Rate:</span>
+
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="Rate this article">
+                                        @for (byte i = 1; i <= 5; i++)
+                                        {
+                                            var active = Model.CurrentUserRating.HasValue && Model.CurrentUserRating.Value == i;
+
+                                            <button type="submit"
+                                                    name="rating"
+                                                    value="@i"
+                                                    class="btn @(active ? "btn-warning" : "btn-outline-secondary")">
+                                                @i
+                                            </button>
+                                        }
+                                    </div>
+
+                                    <span class="blog-rate-help">
+                                        @if (Model.CurrentUserRating.HasValue)
+                                        {
+                                            <text>You rated: @Model.CurrentUserRating/5</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Click a number to rate.</text>
+                                        }
+                                    </span>
+                                </form>
+                            }
+                            else
+                            {
+                                <div class="blog-rate-help">
+                                    <i class="fa-solid fa-lock me-1"></i>
+                                    Login to rate this article.
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="blog-details-card">
+                        <h2 class="blog-details-card-title">
+                            <i class="fa-solid fa-share-nodes text-primary me-1"></i>
+                            Share This Post
+                        </h2>
+
+                        <div class="blog-share-buttons">
+                            <a class="btn btn-primary btn-sm blog-share-btn"
+                               href="https://www.facebook.com/sharer/sharer.php?u=@encodedUrl"
+                               target="_blank"
+                               rel="noopener">
+                                <i class="fa-brands fa-facebook-f"></i>
+                                Facebook
+                            </a>
+
+                            <a class="btn btn-info text-white btn-sm blog-share-btn"
+                               href="https://twitter.com/intent/tweet?url=@encodedUrl&amp;text=@encodedTitle"
+                               target="_blank"
+                               rel="noopener">
+                                <i class="fa-brands fa-x-twitter"></i>
+                                X / Twitter
+                            </a>
+
+                            <a class="btn btn-success btn-sm blog-share-btn"
+                               href="https://api.whatsapp.com/send?text=@WebUtility.UrlEncode(Model.Title + " - " + url)"
+                               target="_blank"
+                               rel="noopener">
+                                <i class="fa-brands fa-whatsapp"></i>
+                                WhatsApp
+                            </a>
+
+                            <a class="btn btn-secondary btn-sm blog-share-btn"
+                               href="https://www.linkedin.com/sharing/share-offsite/?url=@encodedUrl"
+                               target="_blank"
+                               rel="noopener">
+                                <i class="fa-brands fa-linkedin-in"></i>
+                                LinkedIn
+                            </a>
+                        </div>
+
+                        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                        {
+                            <div class="blog-admin-actions">
+                                <a asp-area="Admin"
+                                   asp-controller="BlogPosts"
+                                   asp-action="Edit"
+                                   asp-route-id="@Model.Id"
+                                   class="btn btn-outline-primary btn-sm blog-admin-btn">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    Edit Post
+                                </a>
+
+                                <a asp-controller="Blog"
+                                   asp-action="Index"
+                                   class="btn btn-outline-secondary btn-sm blog-admin-btn">
+                                    <i class="fa-solid fa-list"></i>
+                                    Admin Posts
+                                </a>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(Model.ProductPageUrl))
+                        {
+                            <div class="blog-amazon-actions">
+                                <a asp-controller="Blog"
+                                   asp-action="Go"
+                                   asp-route-id="@Model.Id"
+                                   class="btn btn-warning blog-amazon-btn"
+                                   target="_blank"
+                                   rel="nofollow sponsored noopener">
+                                    <i class="fa-brands fa-amazon"></i>
+                                    Buy on Amazon
+                                </a>
+
+                                <span class="blog-amazon-note">
+                                    Opens in a new tab.
+                                </span>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            </div>
+        </header>
+
+        @* @if (!string.IsNullOrWhiteSpace(Model.FeaturedImageUrl))
+        {
+            <div class="mb-4 text-center">
+                <img src="@Model.FeaturedImageUrl"
+                     alt="@Model.Title"
+                     class="img-fluid blog-featured-img"
+                     loading="lazy" />
+            </div>
+        } *@
+
+        <div class="blog-content-card">
+            <article class="blog-content">
+                @Html.Raw(Model.Content)
+            </article>
+        </div>
+
+    </div>
+</section>

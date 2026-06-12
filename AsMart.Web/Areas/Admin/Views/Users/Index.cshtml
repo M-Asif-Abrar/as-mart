@@ -1,0 +1,330 @@
+﻿@model IEnumerable<AsMart.Web.Models.ViewModels.AdminUserListItemViewModel>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var canManageUsers = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
+}
+
+@section Styles {
+    <style>
+        .users-page {
+            background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 45%, #f8fafc 100%);
+            min-height: calc(100vh - 80px);
+        }
+
+        .users-hero {
+            border-radius: 26px;
+            background: linear-gradient(135deg, #0f172a, #1d4ed8);
+            color: #fff;
+            padding: 2rem;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .16);
+        }
+
+        .stat-card {
+            border: 0;
+            border-radius: 22px;
+            background: rgba(255,255,255,.92);
+            box-shadow: 0 12px 35px rgba(15,23,42,.08);
+            height: 100%;
+        }
+
+        .users-table-card {
+            border: 0;
+            border-radius: 24px;
+            background: rgba(255,255,255,.95);
+            box-shadow: 0 16px 45px rgba(15,23,42,.08);
+            overflow: hidden;
+        }
+
+        .users-table {
+            margin-bottom: 0;
+            min-width: 1100px;
+        }
+
+            .users-table thead th {
+                background: #f8fafc;
+                color: #475569;
+                font-size: .78rem;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                border-bottom: 1px solid rgba(15,23,42,.08);
+                white-space: nowrap;
+                padding: 1rem;
+            }
+
+            .users-table tbody td {
+                padding: 1rem;
+                vertical-align: middle;
+                border-color: rgba(15,23,42,.06);
+            }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            box-shadow: 0 6px 18px rgba(15,23,42,.14);
+        }
+
+        .avatar-fallback {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+        }
+
+        .status-badge {
+            border-radius: 999px;
+            padding: .45rem .75rem;
+            font-weight: 700;
+            font-size: .76rem;
+            white-space: nowrap;
+        }
+
+        .action-buttons {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: .5rem;
+            flex-wrap: nowrap;
+        }
+
+        .action-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s ease;
+        }
+
+            .action-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(15,23,42,.12);
+            }
+
+        @@media (max-width: 768px) {
+            .users-hero {
+                padding: 1.5rem;
+            }
+
+                .users-hero h2 {
+                    font-size: 1.45rem;
+                }
+
+            .users-table-card .card-body {
+                padding: 1rem !important;
+            }
+
+            .action-btn {
+                width: 36px;
+                height: 36px;
+            }
+        }
+    </style>
+}
+
+<div class="users-page py-4">
+    <div class="container-fluid">
+
+        <div class="users-hero mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h2 class="fw-bold mb-1">Registered Users</h2>
+                    <p class="mb-0 opacity-75">Manage customer accounts, email confirmation status, roles and profile actions.</p>
+                </div>
+
+                <div class="d-inline-flex align-items-center gap-2 bg-white bg-opacity-10 rounded-pill px-3 py-2">
+                    <i class="fa-solid fa-users"></i>
+                    <span class="fw-semibold">@ViewBag.TotalUsers Users</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-4 col-md-6">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold">Total Users</div>
+                            <div class="h3 fw-bold mb-0">@ViewBag.TotalUsers</div>
+                        </div>
+                        <div class="avatar-fallback">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-md-6">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold">Email Confirmed</div>
+                            <div class="h3 fw-bold mb-0">@ViewBag.TotalEmailConfirmed</div>
+                        </div>
+                        <div class="avatar-fallback">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-md-6">
+                <div class="card stat-card">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold">Admins</div>
+                            <div class="h3 fw-bold mb-0">@ViewBag.TotalAdmins</div>
+                        </div>
+                        <div class="avatar-fallback">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card users-table-card">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1">Users List</h5>
+                        <p class="text-muted mb-0 small">Admin can view, edit and delete user profiles.</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table users-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Profile</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Email Status</th>
+                                <th>Phone</th>
+                                <th>City</th>
+                                <th>Country</th>
+                                <th>Account Status</th>
+                                <th>Roles</th>
+                                @if (canManageUsers)
+                                {
+                                    <th class="text-end">Actions</th>
+                                }
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var u in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(u.AvatarUrl))
+                                        {
+                                            <img src="@u.AvatarUrl" alt="@u.DisplayName" class="user-avatar" />
+                                        }
+                                        else
+                                        {
+                                            <span class="avatar-fallback">
+                                                <i class="fa-solid fa-user"></i>
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <div class="fw-bold text-dark">@u.DisplayName</div>
+                                        <div class="text-muted small">Id: @u.Id</div>
+                                    </td>
+
+                                    <td>
+                                        <span class="fw-semibold">@u.Email</span>
+                                    </td>
+
+                                    <td>
+                                        @if (u.EmailConfirmed)
+                                        {
+                                            <span class="badge bg-success status-badge">Confirmed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark status-badge">Unconfirmed</span>
+                                        }
+                                    </td>
+
+                                    <td>@u.PhoneNumber</td>
+                                    <td>@u.City</td>
+                                    <td>@u.Country</td>
+
+                                    <td>
+                                        @if (u.IsLockedOut)
+                                        {
+                                            <span class="badge bg-danger status-badge">Locked</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success status-badge">Active</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (u.IsAdmin)
+                                        {
+                                            <span class="badge bg-primary status-badge">Admin</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary status-badge">User</span>
+                                        }
+                                    </td>
+
+                                    @if (canManageUsers)
+                                    {
+                                        <td class="text-end">
+                                            <div class="action-buttons">
+                                                <a asp-area="Admin"
+                                                   asp-controller="Users"
+                                                   asp-action="Details"
+                                                   asp-route-id="@u.Id"
+                                                   class="btn btn-outline-info action-btn"
+                                                   title="View Profile">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </a>
+
+                                                <a asp-area="Admin"
+                                                   asp-controller="Users"
+                                                   asp-action="Edit"
+                                                   asp-route-id="@u.Id"
+                                                   class="btn btn-outline-primary action-btn"
+                                                   title="Edit Profile">
+                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                                </a>
+
+                                                <a asp-area="Admin"
+                                                   asp-controller="Users"
+                                                   asp-action="Delete"
+                                                   asp-route-id="@u.Id"
+                                                   class="btn btn-outline-danger action-btn"
+                                                   title="Delete Profile">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>

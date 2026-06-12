@@ -1,0 +1,752 @@
+﻿@{
+    ViewData["Title"] = "About As-Mart";
+}
+
+<section class="about-page">
+    <div class="container-fluid about-shell">
+
+        <header class="about-hero">
+            <div class="about-hero-body">
+                <div class="row align-items-center g-4">
+                    <div class="col-12 col-lg-7">
+                        <div class="about-kicker">
+                            <i class="fa-solid fa-shield-heart"></i>
+                            Trusted Affiliate Shopping Platform
+                        </div>
+
+                        <h1 class="about-title">
+                            About <span>As-Mart</span>
+                        </h1>
+
+                        <p class="about-sub">
+                            As-Mart helps shoppers discover useful products, compare smart picks, and move quickly from research to purchase through clean categories, curated collections, buying guides, and Amazon affiliate links.
+                        </p>
+
+                        <div class="about-pills">
+                            <span><i class="fa-solid fa-bolt"></i> Fast browsing</span>
+                            <span><i class="fa-solid fa-layer-group"></i> Curated collections</span>
+                            <span><i class="fa-solid fa-star"></i> Product guides</span>
+                            <span><i class="fa-brands fa-amazon"></i> Amazon checkout</span>
+                        </div>
+
+                        <div class="about-actions">
+                            <a asp-controller="Catalog"
+                               asp-action="Index"
+                               class="btn btn-primary about-btn">
+                                <i class="fa-solid fa-store"></i>
+                                Start Shopping
+                            </a>
+
+                            <a asp-controller="Blog"
+                               asp-action="Index"
+                               class="btn btn-light about-btn">
+                                <i class="fa-solid fa-newspaper"></i>
+                                Read Buying Guides
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-5">
+                        <div class="about-affiliate-card">
+                            <div class="about-affiliate-icon">
+                                <i class="fa-brands fa-amazon"></i>
+                            </div>
+
+                            <h2>What is As-Mart?</h2>
+
+                            <p>
+                                As-Mart is an Amazon affiliate store. When you open a product from As-Mart and complete your purchase on Amazon, we may earn a small commission at no extra cost to you.
+                            </p>
+
+                            <div class="about-disclosure">
+                                <strong>Affiliate disclosure</strong>
+                                <span>
+                                    Commissions help us maintain the website, improve content quality, publish better guides, and organize products for easier shopping.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="about-section">
+            <div class="about-section-head">
+                <div>
+                    <div class="about-section-kicker">
+                        <i class="fa-solid fa-circle-check"></i>
+                        Why As-Mart
+                    </div>
+
+                    <h2>Built for faster and clearer buying decisions</h2>
+                </div>
+            </div>
+
+            <div class="about-value-grid">
+                <article class="about-value-card">
+                    <div class="about-value-icon">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+
+                    <h3>Curated Products</h3>
+
+                    <p>
+                        We organize products into useful groups so shoppers can find relevant options without scrolling through random listings.
+                    </p>
+                </article>
+
+                <article class="about-value-card">
+                    <div class="about-value-icon">
+                        <i class="fa-solid fa-sitemap"></i>
+                    </div>
+
+                    <h3>Smart Categories</h3>
+
+                    <p>
+                        Category pages, filters, collections, and SEO guides make product discovery easier on desktop and mobile.
+                    </p>
+                </article>
+
+                <article class="about-value-card">
+                    <div class="about-value-icon">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+
+                    <h3>Secure Checkout</h3>
+
+                    <p>
+                        Purchases are completed on Amazon. As-Mart does not process payments or store customer payment details.
+                    </p>
+                </article>
+            </div>
+        </section>
+
+        <section class="about-workflow">
+            <div class="row g-4">
+                <div class="col-12 col-lg-8">
+                    <div class="about-card">
+                        <div class="about-section-kicker">
+                            <i class="fa-solid fa-route"></i>
+                            How It Works
+                        </div>
+
+                        <h2>Simple shopping flow</h2>
+
+                        <div class="about-steps">
+                            <div class="about-step">
+                                <span>01</span>
+                                <div>
+                                    <h3>Browse products and categories</h3>
+                                    <p>Use the catalog, filters, collections, and product groups to find relevant items quickly.</p>
+                                </div>
+                            </div>
+
+                            <div class="about-step">
+                                <span>02</span>
+                                <div>
+                                    <h3>Open product details</h3>
+                                    <p>Review images, prices, ratings, product information, and related recommendations before buying.</p>
+                                </div>
+                            </div>
+
+                            <div class="about-step">
+                                <span>03</span>
+                                <div>
+                                    <h3>Complete purchase on Amazon</h3>
+                                    <p>Click the Amazon button and finish checkout directly on Amazon’s secure website.</p>
+                                </div>
+                            </div>
+
+                            <div class="about-step">
+                                <span>04</span>
+                                <div>
+                                    <h3>Support As-Mart</h3>
+                                    <p>When eligible purchases are made through affiliate links, As-Mart may earn a commission.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="about-card-actions">
+                            <a asp-controller="Catalog"
+                               asp-action="Index"
+                               class="btn btn-primary about-btn">
+                                <i class="fa-solid fa-bag-shopping"></i>
+                                Explore Shop
+                            </a>
+
+                            <a asp-controller="Collections"
+                               asp-action="Index"
+                               class="btn btn-outline-primary about-btn">
+                                <i class="fa-solid fa-layer-group"></i>
+                                Explore Collections
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="about-card about-focus-card">
+                        <div class="about-section-kicker">
+                            <i class="fa-solid fa-bullseye"></i>
+                            Our Focus
+                        </div>
+
+                        <h2>What we improve</h2>
+
+                        <ul class="about-focus-list">
+                            <li><i class="fa-solid fa-check"></i> Clear product information</li>
+                            <li><i class="fa-solid fa-check"></i> Mobile-friendly browsing</li>
+                            <li><i class="fa-solid fa-check"></i> Helpful buying guides</li>
+                            <li><i class="fa-solid fa-check"></i> Organized categories</li>
+                            <li><i class="fa-solid fa-check"></i> Better product discovery</li>
+                        </ul>
+
+                        <div class="about-note">
+                            As-Mart is actively growing with more products, comparisons, guides, and curated collections.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-cta">
+            <div class="row align-items-center g-3">
+                <div class="col-12 col-lg-8">
+                    <div class="about-section-kicker">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                        Feedback
+                    </div>
+
+                    <h2>Need help or want to suggest a category?</h2>
+
+                    <p>
+                        Send feedback, report a broken link, or suggest products and categories you want As-Mart to cover next.
+                    </p>
+                </div>
+
+                <div class="col-12 col-lg-4 text-lg-end">
+                    <a class="btn btn-dark about-btn about-mail-btn"
+                       href="mailto:support@as-mart.com">
+                        <i class="fa-solid fa-envelope"></i>
+                        Email Support
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <nav class="about-links" aria-label="Popular pages">
+            <span>Popular pages:</span>
+
+            <a asp-controller="Blog" asp-action="Index">
+                Buying Guides
+            </a>
+
+            <a asp-controller="Catalog" asp-action="Index">
+                Shop
+            </a>
+
+            <a asp-controller="Collections" asp-action="Index">
+                Collections
+            </a>
+
+            <a asp-controller="Home" asp-action="Privacy">
+                Privacy & Affiliate Disclosure
+            </a>
+        </nav>
+
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .about-page {
+            min-height: calc(100vh - 90px);
+            padding: 24px 0 42px;
+            background: radial-gradient(circle at 10% 8%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .about-shell {
+            max-width: 1480px;
+            margin: 0 auto;
+        }
+
+        .about-hero,
+        .about-card,
+        .about-cta,
+        .about-value-card {
+            border: 1px solid rgba(15,23,42,.08);
+            background: rgba(255,255,255,.96);
+            box-shadow: 0 20px 60px rgba(15,23,42,.08);
+        }
+
+        .about-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.93)), radial-gradient(circle at top right, rgba(37,99,235,.17), transparent 36%);
+            margin-bottom: 24px;
+        }
+
+            .about-hero::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 16% 20%, rgba(37,99,235,.10), transparent 28%), radial-gradient(circle at 85% 80%, rgba(14,165,233,.13), transparent 30%);
+                pointer-events: none;
+            }
+
+        .about-hero-body {
+            position: relative;
+            z-index: 1;
+            padding: 34px;
+        }
+
+        .about-kicker,
+        .about-section-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .about-title {
+            margin: 14px 0 0;
+            color: #0f172a;
+            font-size: clamp(34px, 5vw, 62px);
+            line-height: 1.03;
+            letter-spacing: -.05em;
+            font-weight: 950;
+        }
+
+            .about-title span {
+                color: #2563eb;
+            }
+
+        .about-sub {
+            margin: 15px 0 0;
+            max-width: 860px;
+            color: #475569;
+            font-size: 16px;
+            line-height: 1.8;
+            font-weight: 650;
+        }
+
+        .about-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 18px;
+        }
+
+            .about-pills span {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 9px 12px;
+                border-radius: 999px;
+                background: rgba(255,255,255,.78);
+                border: 1px solid rgba(15,23,42,.08);
+                color: #0f172a;
+                font-size: 12px;
+                font-weight: 900;
+                box-shadow: 0 8px 18px rgba(15,23,42,.04);
+            }
+
+            .about-pills i {
+                color: #2563eb;
+            }
+
+        .about-actions,
+        .about-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .about-btn {
+            min-height: 44px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            font-size: 13px;
+            font-weight: 950;
+            padding: 0 18px;
+            white-space: nowrap;
+        }
+
+        .about-actions .btn-light {
+            border: 1px solid rgba(15,23,42,.10);
+            background: rgba(255,255,255,.80);
+            color: #334155;
+        }
+
+        .about-affiliate-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 28px;
+            padding: 24px;
+            background: rgba(255,255,255,.78);
+            border: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 18px 44px rgba(15,23,42,.07);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .about-affiliate-icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 22px;
+            background: rgba(245,158,11,.12);
+            border: 1px solid rgba(245,158,11,.22);
+            color: #b45309;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .about-affiliate-card h2,
+        .about-section-head h2,
+        .about-card h2,
+        .about-cta h2 {
+            color: #0f172a;
+            font-weight: 950;
+            letter-spacing: -.035em;
+            line-height: 1.18;
+        }
+
+        .about-affiliate-card h2 {
+            margin: 0 0 10px;
+            font-size: 25px;
+        }
+
+        .about-affiliate-card p {
+            margin: 0;
+            color: #475569;
+            font-size: 15px;
+            line-height: 1.75;
+            font-weight: 650;
+        }
+
+        .about-disclosure {
+            margin-top: 17px;
+            padding: 15px;
+            border-radius: 20px;
+            background: rgba(255,247,237,.90);
+            border: 1px solid rgba(245,158,11,.24);
+        }
+
+            .about-disclosure strong {
+                display: block;
+                color: #92400e;
+                font-size: 13px;
+                font-weight: 950;
+                text-transform: uppercase;
+                letter-spacing: .045em;
+                margin-bottom: 6px;
+            }
+
+            .about-disclosure span {
+                display: block;
+                color: #475569;
+                font-size: 14px;
+                line-height: 1.7;
+                font-weight: 650;
+            }
+
+        .about-section {
+            margin-top: 24px;
+        }
+
+        .about-section-head {
+            margin-bottom: 16px;
+        }
+
+            .about-section-head h2 {
+                margin: 11px 0 0;
+                font-size: clamp(26px, 3vw, 38px);
+            }
+
+        .about-value-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .about-value-card {
+            border-radius: 26px;
+            padding: 22px;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+            .about-value-card:hover {
+                transform: translateY(-4px);
+                border-color: rgba(37,99,235,.22);
+                box-shadow: 0 26px 70px rgba(15,23,42,.12);
+            }
+
+        .about-value-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 20px;
+            background: rgba(37,99,235,.09);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 23px;
+            margin-bottom: 15px;
+        }
+
+        .about-value-card h3 {
+            margin: 0 0 8px;
+            color: #0f172a;
+            font-size: 19px;
+            font-weight: 950;
+            letter-spacing: -.02em;
+        }
+
+        .about-value-card p {
+            margin: 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.75;
+            font-weight: 650;
+        }
+
+        .about-workflow {
+            margin-top: 24px;
+        }
+
+        .about-card {
+            border-radius: 28px;
+            padding: 24px;
+            height: 100%;
+        }
+
+            .about-card h2 {
+                margin: 13px 0 16px;
+                font-size: clamp(25px, 3vw, 36px);
+            }
+
+        .about-steps {
+            display: grid;
+            gap: 12px;
+        }
+
+        .about-step {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr);
+            gap: 14px;
+            padding: 15px;
+            border-radius: 20px;
+            background: #f8fafc;
+            border: 1px solid rgba(15,23,42,.08);
+        }
+
+            .about-step > span {
+                width: 46px;
+                height: 46px;
+                border-radius: 16px;
+                background: #2563eb;
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 13px;
+                font-weight: 950;
+            }
+
+            .about-step h3 {
+                margin: 0 0 4px;
+                color: #0f172a;
+                font-size: 16px;
+                font-weight: 950;
+            }
+
+            .about-step p {
+                margin: 0;
+                color: #64748b;
+                font-size: 14px;
+                line-height: 1.7;
+                font-weight: 650;
+            }
+
+        .about-focus-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 11px;
+        }
+
+            .about-focus-list li {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 850;
+            }
+
+            .about-focus-list i {
+                color: #22c55e;
+            }
+
+        .about-note {
+            margin-top: 18px;
+            padding: 15px;
+            border-radius: 18px;
+            background: rgba(37,99,235,.07);
+            border: 1px solid rgba(37,99,235,.14);
+            color: #1d4ed8;
+            font-size: 14px;
+            line-height: 1.7;
+            font-weight: 800;
+        }
+
+        .about-cta {
+            margin-top: 24px;
+            border-radius: 30px;
+            padding: 28px;
+            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.93)), radial-gradient(circle at top right, rgba(37,99,235,.15), transparent 36%);
+        }
+
+            .about-cta h2 {
+                margin: 12px 0 8px;
+                font-size: clamp(25px, 3vw, 36px);
+            }
+
+            .about-cta p {
+                margin: 0;
+                color: #64748b;
+                font-size: 15px;
+                line-height: 1.75;
+                font-weight: 650;
+            }
+
+        .about-mail-btn {
+            min-width: 180px;
+        }
+
+        .about-links {
+            margin-top: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 750;
+        }
+
+            .about-links span {
+                font-weight: 950;
+                color: #334155;
+            }
+
+            .about-links a {
+                color: #2563eb;
+                font-weight: 850;
+                text-decoration: none;
+            }
+
+                .about-links a:hover {
+                    text-decoration: underline;
+                }
+
+                .about-links a:not(:last-child)::after {
+                    content: "•";
+                    color: #94a3b8;
+                    margin-left: 8px;
+                    text-decoration: none;
+                }
+
+        @@media (max-width: 1199.98px) {
+            .about-page {
+                padding: 18px 0 34px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .about-hero-body {
+                padding: 24px;
+            }
+
+            .about-value-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-mail-btn {
+                width: 100%;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .about-page {
+                padding: 14px 0 28px;
+            }
+
+            .about-hero,
+            .about-card,
+            .about-cta,
+            .about-value-card,
+            .about-affiliate-card {
+                border-radius: 22px;
+            }
+
+            .about-hero-body {
+                padding: 18px;
+            }
+
+            .about-pills span,
+            .about-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .about-actions,
+            .about-card-actions {
+                flex-direction: column;
+            }
+
+            .about-card,
+            .about-cta,
+            .about-value-card {
+                padding: 18px;
+            }
+
+            .about-step {
+                grid-template-columns: 1fr;
+            }
+
+                .about-step > span {
+                    width: 44px;
+                    height: 44px;
+                }
+
+            .about-links {
+                display: block;
+                line-height: 2;
+            }
+
+                .about-links a {
+                    display: inline-block;
+                    margin-right: 6px;
+                }
+        }
+    </style>
+}

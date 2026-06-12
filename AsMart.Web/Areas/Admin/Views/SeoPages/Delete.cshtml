@@ -1,0 +1,650 @@
+﻿@* Areas/Admin/Views/SeoPages/Delete.cshtml *@
+@using AsMart.Web.Models.Entities
+@model SeoPage
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .as-delete-page {
+            min-height: calc(100vh - 76px);
+            padding: 24px;
+            background: radial-gradient(900px 420px at 8% 0%, rgba(239, 68, 68, .11), transparent 60%), radial-gradient(760px 380px at 100% 8%, rgba(37, 99, 235, .10), transparent 60%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+        }
+
+        .as-delete-shell {
+            width: 100%;
+            max-width: 1380px;
+            margin: 0 auto;
+        }
+
+        .as-delete-hero,
+        .as-delete-card,
+        .as-side-card {
+            border: 1px solid rgba(15, 23, 42, .08);
+            background: rgba(255, 255, 255, .88);
+            box-shadow: 0 18px 50px rgba(15, 23, 42, .08);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .as-delete-hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+            padding: 24px;
+            border-radius: 30px;
+        }
+
+        .as-delete-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            margin-bottom: 12px;
+            border-radius: 999px;
+            background: rgba(220, 38, 38, .10);
+            color: #dc2626;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .as-delete-title-main {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(26px, 3vw, 42px);
+            font-weight: 950;
+            letter-spacing: -.055em;
+            line-height: 1.05;
+        }
+
+        .as-delete-subtitle {
+            max-width: 820px;
+            margin: 10px 0 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.75;
+        }
+
+        .as-delete-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 14px;
+        }
+
+            .as-delete-badges span {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                padding: 8px 11px;
+                border: 1px solid rgba(220, 38, 38, .13);
+                border-radius: 999px;
+                background: rgba(254, 242, 242, .82);
+                color: #991b1b;
+                font-size: 12px;
+                font-weight: 850;
+            }
+
+        .as-hero-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .as-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: .62rem 1rem;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 850;
+        }
+
+        .as-delete-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            gap: 18px;
+            align-items: start;
+        }
+
+        .as-delete-card,
+        .as-side-card {
+            border-radius: 28px;
+        }
+
+        .as-delete-card {
+            overflow: hidden;
+            padding: 22px;
+        }
+
+        .as-side-column {
+            display: grid;
+            gap: 18px;
+            position: sticky;
+            top: 88px;
+        }
+
+        .as-side-card {
+            padding: 18px;
+        }
+
+        .as-warning-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 18px;
+            border: 1px solid rgba(220, 38, 38, .18);
+            border-radius: 24px;
+            background: radial-gradient(560px 220px at 0% 0%, rgba(239, 68, 68, .12), transparent 62%), linear-gradient(135deg, rgba(254, 242, 242, .95), rgba(255, 255, 255, .92));
+        }
+
+        .as-warning-icon {
+            display: inline-grid;
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            place-items: center;
+            border-radius: 18px;
+            background: rgba(220, 38, 38, .10);
+            color: #dc2626;
+            font-size: 21px;
+        }
+
+        .as-warning-box h2 {
+            margin: 0;
+            color: #991b1b;
+            font-size: 20px;
+            font-weight: 950;
+            letter-spacing: -.035em;
+        }
+
+        .as-warning-box p {
+            max-width: 820px;
+            margin: 7px 0 0;
+            color: #7f1d1d;
+            font-size: 14px;
+            line-height: 1.75;
+        }
+
+        .as-kv-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .as-kv-card {
+            padding: 16px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 22px;
+            background: rgba(248, 250, 252, .82);
+        }
+
+        .as-kv-wide {
+            grid-column: 1 / -1;
+        }
+
+        .as-kv-label {
+            margin-bottom: 8px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+        }
+
+        .as-kv-value {
+            color: #0f172a;
+            font-size: 15px;
+            font-weight: 900;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+            .as-kv-value code {
+                display: inline-flex;
+                max-width: 100%;
+                padding: 6px 10px;
+                border-radius: 999px;
+                background: #0f172a;
+                color: #fff;
+                font-size: 13px;
+                font-weight: 800;
+                white-space: normal;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+        .as-delete-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(15, 23, 42, .08);
+        }
+
+        .as-side-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #0f172a;
+            font-size: 15px;
+            font-weight: 950;
+            letter-spacing: -.02em;
+        }
+
+            .as-side-title i {
+                display: inline-grid;
+                width: 36px;
+                height: 36px;
+                place-items: center;
+                border-radius: 14px;
+                background: rgba(37, 99, 235, .10);
+                color: #2563eb;
+            }
+
+        .as-preview-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+            .as-preview-list div {
+                padding: 12px;
+                border: 1px solid rgba(15, 23, 42, .08);
+                border-radius: 16px;
+                background: #f8fafc;
+            }
+
+            .as-preview-list span {
+                display: block;
+                margin-bottom: 4px;
+                color: #64748b;
+                font-size: 11px;
+                font-weight: 900;
+                letter-spacing: .06em;
+                text-transform: uppercase;
+            }
+
+            .as-preview-list strong {
+                display: block;
+                color: #0f172a;
+                font-size: 13px;
+                font-weight: 900;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+        .as-tip-list {
+            margin: 14px 0 0;
+            padding-left: 18px;
+            color: #475569;
+            font-size: 13px;
+            line-height: 1.75;
+        }
+
+            .as-tip-list li {
+                margin-bottom: 6px;
+            }
+
+        .as-delete-modal-content {
+            overflow: hidden;
+            border: 0;
+            border-radius: 26px;
+            box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
+        }
+
+        .as-delete-modal-header {
+            position: relative;
+            padding: 24px 24px 10px;
+            border-bottom: 0;
+            background: radial-gradient(520px 220px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
+        }
+
+        .as-delete-icon {
+            display: inline-grid;
+            width: 54px;
+            height: 54px;
+            place-items: center;
+            margin-bottom: 14px;
+            border-radius: 18px;
+            background: rgba(220, 38, 38, .10);
+            color: #dc2626;
+            font-size: 22px;
+        }
+
+        .as-delete-title {
+            color: #0f172a;
+            font-weight: 900;
+            letter-spacing: -.03em;
+        }
+
+        .as-delete-text {
+            max-width: 420px;
+            margin: 8px 0 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .as-delete-modal-footer {
+            gap: 10px;
+            padding: 18px 24px 24px;
+            border-top: 0;
+            background: #f8fafc;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .as-delete-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .as-side-column {
+                position: static;
+                top: auto;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .as-delete-page {
+                padding: 12px;
+            }
+
+            .as-delete-hero {
+                flex-direction: column;
+                padding: 18px;
+                border-radius: 24px;
+            }
+
+            .as-hero-actions,
+            .as-hero-actions .btn {
+                width: 100%;
+            }
+
+            .as-delete-card,
+            .as-side-card {
+                padding: 16px;
+                border-radius: 24px;
+            }
+
+            .as-warning-box {
+                flex-direction: column;
+            }
+
+            .as-kv-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .as-delete-actions {
+                flex-direction: column-reverse;
+            }
+
+                .as-delete-actions .btn {
+                    width: 100%;
+                }
+
+            .as-delete-modal-footer {
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
+
+                .as-delete-modal-footer .btn {
+                    width: 100%;
+                }
+        }
+    </style>
+}
+
+<div class="as-delete-page">
+    <div class="as-delete-shell">
+
+        <div class="as-delete-hero">
+            <div>
+                <div class="as-delete-kicker">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    Destructive Action
+                </div>
+
+                <h1 class="as-delete-title-main">Delete SEO Page</h1>
+
+                <p class="as-delete-subtitle">
+                    Review this SEO page carefully before deleting. The final delete request will only submit after confirmation.
+                </p>
+
+                <div class="as-delete-badges">
+                    <span><i class="fas fa-lock"></i> Permanent</span>
+                    <span><i class="fas fa-file-alt"></i> SEO Page</span>
+                    <span><i class="fas fa-shield-halved"></i> Confirmation Required</span>
+                </div>
+            </div>
+
+            <div class="as-hero-actions">
+                <a class="btn btn-light border as-action-btn" href="/Admin/SeoPages">
+                    <i class="fas fa-arrow-left"></i>
+                    Back
+                </a>
+            </div>
+        </div>
+
+        <div class="as-delete-grid">
+            <div class="as-delete-card">
+                <div class="as-warning-box">
+                    <div class="as-warning-icon">
+                        <i class="fas fa-trash"></i>
+                    </div>
+
+                    <div>
+                        <h2>Confirm deletion</h2>
+                        <p>
+                            Are you sure you want to delete this SEO page? This action cannot be undone.
+                            If this page is already indexed in Google, consider archiving it instead.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="as-kv-grid">
+                    <div class="as-kv-card">
+                        <div class="as-kv-label">ID</div>
+                        <div class="as-kv-value">@Model.Id</div>
+                    </div>
+
+                    <div class="as-kv-card">
+                        <div class="as-kv-label">Slug</div>
+                        <div class="as-kv-value">
+                            <code>@(Model.Slug ?? "-")</code>
+                        </div>
+                    </div>
+
+                    <div class="as-kv-card as-kv-wide">
+                        <div class="as-kv-label">Title</div>
+                        <div class="as-kv-value">@(!string.IsNullOrWhiteSpace(Model.Title) ? Model.Title : "-")</div>
+                    </div>
+
+                    <div class="as-kv-card">
+                        <div class="as-kv-label">Template</div>
+                        <div class="as-kv-value">@(!string.IsNullOrWhiteSpace(Model.TemplateKey) ? Model.TemplateKey : "-")</div>
+                    </div>
+
+                    <div class="as-kv-card">
+                        <div class="as-kv-label">Status</div>
+                        <div class="as-kv-value">@Model.Status</div>
+                    </div>
+
+                    <div class="as-kv-card as-kv-wide">
+                        <div class="as-kv-label">Target Keyword</div>
+                        <div class="as-kv-value">@(!string.IsNullOrWhiteSpace(Model.TargetKeyword) ? Model.TargetKeyword : "-")</div>
+                    </div>
+                </div>
+
+                <form method="post" action="/Admin/SeoPages/DeleteConfirmed/@Model.Id" id="deleteSeoPageForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="as-delete-actions">
+                        <a class="btn btn-light border as-action-btn" href="/Admin/SeoPages">
+                            <i class="fas fa-xmark"></i>
+                            Cancel
+                        </a>
+
+                        <button type="button"
+                                class="btn btn-danger as-action-btn"
+                                data-delete-confirm="true"
+                                data-delete-message="Are you sure you want to permanently delete this SEO page? This cannot be undone.">
+                            <i class="fas fa-trash"></i>
+                            Delete SEO Page
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <aside class="as-side-column">
+                <div class="as-side-card">
+                    <div class="as-side-title">
+                        <i class="fas fa-eye"></i>
+                        Preview
+                    </div>
+
+                    <div class="as-preview-list">
+                        <div>
+                            <span>Slug</span>
+                            <strong>@(Model.Slug ?? "-")</strong>
+                        </div>
+
+                        <div>
+                            <span>Template</span>
+                            <strong>@(Model.TemplateKey ?? "-")</strong>
+                        </div>
+
+                        <div>
+                            <span>Status</span>
+                            <strong>@Model.Status</strong>
+                        </div>
+
+                        <div>
+                            <span>Keyword</span>
+                            <strong>@(Model.TargetKeyword ?? "-")</strong>
+                        </div>
+
+                        <div>
+                            <span>Sort</span>
+                            <strong>@(Model.SortMode ?? "-")</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="as-side-card">
+                    <div class="as-side-title">
+                        <i class="fas fa-lightbulb"></i>
+                        Safer Options
+                    </div>
+
+                    <ul class="as-tip-list">
+                        <li>Use Cancel if you are unsure.</li>
+                        <li>Consider setting Status to Archived instead.</li>
+                        <li>Check if the page is indexed before deleting.</li>
+                        <li>Confirm no internal guide links depend on this slug.</li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade as-delete-modal" id="asDeleteConfirmModal" tabindex="-1" aria-labelledby="asDeleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content as-delete-modal-content">
+            <div class="modal-header as-delete-modal-header">
+                <div>
+                    <div class="as-delete-icon">
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+
+                    <h5 class="modal-title as-delete-title" id="asDeleteConfirmModalLabel">Confirm Delete</h5>
+
+                    <p class="as-delete-text">
+                        This action cannot be undone. Please confirm before deleting.
+                    </p>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-footer as-delete-modal-footer">
+                <button type="button" class="btn btn-light as-action-btn" data-bs-dismiss="modal">
+                    <i class="fas fa-xmark"></i>
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-danger as-action-btn" id="asDeleteConfirmButton">
+                    <i class="fas fa-trash"></i>
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let pendingDeleteForm = null;
+        let pendingDeleteUrl = null;
+
+        const modalElement = document.getElementById('asDeleteConfirmModal');
+        const confirmButton = document.getElementById('asDeleteConfirmButton');
+
+        if (!modalElement || !confirmButton || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        const modal = new bootstrap.Modal(modalElement);
+
+        document.addEventListener('click', function (event) {
+            const deleteTrigger = event.target.closest('[data-delete-confirm="true"]');
+
+            if (!deleteTrigger) {
+                return;
+            }
+
+            event.preventDefault();
+
+            pendingDeleteForm = deleteTrigger.closest('form');
+            pendingDeleteUrl = deleteTrigger.getAttribute('href') || deleteTrigger.dataset.deleteUrl || null;
+
+            const customMessage = deleteTrigger.dataset.deleteMessage;
+            const textElement = modalElement.querySelector('.as-delete-text');
+
+            if (customMessage && textElement) {
+                textElement.textContent = customMessage;
+            }
+
+            modal.show();
+        });
+
+        confirmButton.addEventListener('click', function () {
+            if (pendingDeleteForm) {
+                pendingDeleteForm.submit();
+                return;
+            }
+
+            if (pendingDeleteUrl) {
+                window.location.href = pendingDeleteUrl;
+            }
+        });
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            pendingDeleteForm = null;
+            pendingDeleteUrl = null;
+        });
+    })();
+</script>

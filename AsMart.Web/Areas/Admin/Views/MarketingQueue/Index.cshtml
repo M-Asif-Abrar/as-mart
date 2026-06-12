@@ -1,0 +1,929 @@
+﻿@model AsMart.Web.Models.ViewModels.Marketing.MarketingQueueIndexViewModel
+@using AsMart.Web.Models.Entities.Marketing
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger rounded-4 fw-bold">
+        <i class="fa-solid fa-triangle-exclamation me-1"></i>
+        @TempData["Error"]
+    </div>
+}
+
+<div class="mq-page">
+    <div class="mq-hero">
+        <div>
+            <span class="mq-kicker">
+                <i class="fa-solid fa-list-check"></i>
+                Global Queue
+            </span>
+            <h1>Marketing Posting Queue</h1>
+            <p>Manage all scheduled, posted, failed, and pending Facebook campaign posts from one place.</p>
+        </div>
+
+        <div class="mq-actions">
+            <a asp-area="Admin" asp-controller="MarketingDashboard" asp-action="Index" class="btn btn-light">
+                <i class="fa-solid fa-chart-line"></i>
+                Dashboard
+            </a>
+            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Create" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i>
+                New Campaign
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success rounded-4 fw-bold">
+            <i class="fa-solid fa-circle-check me-1"></i>
+            @TempData["Success"]
+        </div>
+    }
+
+    <div class="mq-stats">
+        <a asp-area="Admin" asp-controller="MarketingQueue" asp-action="Index" asp-route-status="all" class="mq-stat @(Model.StatusFilter == "all" ? "active" : "")">
+            <span>Total</span>
+            <strong>@Model.TotalItems</strong>
+        </a>
+        <a asp-area="Admin" asp-controller="MarketingQueue" asp-action="Index" asp-route-status="pending" class="mq-stat @(Model.StatusFilter == "pending" ? "active" : "")">
+            <span>Pending</span>
+            <strong>@Model.PendingItems</strong>
+        </a>
+        <a asp-area="Admin" asp-controller="MarketingQueue" asp-action="Index" asp-route-status="scheduled" class="mq-stat @(Model.StatusFilter == "scheduled" ? "active" : "")">
+            <span>Scheduled</span>
+            <strong>@Model.ScheduledItems</strong>
+        </a>
+        <a asp-area="Admin" asp-controller="MarketingQueue" asp-action="Index" asp-route-status="posted" class="mq-stat @(Model.StatusFilter == "posted" ? "active" : "")">
+            <span>Posted</span>
+            <strong>@Model.PostedItems</strong>
+        </a>
+        <a asp-area="Admin" asp-controller="MarketingQueue" asp-action="Index" asp-route-status="failed" class="mq-stat @(Model.StatusFilter == "failed" ? "active" : "")">
+            <span>Failed</span>
+            <strong>@Model.FailedItems</strong>
+        </a>
+    </div>
+
+    <div class="mq-card">
+        <div class="mq-card-head">
+            <div>
+                <h2>Queue Items</h2>
+                <p>Open targets, copy final post text, and update queue status after manual posting.</p>
+            </div>
+
+            <form asp-area="Admin" asp-controller="MarketingQueue" asp-action="Index" method="get" class="mq-search">
+                <input type="hidden" name="status" value="@Model.StatusFilter" />
+                <input type="search" name="search" value="@Model.Search" placeholder="Search campaign, target, text..." />
+                <button type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="mq-table-wrap">
+            <table class="table mq-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Target</th>
+                        <th>Status</th>
+                        <th>Scheduled</th>
+                        <th>Final Post Text</th>
+                        <th>Published URL</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items.Any())
+                    {
+                        foreach (var item in Model.Items)
+                        {
+                            var textareaId = $"postText_{item.Id}";
+
+                            <tr>
+                                <td data-label="Campaign">
+                                    <div class="campaign-cell">
+                                        <strong>@item.CampaignTitle</strong>
+                                        <span>@item.CampaignSlug</span>
+                                        <div class="campaign-icon-actions">
+                                            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Details" asp-route-id="@item.CampaignId" class="campaign-icon-btn details" title="Campaign Details">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+
+                                            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Edit" asp-route-id="@item.CampaignId" class="campaign-icon-btn edit" title="Edit Campaign">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+
+                                            <a asp-area="Admin" asp-controller="MarketingCampaigns" asp-action="Delete" asp-route-id="@item.CampaignId" class="campaign-icon-btn delete" title="Delete Campaign">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td data-label="Target">
+                                    <div class="target-cell">
+                                        <div class="target-icon">
+                                            <i class="fa-brands fa-facebook-f"></i>
+                                        </div>
+                                        <div>
+                                            <strong>@item.TargetName</strong>
+                                            <span>@item.TargetType</span>
+                                            @if (!string.IsNullOrWhiteSpace(item.TargetUrl))
+                                            {
+                                                <a href="@item.TargetUrl" target="_blank" rel="noopener">Open target</a>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td data-label="Status">
+                                    <span class="status-pill status-@item.Status.ToString().ToLower()">@item.Status</span>
+                                    @if (item.RetryCount > 0)
+                                    {
+                                        <small class="retry-text">Retries: @item.RetryCount</small>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.LastError))
+                                    {
+                                        <small class="error-text">@item.LastError</small>
+                                    }
+                                </td>
+
+                                <td data-label="Scheduled">
+                                    <strong>@(item.ScheduledAt?.ToString("dd MMM yyyy") ?? "-")</strong>
+                                    <span class="date-sub">@((item.ScheduledAt?.ToString("hh:mm tt")) ?? "")</span>
+                                </td>
+
+                                <td data-label="Final Post Text">
+                                    <textarea id="@textareaId" class="copy-text" readonly rows="6">@item.FinalPostText</textarea>
+                                    <button type="button" class="copy-btn" data-copy-target="@textareaId">
+                                        <i class="fa-regular fa-copy"></i>
+                                        Copy Text
+                                    </button>
+                                </td>
+
+                                <td data-label="Published URL">
+                                    @if (!string.IsNullOrWhiteSpace(item.PublishedPostUrl))
+                                    {
+                                        <a href="@item.PublishedPostUrl" target="_blank" rel="noopener" class="published-link">
+                                            Open Published Post
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="muted">Not added</span>
+                                    }
+                                </td>
+
+                                <td data-label="Action" class="text-end action-cell">
+                                    <div class="queue-actions">
+                                        @if (!string.IsNullOrWhiteSpace(item.TargetUrl))
+                                        {
+                                            <a href="@item.TargetUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
+                                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                                Open Target
+                                            </a>
+                                        }
+
+                                        @if (item.TargetType == MarketingTargetType.FacebookPage)
+                                        {
+                                            <form asp-area="Admin" asp-controller="MarketingQueue" asp-action="PublishFacebookPageNow" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <input type="hidden" name="returnUrl" value="@currentUrl" />
+                                                <button type="submit" class="btn btn-sm btn-primary full-btn">
+                                                    <i class="fa-brands fa-facebook"></i>
+                                                    Publish Page Now
+                                                </button>
+                                            </form>
+                                        }
+
+                                        <form asp-area="Admin" asp-controller="MarketingQueue" asp-action="MarkPosted" method="post" class="inline-action-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="hidden" name="returnUrl" value="@currentUrl" />
+                                            <input type="url" name="publishedPostUrl" class="form-control form-control-sm" placeholder="Published post URL optional" value="@item.PublishedPostUrl" />
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fa-solid fa-check"></i>
+                                                Posted
+                                            </button>
+                                        </form>
+
+                                        <form asp-area="Admin" asp-controller="MarketingQueue" asp-action="MarkFailed" method="post" class="inline-action-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="hidden" name="returnUrl" value="@currentUrl" />
+                                            <input type="text" name="error" class="form-control form-control-sm" placeholder="Failure reason optional" />
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fa-solid fa-xmark"></i>
+                                                Failed
+                                            </button>
+                                        </form>
+
+                                        @if (item.Status == MarketingQueueStatus.Failed || item.Status == MarketingQueueStatus.Posted)
+                                        {
+                                            <form asp-area="Admin" asp-controller="MarketingQueue" asp-action="ResetToScheduled" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <input type="hidden" name="returnUrl" value="@currentUrl" />
+                                                <button type="submit" class="btn btn-sm btn-warning full-btn">
+                                                    <i class="fa-solid fa-rotate-left"></i>
+                                                    Reset
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="empty-cell">
+                                No queue items found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .campaign-icon-actions {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .campaign-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 13px !important;
+            font-weight: 900;
+            border: 1px solid rgba(15,23,42,.10);
+            transition: all .15s ease;
+        }
+
+            .campaign-icon-btn.details {
+                background: rgba(37,99,235,.10);
+                color: #2563eb;
+            }
+
+            .campaign-icon-btn.edit {
+                background: rgba(245,158,11,.14);
+                color: #b45309;
+            }
+
+            .campaign-icon-btn.delete {
+                background: rgba(239,68,68,.12);
+                color: #dc2626;
+            }
+
+            .campaign-icon-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 18px rgba(2,6,23,.12);
+            }
+
+        .mq-page {
+            width: 100%;
+            max-width: 100%;
+            padding: 18px 0 42px;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow-x: hidden;
+        }
+
+        .mq-hero {
+            border-radius: 30px;
+            padding: 30px;
+            margin-bottom: 18px;
+            background: radial-gradient(circle at top left, rgba(37,99,235,.20), transparent 38%), radial-gradient(circle at top right, rgba(168,85,247,.16), transparent 34%), linear-gradient(135deg, rgba(255,255,255,.96), rgba(239,246,255,.92));
+            border: 1px solid rgba(15,23,42,.10);
+            box-shadow: 0 24px 60px rgba(2,6,23,.10);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .mq-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #2563eb;
+            background: rgba(37,99,235,.10);
+            border: 1px solid rgba(37,99,235,.14);
+            border-radius: 999px;
+            padding: 8px 13px;
+            font-weight: 900;
+            font-size: 13px;
+            margin-bottom: 14px;
+        }
+
+        .mq-hero h1 {
+            font-size: clamp(28px, 4vw, 44px);
+            line-height: 1;
+            font-weight: 950;
+            color: #0f172a;
+            margin: 0 0 10px;
+            letter-spacing: -.04em;
+        }
+
+        .mq-hero p {
+            margin: 0;
+            max-width: 780px;
+            color: #64748b;
+            font-weight: 650;
+            font-size: 16px;
+        }
+
+        .mq-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+            .mq-actions .btn {
+                border-radius: 999px;
+                font-weight: 900;
+                padding: 11px 18px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+            }
+
+        .mq-stats {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .mq-stat {
+            text-decoration: none;
+            border-radius: 22px;
+            background: rgba(255,255,255,.90);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 14px 30px rgba(2,6,23,.06);
+            padding: 16px;
+            transition: all .15s ease;
+        }
+
+            .mq-stat:hover,
+            .mq-stat.active {
+                transform: translateY(-2px);
+                border-color: rgba(37,99,235,.24);
+                background: linear-gradient(135deg, rgba(37,99,235,.10), rgba(255,255,255,.96));
+            }
+
+            .mq-stat span {
+                display: block;
+                color: #64748b;
+                font-size: 13px;
+                font-weight: 850;
+            }
+
+            .mq-stat strong {
+                display: block;
+                color: #0f172a;
+                font-size: 28px;
+                font-weight: 950;
+                line-height: 1;
+                margin-top: 6px;
+            }
+
+        .mq-card {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 26px;
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(15,23,42,.09);
+            box-shadow: 0 18px 44px rgba(2,6,23,.08);
+            padding: 18px;
+            overflow: visible;
+        }
+
+        .mq-card-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .mq-card h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #0f172a;
+            font-weight: 950;
+        }
+
+        .mq-card p {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-weight: 650;
+        }
+
+        .mq-search {
+            display: flex;
+            gap: 8px;
+            width: min(420px, 100%);
+            background: rgba(248,250,252,.88);
+            border: 1px solid rgba(15,23,42,.10);
+            border-radius: 999px;
+            padding: 6px;
+        }
+
+            .mq-search input {
+                flex: 1;
+                border: 0;
+                outline: 0;
+                background: transparent;
+                padding: 8px 10px;
+                color: #0f172a;
+                font-weight: 700;
+                min-width: 0;
+            }
+
+            .mq-search button {
+                width: 42px;
+                height: 38px;
+                border: 0;
+                border-radius: 999px;
+                color: #fff;
+                background: linear-gradient(135deg, #2563eb, #60a5fa);
+                flex: 0 0 auto;
+            }
+
+        .mq-table-wrap {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: visible;
+            border-radius: 18px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+            .mq-table-wrap::-webkit-scrollbar {
+                height: 10px;
+            }
+
+            .mq-table-wrap::-webkit-scrollbar-track {
+                background: #eef2f7;
+                border-radius: 999px;
+            }
+
+            .mq-table-wrap::-webkit-scrollbar-thumb {
+                background: #94a3b8;
+                border-radius: 999px;
+            }
+
+        .mq-table {
+            width: 100%;
+            min-width: 1180px;
+            margin: 0;
+            table-layout: fixed;
+        }
+
+            .mq-table th:nth-child(1),
+            .mq-table td:nth-child(1) {
+                width: 180px;
+            }
+
+            .mq-table th:nth-child(2),
+            .mq-table td:nth-child(2) {
+                width: 190px;
+            }
+
+            .mq-table th:nth-child(3),
+            .mq-table td:nth-child(3) {
+                width: 120px;
+            }
+
+            .mq-table th:nth-child(4),
+            .mq-table td:nth-child(4) {
+                width: 120px;
+            }
+
+            .mq-table th:nth-child(5),
+            .mq-table td:nth-child(5) {
+                width: 260px;
+            }
+
+            .mq-table th:nth-child(6),
+            .mq-table td:nth-child(6) {
+                width: 150px;
+            }
+
+            .mq-table th:nth-child(7),
+            .mq-table td:nth-child(7) {
+                width: 360px;
+            }
+
+            .mq-table thead th {
+                color: #475569;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: .06em;
+                border-bottom: 1px solid rgba(15,23,42,.10);
+                background: rgba(248,250,252,.92);
+                font-weight: 950;
+                white-space: nowrap;
+                padding: 14px 12px;
+            }
+
+            .mq-table td {
+                color: #334155;
+                font-weight: 650;
+                border-bottom: 1px solid rgba(15,23,42,.07);
+                vertical-align: top;
+                padding: 14px 12px;
+                overflow: hidden;
+            }
+
+        .campaign-cell strong,
+        .campaign-cell span,
+        .campaign-cell a {
+            display: block;
+        }
+
+        .campaign-cell strong {
+            color: #0f172a;
+            font-weight: 950;
+            overflow-wrap: anywhere;
+        }
+
+        .campaign-cell span {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .campaign-cell a,
+        .target-cell a,
+        .published-link {
+            color: #2563eb;
+            font-size: 12px;
+            text-decoration: none;
+            font-weight: 900;
+        }
+
+        .target-cell {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            min-width: 0;
+        }
+
+        .target-icon {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #1877f2, #60a5fa);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .target-cell strong,
+        .target-cell span {
+            display: block;
+            overflow-wrap: anywhere;
+        }
+
+        .target-cell strong {
+            color: #0f172a;
+            font-weight: 950;
+        }
+
+        .target-cell span,
+        .date-sub,
+        .muted {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 950;
+            background: rgba(100,116,139,.12);
+            color: #475569;
+            white-space: nowrap;
+        }
+
+        .status-posted,
+        .status-completed,
+        .status-ready {
+            background: rgba(16,185,129,.12);
+            color: #047857;
+        }
+
+        .status-failed {
+            background: rgba(239,68,68,.12);
+            color: #dc2626;
+        }
+
+        .status-scheduled,
+        .status-running {
+            background: rgba(37,99,235,.12);
+            color: #1d4ed8;
+        }
+
+        .status-draft,
+        .status-pending {
+            background: rgba(245,158,11,.14);
+            color: #b45309;
+        }
+
+        .retry-text,
+        .error-text {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 850;
+            overflow-wrap: anywhere;
+        }
+
+        .retry-text {
+            color: #7c3aed;
+        }
+
+        .error-text {
+            color: #dc2626;
+        }
+
+        .copy-text {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(15,23,42,.10);
+            padding: 10px;
+            font-weight: 650;
+            color: #334155;
+            background: #fff;
+            resize: vertical;
+        }
+
+        .copy-btn {
+            margin-top: 7px;
+            border: 1px solid rgba(37,99,235,.18);
+            background: rgba(37,99,235,.08);
+            color: #1d4ed8;
+            border-radius: 999px;
+            padding: 7px 11px;
+            font-weight: 900;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-cell {
+            overflow: visible !important;
+        }
+
+        .queue-actions {
+            width: 100%;
+            max-width: 100%;
+            display: grid;
+            gap: 8px;
+        }
+
+            .queue-actions form {
+                width: 100%;
+                margin: 0;
+            }
+
+            .queue-actions .inline-action-form {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 8px;
+                align-items: center;
+            }
+
+            .queue-actions .form-control {
+                min-width: 0;
+                width: 100%;
+                height: 38px;
+                border-radius: 10px;
+                font-weight: 700;
+            }
+
+            .queue-actions .btn {
+                min-height: 38px;
+                border-radius: 999px;
+                font-weight: 850;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                white-space: nowrap;
+                padding-left: 13px;
+                padding-right: 13px;
+            }
+
+            .queue-actions > a,
+            .queue-actions .full-btn {
+                width: 100%;
+            }
+
+        .empty-cell {
+            text-align: center;
+            color: #64748b;
+            font-weight: 850;
+            padding: 34px;
+            background: rgba(248,250,252,.75);
+            border-radius: 18px;
+        }
+
+        @@media (max-width: 1399.98px) {
+            .mq-table {
+                min-width: 1120px;
+            }
+
+                .mq-table th:nth-child(1),
+                .mq-table td:nth-child(1) {
+                    width: 165px;
+                }
+
+                .mq-table th:nth-child(2),
+                .mq-table td:nth-child(2) {
+                    width: 175px;
+                }
+
+                .mq-table th:nth-child(5),
+                .mq-table td:nth-child(5) {
+                    width: 230px;
+                }
+
+                .mq-table th:nth-child(7),
+                .mq-table td:nth-child(7) {
+                    width: 340px;
+                }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .mq-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .mq-card-head {
+                flex-direction: column;
+            }
+
+            .mq-search {
+                width: 100%;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .mq-table-wrap {
+                overflow-x: visible;
+            }
+
+            .mq-table {
+                min-width: 0;
+                width: 100%;
+                border-collapse: separate;
+                border-spacing: 0 14px;
+            }
+
+                .mq-table thead {
+                    display: none;
+                }
+
+                .mq-table,
+                .mq-table tbody,
+                .mq-table tr,
+                .mq-table td {
+                    display: block;
+                    width: 100% !important;
+                }
+
+                    .mq-table tr {
+                        border: 1px solid rgba(15,23,42,.10);
+                        border-radius: 22px;
+                        background: #fff;
+                        box-shadow: 0 14px 32px rgba(2,6,23,.07);
+                        padding: 14px;
+                    }
+
+                    .mq-table td {
+                        padding: 12px 0;
+                        border-bottom: 1px solid rgba(15,23,42,.07);
+                        overflow: visible;
+                        text-align: left !important;
+                    }
+
+                        .mq-table td:last-child {
+                            border-bottom: 0;
+                        }
+
+                        .mq-table td::before {
+                            content: attr(data-label);
+                            display: block;
+                            margin-bottom: 7px;
+                            color: #475569;
+                            font-size: 12px;
+                            font-weight: 950;
+                            text-transform: uppercase;
+                            letter-spacing: .06em;
+                        }
+
+            .queue-actions .inline-action-form {
+                grid-template-columns: 1fr;
+            }
+
+            .queue-actions .btn,
+            .queue-actions > a {
+                width: 100%;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .mq-page {
+                padding-top: 10px;
+            }
+
+            .mq-hero {
+                padding: 22px;
+                border-radius: 24px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .mq-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .mq-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .mq-card {
+                padding: 12px;
+                border-radius: 22px;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            document.addEventListener("click", async function (event) {
+                const button = event.target.closest("[data-copy-target]");
+
+                if (!button) {
+                    return;
+                }
+
+                const targetId = button.getAttribute("data-copy-target");
+                const target = document.getElementById(targetId);
+
+                if (!target) {
+                    return;
+                }
+
+                const text = target.value || target.textContent || "";
+
+                try {
+                    await navigator.clipboard.writeText(text);
+                    const original = button.innerHTML;
+                    button.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+
+                    setTimeout(function () {
+                        button.innerHTML = original;
+                    }, 1400);
+                } catch {
+                    target.select();
+                    document.execCommand("copy");
+                }
+            });
+        })();
+    </script>
+}

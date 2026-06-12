@@ -1,0 +1,246 @@
+﻿@model AdminBlogPostListItemViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .admin-page {
+            min-height: calc(100vh - 80px);
+            background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 45%, #ffffff 100%);
+        }
+
+        .delete-shell {
+            min-height: calc(100vh - 130px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-card {
+            width: 100%;
+            max-width: 620px;
+            border-radius: 28px;
+            background: rgba(255,255,255,.96);
+            border: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 24px 70px rgba(15,23,42,.12);
+            overflow: hidden;
+        }
+
+        .delete-hero {
+            padding: 2.25rem;
+            text-align: center;
+            color: #fff;
+            background: linear-gradient(135deg, #991b1b, #dc2626, #ef4444);
+        }
+
+        .delete-icon {
+            width: 78px;
+            height: 78px;
+            border-radius: 24px;
+            margin: 0 auto 1rem;
+            background: rgba(255,255,255,.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+        }
+
+        .delete-kicker {
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: .14em;
+            font-size: .78rem;
+            font-weight: 900;
+            color: rgba(255,255,255,.8);
+            margin-bottom: .35rem;
+        }
+
+        .delete-hero h1 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 900;
+            margin: 0 0 .5rem;
+        }
+
+        .delete-hero p {
+            margin: 0;
+            color: rgba(255,255,255,.82);
+            font-weight: 500;
+        }
+
+        .delete-body {
+            padding: 1.5rem;
+        }
+
+        .post-preview {
+            border-radius: 22px;
+            background: #f8fafc;
+            border: 1px solid rgba(15,23,42,.08);
+            padding: 1.25rem;
+        }
+
+        .preview-label {
+            color: #64748b;
+            font-size: .78rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .preview-title {
+            color: #0f172a;
+            font-weight: 900;
+            font-size: 1.15rem;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+
+        .preview-slug {
+            color: #2563eb;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .delete-actions {
+            display: flex;
+            justify-content: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .modern-btn {
+            border-radius: 16px;
+            padding: .78rem 1.2rem;
+            font-weight: 900;
+        }
+
+        .danger-btn {
+            color: #fff;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            border: 0;
+            box-shadow: 0 10px 24px rgba(220,38,38,.2);
+        }
+
+        .light-btn {
+            background: #fff;
+            color: #0f172a;
+        }
+
+        .confirm-modal {
+            border: 0;
+            border-radius: 28px;
+            box-shadow: 0 24px 70px rgba(15,23,42,.22);
+        }
+
+        .modal-icon {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: rgba(220,38,38,.08);
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+
+        @@media (max-width: 575.98px) {
+            .delete-card,
+            .confirm-modal {
+                border-radius: 22px;
+            }
+
+            .delete-hero,
+            .delete-body {
+                padding: 1.25rem;
+            }
+
+            .delete-actions,
+            .delete-actions .btn,
+            .modal-body .btn,
+            .modal-body form {
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+<div class="container-fluid py-4 admin-page">
+    <div class="delete-shell">
+        <div class="delete-card">
+            <div class="delete-hero">
+                <div class="delete-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+
+                <span class="delete-kicker">Danger Zone</span>
+                <h1>Delete Blog Post</h1>
+                <p>This action is permanent and cannot be undone.</p>
+            </div>
+
+            <div class="delete-body">
+                <div class="post-preview">
+                    <div class="preview-label">Post Title</div>
+                    <div class="preview-title">@Model.Title</div>
+
+                    <div class="preview-label mt-3">Slug</div>
+                    <div class="preview-slug">/@Model.Slug</div>
+                </div>
+
+                <div class="delete-actions">
+                    <button type="button"
+                            class="btn modern-btn danger-btn"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteConfirmModal">
+                        <i class="fa-solid fa-trash me-2"></i>
+                        Delete Post
+                    </button>
+
+                    <a asp-action="Index" class="btn modern-btn light-btn">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content confirm-modal">
+            <div class="modal-body text-center p-4">
+                <div class="modal-icon">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+
+                <h4 class="fw-bold mb-2">Confirm Deletion</h4>
+
+                <p class="text-muted mb-4">
+                    Are you sure you want to delete this blog post?
+                    <br />
+                    <strong>@Model.Title</strong>
+                </p>
+
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                    <button type="button"
+                            class="btn modern-btn light-btn border"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <form asp-action="Delete" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <button type="submit" class="btn modern-btn danger-btn">
+                            Yes, Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

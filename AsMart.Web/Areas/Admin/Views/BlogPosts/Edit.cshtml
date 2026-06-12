@@ -1,0 +1,468 @@
+﻿@model AsMart.Web.Models.DTOs.BlogPostEditDto
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var categoryOptions = ViewBag.CategoryOptions as List<SelectListItem> ?? new();
+    var tagOptions = ViewBag.TagOptions as List<SelectListItem> ?? new();
+}
+
+@section Styles {
+    <style>
+        .bp-page {
+            background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 45%, #ffffff 100%);
+            min-height: calc(100vh - 80px);
+        }
+
+        .bp-hero {
+            border-radius: 28px;
+            padding: 2rem;
+            background: linear-gradient(135deg, #0f172a, #2563eb);
+            color: #fff;
+            box-shadow: 0 18px 45px rgba(15,23,42,.16);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .bp-kicker {
+            text-transform: uppercase;
+            letter-spacing: .14em;
+            color: #bfdbfe;
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+        .bp-hero h1 {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 900;
+            margin: .35rem 0;
+        }
+
+        .bp-hero p {
+            margin: 0;
+            color: rgba(255,255,255,.78);
+            font-weight: 500;
+        }
+
+        .bp-hero-actions {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        .bp-card {
+            border-radius: 26px;
+            background: rgba(255,255,255,.96);
+            border: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 16px 45px rgba(15,23,42,.08);
+            overflow: hidden;
+        }
+
+        .bp-card-body {
+            padding: 1.5rem;
+        }
+
+        .bp-label {
+            display: block;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: .5rem;
+        }
+
+        .bp-control {
+            border-radius: 16px;
+            border: 1px solid rgba(15,23,42,.12);
+            min-height: 48px;
+            box-shadow: none;
+        }
+
+            .bp-control:focus {
+                border-color: rgba(37,99,235,.55);
+                box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
+            }
+
+        .bp-textarea {
+            min-height: 420px;
+            resize: vertical;
+        }
+
+        .bp-image-preview {
+            border-radius: 22px;
+            overflow: hidden;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #f8fafc;
+        }
+
+            .bp-image-preview img {
+                width: 100%;
+                max-height: 280px;
+                object-fit: cover;
+                display: block;
+            }
+
+        .bp-sidebar {
+            position: sticky;
+            top: 90px;
+        }
+
+        .bp-side-title {
+            font-weight: 900;
+            margin-bottom: 1rem;
+        }
+
+        .bp-pill {
+            border-radius: 999px;
+            padding: .45rem .8rem;
+            font-size: .78rem;
+            font-weight: 900;
+            border: 1px solid rgba(15,23,42,.1);
+        }
+
+            .bp-pill.is-live {
+                color: #166534;
+                background: rgba(22,101,52,.08);
+                border-color: rgba(22,101,52,.18);
+            }
+
+            .bp-pill.is-draft {
+                color: #475569;
+                background: rgba(71,85,105,.08);
+                border-color: rgba(71,85,105,.16);
+            }
+
+        .bp-switch .form-check-input {
+            width: 3rem;
+            height: 1.5rem;
+        }
+
+        .bp-check-list {
+            display: grid;
+            gap: .75rem;
+        }
+
+        .bp-check {
+            border: 1px solid rgba(15,23,42,.1);
+            border-radius: 16px;
+            background: #fff;
+            padding: .75rem .9rem;
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            cursor: pointer;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+            .bp-check:hover {
+                border-color: rgba(37,99,235,.35);
+                background: rgba(37,99,235,.03);
+            }
+
+            .bp-check input {
+                width: 1rem;
+                height: 1rem;
+            }
+
+        .bp-btn {
+            border-radius: 16px;
+            padding: .75rem 1.15rem;
+            font-weight: 900;
+        }
+
+        .bp-btn-primary {
+            color: #fff;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: 0;
+            box-shadow: 0 10px 24px rgba(37,99,235,.24);
+        }
+
+        .bp-btn-light {
+            background: #fff;
+            color: #0f172a;
+        }
+
+        .bp-btn-danger {
+            color: #fff;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            border: 0;
+            box-shadow: 0 10px 24px rgba(220,38,38,.20);
+        }
+
+        .bp-modal {
+            border: 0;
+            border-radius: 28px;
+            box-shadow: 0 24px 70px rgba(15,23,42,.22);
+        }
+
+        .bp-modal-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(220,38,38,.08);
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .bp-sidebar {
+                position: static;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .bp-hero,
+            .bp-card {
+                border-radius: 20px;
+            }
+
+            .bp-hero-actions,
+            .bp-hero-actions .btn {
+                width: 100%;
+            }
+
+            .bp-card-body {
+                padding: 1rem;
+            }
+        }
+    </style>
+}
+
+<div class="container-fluid py-4 bp-page">
+
+    <div class="bp-hero mb-4">
+        <div>
+            <span class="bp-kicker">Admin Editor</span>
+            <h1>Edit Blog Post</h1>
+            <p>Update content, SEO slug, publishing status, categories, and tags.</p>
+        </div>
+
+        <div class="bp-hero-actions">
+            <a asp-action="Index" class="btn bp-btn bp-btn-light">
+                <i class="fa-solid fa-arrow-left me-2"></i>Back
+            </a>
+
+            <button type="submit" form="bpForm" class="btn bp-btn bp-btn-primary">
+                <i class="fa-solid fa-floppy-disk me-2"></i>Save
+            </button>
+        </div>
+    </div>
+
+    <form id="bpForm" asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row g-4">
+            <div class="col-12 col-xl-8">
+                <div class="bp-card">
+                    <div class="bp-card-body">
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-4">
+                            <label asp-for="Title" class="bp-label"></label>
+                            <input asp-for="Title" class="form-control bp-control" />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label asp-for="Slug" class="bp-label"></label>
+                                <input asp-for="Slug" class="form-control bp-control" />
+                                <div class="form-text">Use lowercase words separated by hyphens.</div>
+                                <span asp-validation-for="Slug" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="FeaturedImageUrl" class="bp-label"></label>
+                                <input asp-for="FeaturedImageUrl" class="form-control bp-control" />
+                                <span asp-validation-for="FeaturedImageUrl" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(Model?.FeaturedImageUrl))
+                        {
+                            <div class="bp-image-preview mt-4">
+                                <img src="@Model.FeaturedImageUrl" alt="Featured image preview" />
+                            </div>
+                        }
+
+                        <div class="mt-4">
+                            <label asp-for="ProductPageUrl" class="bp-label"></label>
+                            <input asp-for="ProductPageUrl" class="form-control bp-control" />
+                            <span asp-validation-for="ProductPageUrl" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mt-4">
+                            <label asp-for="Content" class="bp-label"></label>
+                            <textarea asp-for="Content" class="form-control bp-control bp-textarea"></textarea>
+                            <span asp-validation-for="Content" class="text-danger small"></span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <div class="bp-sidebar">
+
+                    <div class="bp-card mb-4">
+                        <div class="bp-card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h5 class="bp-side-title">Publish Settings</h5>
+
+                                <span class="bp-pill @(Model?.IsPublished == true ? "is-live" : "is-draft")">
+                                    @(Model?.IsPublished == true ? "Live" : "Draft")
+                                </span>
+                            </div>
+
+                            <div class="form-check form-switch bp-switch mb-4">
+                                <input class="form-check-input" asp-for="IsPublished" id="bpIsPublished" />
+                                <label class="form-check-label fw-bold" asp-for="IsPublished"></label>
+                            </div>
+
+                            <label asp-for="PublishedAt" class="bp-label"></label>
+                            <input asp-for="PublishedAt"
+                                   class="form-control bp-control"
+                                   type="datetime-local"
+                                   value="@(Model.PublishedAt?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm"))" />
+                            <span asp-validation-for="PublishedAt" class="text-danger small"></span>
+
+                            <div class="d-grid gap-3 mt-4">
+                                <button type="submit" class="btn bp-btn bp-btn-primary">
+                                    <i class="fa-solid fa-floppy-disk me-2"></i>Save Changes
+                                </button>
+
+                                <a asp-action="Index" class="btn bp-btn bp-btn-light border">
+                                    Cancel
+                                </a>
+
+                                <button type="button"
+                                        class="btn bp-btn bp-btn-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteConfirmModal">
+                                    <i class="fa-regular fa-trash-can me-2"></i>Delete Post
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bp-card mb-4">
+                        <div class="bp-card-body">
+                            <h5 class="bp-side-title">Categories</h5>
+
+                            <div class="bp-check-list">
+                                @foreach (var c in categoryOptions)
+                                {
+                                    var cid = "cat_" + c.Value;
+
+                                    <label class="bp-check" for="@cid">
+                                        <input id="@cid"
+                                               type="checkbox"
+                                               name="SelectedCategoryIds"
+                                               value="@c.Value"
+                                               @(c.Selected ? "checked" : "") />
+                                        <span>@c.Text</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bp-card">
+                        <div class="bp-card-body">
+                            <h5 class="bp-side-title">Tags</h5>
+
+                            <div class="bp-check-list">
+                                @foreach (var t in tagOptions)
+                                {
+                                    var tid = "tag_" + t.Value;
+
+                                    <label class="bp-check" for="@tid">
+                                        <input id="@tid"
+                                               type="checkbox"
+                                               name="SelectedTagIds"
+                                               value="@t.Value"
+                                               @(t.Selected ? "checked" : "") />
+                                        <span>@t.Text</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bp-modal">
+            <div class="modal-body text-center p-4">
+                <div class="bp-modal-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+
+                <h4 class="fw-bold mb-2">Confirm Deletion</h4>
+
+                <p class="text-muted mb-4">
+                    Are you sure you want to delete this blog post?
+                    <br />
+                    <strong>@Model?.Title</strong>
+                </p>
+
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                    <button type="button" class="btn bp-btn bp-btn-light border" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <a asp-action="Delete"
+                       asp-route-id="@Model?.Id"
+                       class="btn bp-btn bp-btn-danger">
+                        Yes, Delete
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var pub = document.getElementById('bpIsPublished');
+        var pill = document.querySelector('.bp-pill');
+
+        function syncPublishPill() {
+            if (!pub || !pill) return;
+
+            if (pub.checked) {
+                pill.classList.remove('is-draft');
+                pill.classList.add('is-live');
+                pill.textContent = 'Live';
+            } else {
+                pill.classList.remove('is-live');
+                pill.classList.add('is-draft');
+                pill.textContent = 'Draft';
+            }
+        }
+
+        if (pub) {
+            pub.addEventListener('change', syncPublishPill);
+            syncPublishPill();
+        }
+    })();
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

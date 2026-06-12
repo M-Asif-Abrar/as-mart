@@ -1,0 +1,8 @@
+﻿@* /Views/Error/403.cshtml *@
+@model AsMart.Web.Models.ViewModels.ErrorPageViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = $"{Model.StatusCode} - {Model.Title}";
+}
+<meta name="robots" content="noindex, nofollow" />
+@await Html.PartialAsync("_ErrorPage", Model)

@@ -1,0 +1,480 @@
+﻿@model CollectionListItemViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .collection-delete-page {
+            min-height: calc(100vh - 80px);
+            background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 45%, #ffffff 100%);
+        }
+
+        .collection-delete-shell {
+            min-height: calc(100vh - 130px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .collection-delete-card {
+            width: 100%;
+            max-width: 850px;
+            border-radius: 30px;
+            background: rgba(255,255,255,.96);
+            border: 1px solid rgba(15,23,42,.08);
+            box-shadow: 0 24px 70px rgba(15,23,42,.12);
+            overflow: hidden;
+        }
+
+        .delete-hero {
+            padding: 2.25rem;
+            text-align: center;
+            color: #fff;
+            background: linear-gradient(135deg, #991b1b, #dc2626, #ef4444);
+        }
+
+        .delete-icon {
+            width: 78px;
+            height: 78px;
+            border-radius: 24px;
+            margin: 0 auto 1rem;
+            background: rgba(255,255,255,.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+        }
+
+        .delete-kicker {
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: .14em;
+            font-size: .78rem;
+            font-weight: 900;
+            color: rgba(255,255,255,.8);
+            margin-bottom: .35rem;
+        }
+
+        .delete-hero h1 {
+            font-size: clamp(1.9rem, 4vw, 2.8rem);
+            font-weight: 900;
+            margin: 0 0 .5rem;
+        }
+
+        .delete-hero p {
+            max-width: 680px;
+            margin: 0 auto;
+            color: rgba(255,255,255,.82);
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .delete-body {
+            padding: 1.5rem;
+        }
+
+        .collection-summary-card {
+            border-radius: 24px;
+            background: #f8fafc;
+            border: 1px solid rgba(15,23,42,.08);
+            padding: 1.25rem;
+        }
+
+        .summary-label,
+        .metric-label {
+            color: #64748b;
+            font-size: .78rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .summary-title {
+            color: #0f172a;
+            font-weight: 900;
+            font-size: clamp(1.35rem, 3vw, 1.9rem);
+            margin: .25rem 0;
+            overflow-wrap: anywhere;
+        }
+
+        .summary-slug {
+            color: #2563eb;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .delete-status-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .55rem .9rem;
+            font-size: .8rem;
+            font-weight: 900;
+            white-space: nowrap;
+            color: #dc2626;
+            background: rgba(220,38,38,.08);
+            border: 1px solid rgba(220,38,38,.16);
+        }
+
+        .metric-card {
+            height: 100%;
+            border-radius: 22px;
+            border: 1px solid rgba(15,23,42,.08);
+            background: #fff;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+            .metric-icon.blue {
+                background: rgba(37,99,235,.08);
+                color: #2563eb;
+            }
+
+            .metric-icon.warning {
+                background: rgba(245,158,11,.10);
+                color: #d97706;
+            }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 900;
+            overflow-wrap: anywhere;
+        }
+
+        .delete-alert {
+            border-radius: 22px;
+            padding: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: .85rem;
+        }
+
+            .delete-alert.danger {
+                background: rgba(220,38,38,.08);
+                border: 1px solid rgba(220,38,38,.16);
+            }
+
+            .delete-alert .alert-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 14px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex: 0 0 auto;
+                background: #fff;
+                color: #dc2626;
+            }
+
+            .delete-alert h5 {
+                font-weight: 900;
+                color: #0f172a;
+                margin-bottom: .25rem;
+            }
+
+            .delete-alert p {
+                margin: 0;
+                color: #64748b;
+                line-height: 1.5;
+            }
+
+        .delete-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: .85rem;
+            flex-wrap: wrap;
+        }
+
+        .collection-btn {
+            border-radius: 16px;
+            padding: .82rem 1.2rem;
+            font-weight: 900;
+            transition: .2s ease;
+        }
+
+            .collection-btn:hover {
+                transform: translateY(-2px);
+            }
+
+        .collection-btn-light {
+            background: #fff;
+            color: #0f172a;
+        }
+
+        .collection-btn-danger {
+            color: #fff;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            border: 0;
+            box-shadow: 0 10px 24px rgba(220,38,38,.20);
+        }
+
+            .collection-btn-danger:hover {
+                color: #fff;
+            }
+
+        .delete-modal {
+            border: 0;
+            border-radius: 28px;
+            box-shadow: 0 24px 70px rgba(15,23,42,.22);
+        }
+
+        .modal-delete-icon {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: rgba(220,38,38,.08);
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+
+        @@media (max-width: 767.98px) {
+            .collection-delete-card,
+            .delete-modal {
+                border-radius: 22px;
+            }
+
+            .delete-hero {
+                padding: 1.5rem;
+            }
+
+            .delete-body {
+                padding: 1.1rem;
+            }
+
+            .delete-alert {
+                flex-direction: column;
+            }
+
+            .delete-actions {
+                flex-direction: column-reverse;
+            }
+
+                .delete-actions .btn,
+                .modal-body .btn,
+                .modal-body form {
+                    width: 100%;
+                }
+        }
+    </style>
+}
+
+<div class="container-fluid py-4 collection-delete-page">
+
+    <div class="collection-delete-shell">
+
+        <div class="collection-delete-card">
+
+            <div class="delete-hero">
+
+                <div class="delete-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+
+                <span class="delete-kicker">
+                    Danger Zone
+                </span>
+
+                <h1>Delete Collection</h1>
+
+                <p>
+                    Review this collection before deleting it.
+                    This action cannot be undone.
+                </p>
+
+            </div>
+
+            <div class="delete-body">
+
+                <div class="collection-summary-card mb-4">
+
+                    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+
+                        <div>
+                            <div class="summary-label">
+                                Collection Name
+                            </div>
+
+                            <h2 class="summary-title">
+                                @Model.Name
+                            </h2>
+
+                            <div class="summary-slug">
+                                <i class="fa-solid fa-link me-2"></i>
+                                @Model.Slug
+                            </div>
+                        </div>
+
+                        <span class="delete-status-badge">
+                            <i class="fa-solid fa-trash me-1"></i>
+                            Delete
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="row g-3 mb-4">
+
+                    <div class="col-12 col-md-6">
+                        <div class="metric-card">
+
+                            <div class="metric-icon blue">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+
+                            <div>
+                                <div class="metric-label">
+                                    Collection
+                                </div>
+
+                                <div class="metric-value">
+                                    @Model.Name
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="metric-card">
+
+                            <div class="metric-icon warning">
+                                <i class="fa-solid fa-boxes-stacked"></i>
+                            </div>
+
+                            <div>
+                                <div class="metric-label">
+                                    Products Inside
+                                </div>
+
+                                <div class="metric-value">
+                                    @Model.ProductCount
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="delete-alert danger mb-4">
+
+                    <div class="alert-icon">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
+
+                    <div>
+                        <h5>
+                            Permanent deletion
+                        </h5>
+
+                        <p>
+                            You are about to delete this collection.
+                            Product records will remain in the system, but this collection grouping will be removed.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="delete-actions">
+
+                    <a asp-action="Index"
+                       class="btn collection-btn collection-btn-light border">
+                        <i class="fa-solid fa-xmark me-2"></i>
+                        Cancel
+                    </a>
+
+                    <button type="button"
+                            class="btn collection-btn collection-btn-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteConfirmModal">
+                        <i class="fa-solid fa-trash me-2"></i>
+                        Delete Collection
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade"
+     id="deleteConfirmModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content delete-modal">
+
+            <div class="modal-body text-center p-4">
+
+                <div class="modal-delete-icon">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+
+                <h4 class="fw-bold mb-2">
+                    Confirm Deletion
+                </h4>
+
+                <p class="text-muted mb-4">
+                    Are you sure you want to permanently delete this collection?
+                    <br />
+                    <strong>@Model.Name</strong>
+                </p>
+
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+
+                    <button type="button"
+                            class="btn collection-btn collection-btn-light border"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <form asp-action="Delete"
+                          method="post"
+                          class="m-0">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               asp-for="Id" />
+
+                        <button type="submit"
+                                class="btn collection-btn collection-btn-danger">
+                            Yes, Delete
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
