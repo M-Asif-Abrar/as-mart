@@ -42,5 +42,7 @@ namespace AsMart.Web.Models.Entities
 
         public ICollection<ClickLog> ClickLogs { get; set; }
             = new List<ClickLog>();
+
+        public ICollection<ApiClient> ApiClients { get; set; } = new List<ApiClient>();
     }
 }

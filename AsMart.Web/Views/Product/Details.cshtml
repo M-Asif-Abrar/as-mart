@@ -660,6 +660,68 @@
             line-height: 1.25;
         }
 
+        .pd-left-related {
+            padding: 16px;
+        }
+
+        .pd-left-related-title {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #0f172a;
+            font-size: 15px;
+            font-weight: 950;
+        }
+
+            .pd-left-related-title i {
+                color: #2563eb;
+            }
+
+        .pd-left-related-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .pd-left-related-item {
+            text-decoration: none;
+            border: 1px solid rgba(15,23,42,.10);
+            background: #fff;
+            border-radius: 16px;
+            padding: 8px;
+            transition: .18s ease-in-out;
+        }
+
+            .pd-left-related-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 28px rgba(15,23,42,.12);
+                border-color: rgba(37,99,235,.35);
+                text-decoration: none;
+            }
+
+            .pd-left-related-item img {
+                width: 100%;
+                height: 82px;
+                object-fit: contain;
+                display: block;
+            }
+
+        .pd-left-related-name {
+            margin-top: 7px;
+            color: #334155;
+            font-size: 11px;
+            line-height: 1.3;
+            font-weight: 800;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
         @@supports (-webkit-line-clamp: 2) {
             .product-card-title {
                 display: block;
@@ -970,6 +1032,37 @@
                                     Hover to zoom on desktop. Click thumbnails to switch images.
                                 </div>
                             </div>
+
+                            @if (Model.RelatedCategoryProducts.Any())
+                            {
+                                <div class="pd-card mt-3 pd-left-related">
+                                    <div class="pd-left-related-title">
+                                        <i class="fa-solid fa-layer-group"></i>
+                                        Related Category Products
+                                    </div>
+
+                                    <div class="pd-left-related-grid">
+                                        @foreach (var item in Model.RelatedCategoryProducts)
+                                        {
+                                            <a asp-controller="Product"
+                                               asp-action="Details"
+                                               asp-route-slug="@item.Slug"
+                                               class="pd-left-related-item"
+                                               title="@item.Title">
+
+                                                <img src="@(string.IsNullOrWhiteSpace(item.MainImageUrl)
+                                                                                     ? Url.Content("~/images/no-image.png")
+                                                                                     : item.MainImageUrl)"
+                                             alt="@item.Title" />
+
+                                                <div class="pd-left-related-name">
+                                                    @item.Title
+                                                </div>
+                                            </a>
+                                                                        }
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
 

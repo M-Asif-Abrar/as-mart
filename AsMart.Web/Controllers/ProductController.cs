@@ -29,13 +29,9 @@ namespace AsMart.Web.Controllers
             _utm = utm;
         }
 
-        // ----------------------------------------------------
-        // PRODUCT DETAILS + RELATED / OTHER PRODUCTS
-        // ----------------------------------------------------
         [HttpGet("/product/{slug}")]
         public async Task<IActionResult> Details(string slug)
         {
-            // main product
             var product = await _db.Products
                 .AsNoTracking()
                 .Include(p => p.ProductCategories)
@@ -45,77 +41,72 @@ namespace AsMart.Web.Controllers
             if (product == null)
                 return NotFound();
 
-
             await _utm.TrackVisitAsync(HttpContext, productId: product.Id, clickType: "ProductLanding");
 
-            // ---------------- RELATED PRODUCTS ----------------
-            // collect this product's own categories + parent categories
-            var categoryIds = product.ProductCategories
+            // Pick ONE best category only.
+            // Prefer child category, not parent/general category.
+            // Example: Smart Watches instead of Electronics.
+            var targetCategoryId = product.ProductCategories
                 .Where(pc => pc.Category != null)
                 .Select(pc => pc.Category!)
-                .SelectMany(c => new[]
-                {
-                    c.Id,
-                    c.ParentCategoryId ?? 0
-                })
-                .Where(id => id != 0)
-                .Distinct()
-                .ToList();
+                .OrderByDescending(c => c.ParentCategoryId.HasValue)
+                .ThenBy(c => c.Name)
+                .Select(c => c.Id)
+                .FirstOrDefault();
 
+            IReadOnlyList<Product> relatedCategoryProducts = Array.Empty<Product>();
             IReadOnlyList<Product> relatedProducts = Array.Empty<Product>();
 
-            if (categoryIds.Any())
+            if (targetCategoryId != 0)
             {
-                var relatedQuery = _db.Products
+                relatedCategoryProducts = await _db.Products
                     .AsNoTracking()
                     .Include(p => p.ProductCategories)
                         .ThenInclude(pc => pc.Category)
                     .Where(p =>
                         p.IsActive &&
                         p.Id != product.Id &&
-                        p.ProductCategories.Any(pc => categoryIds.Contains(pc.CategoryId)));
+                        p.ProductCategories.Any(pc => pc.CategoryId == targetCategoryId))
+                    .OrderByDescending(p => p.Rating ?? 0)
+                    .ThenByDescending(p => p.RatingCount ?? 0)
+                    .ThenByDescending(p => p.CreatedAt)
+                    .ToListAsync();
 
-                // score: number of shared categories → rating → rating count
-                relatedQuery = relatedQuery
-                    .OrderByDescending(p =>
-                        p.ProductCategories.Count(pc => categoryIds.Contains(pc.CategoryId)))
-                    .ThenByDescending(p => p.Rating ?? 0)
-                    .ThenByDescending(p => p.RatingCount ?? 0);
-
-                relatedProducts = await relatedQuery.Take(12).ToListAsync();
+                relatedProducts = relatedCategoryProducts
+                    .Take(12)
+                    .ToList();
             }
 
-            // ---------------- OTHER PRODUCTS ----------------
-            // exclude current + already-related
-            var excludedIds = relatedProducts
+            var excludedIds = relatedCategoryProducts
                 .Select(p => p.Id)
                 .Append(product.Id)
                 .ToHashSet();
 
-            var otherQuery = _db.Products
+            var otherProducts = await _db.Products
                 .AsNoTracking()
-                .Where(p => p.IsActive && !excludedIds.Contains(p.Id));
-
-            // "interesting" items – clicks / rating / recency
-            otherQuery = otherQuery
+                .Where(p => p.IsActive && !excludedIds.Contains(p.Id))
                 .OrderByDescending(p => p.ClickCount)
                 .ThenByDescending(p => p.Rating ?? 0)
-                .ThenByDescending(p => p.CreatedAt);
+                .ThenByDescending(p => p.CreatedAt)
+                .Take(12)
+                .ToListAsync();
 
-            var otherProducts = await otherQuery.Take(12).ToListAsync();
-
-            // ---------------- BUILD VIEWMODEL ----------------
             var vm = new ProductDetailViewModel
             {
                 Product = product,
+
+                // Bottom carousel
                 RelatedProducts = relatedProducts.Select(ToCardVm).ToList(),
+
+                // Left-side image box: SAME category only
+                RelatedCategoryProducts = relatedCategoryProducts.Select(ToCardVm).ToList(),
+
                 OtherProducts = otherProducts.Select(ToCardVm).ToList()
             };
 
             return View(vm);
         }
 
-        // maps Product → ProductCardViewModel for carousels
         private static ProductCardViewModel ToCardVm(Product p)
         {
             var primaryCategory = p.ProductCategories?
@@ -137,34 +128,31 @@ namespace AsMart.Web.Controllers
             };
         }
 
-        // ----------------------------------------------------
-        // AFFILIATE REDIRECT + CLICK LOGGING
-        // ----------------------------------------------------
         [HttpGet("/product/go/{id:int}")]
         public async Task<IActionResult> Go(int id)
         {
             var product = await _db.Products.FindAsync(id);
+
             if (product == null || !product.IsActive)
                 return NotFound();
 
-            var affiliateUrl = !string.IsNullOrWhiteSpace(product.AffiliateUrlOverride)
-                ? product.AffiliateUrlOverride
-                : _affiliate.BuildProductUrl(product.ASIN);
+            var affiliateUrl = !string.IsNullOrWhiteSpace(product.ASIN)
+                ? _affiliate.BuildProductUrl(product.ASIN)
+                : product.AffiliateUrlOverride;
 
-            // Get current user id if authenticated
+            if (string.IsNullOrWhiteSpace(affiliateUrl))
+                return RedirectToAction("Details", new { slug = product.Slug });
+
             string? userId = User?.Identity?.IsAuthenticated == true
                 ? User.GetUserId()
                 : null;
 
-            // ---------- STEP 3 FIX: bot filter + dedup ----------
             var userAgent = Request.Headers["User-Agent"].ToString();
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            // If bot-like traffic, do NOT log (prevents inflated counts)
             if (IsBotLike(userAgent))
                 return Redirect(affiliateUrl);
 
-            // Deduplicate within 60 seconds for same product + IP + UA + click type
             var since = DateTime.UtcNow.AddSeconds(-60);
 
             var already = await _db.ClickLogs.AnyAsync(x =>
@@ -176,7 +164,6 @@ namespace AsMart.Web.Controllers
 
             if (!already)
             {
-                // Log click (only if not duplicate)
                 var click = new ClickLog
                 {
                     ProductId = product.Id,
@@ -188,11 +175,8 @@ namespace AsMart.Web.Controllers
                 };
 
                 _db.ClickLogs.Add(click);
-
-                // increment product click counter once per dedup window
                 product.ClickCount++;
 
-                // If user is logged in, insert a UserProductStatus (Clicked)
                 if (!string.IsNullOrEmpty(userId))
                 {
                     var status = new UserProductStatus
@@ -212,10 +196,10 @@ namespace AsMart.Web.Controllers
             return Redirect(affiliateUrl);
         }
 
-        // simple UA filter for non-human traffic
         private static bool IsBotLike(string? userAgent)
         {
-            if (string.IsNullOrWhiteSpace(userAgent)) return true;
+            if (string.IsNullOrWhiteSpace(userAgent))
+                return true;
 
             var ua = userAgent.ToLowerInvariant();
 
@@ -232,9 +216,6 @@ namespace AsMart.Web.Controllers
         }
     }
 
-    // --------------------------------------------------------
-    // IDENTITY EXTENSION: GET CURRENT USER ID
-    // --------------------------------------------------------
     public static class IdentityExtensions
     {
         public static string? GetUserId(this System.Security.Claims.ClaimsPrincipal user)

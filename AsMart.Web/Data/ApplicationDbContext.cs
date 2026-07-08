@@ -40,6 +40,7 @@ namespace AsMart.Web.Data
         public DbSet<MarketingCaptionVariation> MarketingCaptionVariations => Set<MarketingCaptionVariation>();
         public DbSet<MarketingPostingQueue> MarketingPostingQueue => Set<MarketingPostingQueue>();
         public DbSet<MarketingPostingLog> MarketingPostingLogs => Set<MarketingPostingLog>();
+        public DbSet<ApiClient> ApiClients { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -510,6 +511,38 @@ namespace AsMart.Web.Data
                 b.HasIndex(x => x.CreatedAt);
             });
 
+
+            builder.Entity<ApiClient>(b =>
+            {
+                b.ToTable("ApiClients");
+
+                b.HasKey(x => x.Id);
+
+                b.Property(x => x.Name)
+                    .IsRequired()
+                    .HasMaxLength(150);
+
+                b.Property(x => x.ApiKey)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                b.Property(x => x.Website)
+                    .HasMaxLength(300);
+
+                b.Property(x => x.RateLimitPerMinute)
+                    .IsRequired();
+
+                b.Property(x => x.CreatedAt)
+                    .IsRequired();
+
+                b.HasIndex(x => x.ApiKey)
+                    .IsUnique();
+
+                b.HasOne(x => x.User)
+                    .WithMany(x => x.ApiClients)
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
 
         }
     }

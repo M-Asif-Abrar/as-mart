@@ -579,11 +579,48 @@
 
                 <div class="collapse navbar-collapse" id="mainNav">
                     <ul class="navbar-nav mb-3 mb-lg-0 as-nav-links">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle"
+                               href="#"
+                               id="homeDropdown"
+                               role="button"
+                               data-bs-toggle="dropdown"
+                               aria-expanded="false">
                                 <i class="fa-solid fa-house"></i>
                                 <span>Home</span>
                             </a>
+
+                            <ul class="dropdown-menu as-nav-dropdown" aria-labelledby="homeDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">
+                                        <i class="fa-solid fa-house"></i>
+                                        <span>Home Page</span>
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="About">
+                                        <i class="fa-solid fa-circle-info"></i>
+                                        <span>About As-Mart</span>
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Privacy">
+                                        <i class="fa-solid fa-shield-halved"></i>
+                                        <span>Privacy Policy</span>
+                                    </a>
+                                </li>
+
+                                <li><hr class="dropdown-divider as-dd-divider" /></li>
+
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="ApiDocumentation">
+                                        <i class="fa-solid fa-code"></i>
+                                        <span>API Documentation</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
 
                         <li class="nav-item">
@@ -610,7 +647,7 @@
                                 <i class="fa-solid fa-layer-group"></i><span>Categories</span>
                             </a>
 
-                            @await Component.InvokeAsync("CategoriesMenu")
+                            @* @await Component.InvokeAsync("CategoriesMenu") *@
 
                         </li>
 
@@ -639,6 +676,13 @@
                                         <a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
                                             <i class="fa-solid fa-gauge-high"></i>
                                             <span>Dashboard</span>
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="ApiKeys" asp-action="Index">
+                                            <i class="fa-solid fa-key"></i>
+                                            <span>API Keys</span>
                                         </a>
                                     </li>
 
@@ -807,19 +851,7 @@
                             </li>
                         }
 
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">
-                                <i class="fa-solid fa-shield-halved"></i>
-                                <span>Privacy</span>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <span>About</span>
-                            </a>
-                        </li>
+                        
                     </ul>
 
                     <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-3 ms-lg-auto as-nav-right">

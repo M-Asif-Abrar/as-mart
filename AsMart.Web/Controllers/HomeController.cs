@@ -60,5 +60,12 @@ namespace AsMart.Web.Controllers
             return View();
         }
 
+        [HttpGet("/api-documentation")]
+        public IActionResult ApiDocumentation()
+        {
+            ViewData["Title"] = "As-Mart Public Product API Documentation";
+            return View();
+        }
+
     }
 }

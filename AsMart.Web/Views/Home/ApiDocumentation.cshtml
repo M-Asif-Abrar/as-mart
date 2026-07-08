@@ -1,0 +1,1330 @@
+﻿@{
+    ViewData["Title"] = "As-Mart Product API Documentation";
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <style>
+        * {
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        .api-doc-page {
+            background: linear-gradient(135deg,#f4f8ff 0%,#f7f3ff 45%,#fff8ef 100%);
+            min-height: 100vh;
+            padding: 1.5rem 0 4rem;
+            color: #172033;
+            overflow-x: hidden
+        }
+
+        .api-shell {
+            width: min(100%,1500px);
+            margin: 0 auto;
+            padding: 0 1rem
+        }
+
+        .api-layout {
+            display: grid;
+            grid-template-columns: 240px minmax(0,1fr);
+            gap: 1.25rem;
+            align-items: start
+        }
+
+        .api-main {
+            min-width: 0
+        }
+
+        .api-sidebar {
+            position: sticky;
+            top: 92px;
+            height: fit-content;
+            max-width: 100%
+        }
+
+        .api-side-link {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            padding: .85rem 1rem;
+            margin-bottom: .65rem;
+            border-radius: 14px;
+            background: rgba(255,255,255,.9);
+            color: #243047;
+            text-decoration: none;
+            font-weight: 800;
+            box-shadow: 0 10px 24px rgba(45,80,160,.07);
+            border: 1px solid rgba(120,150,220,.18);
+            transition: .2s ease;
+            min-width: 0
+        }
+
+            .api-side-link span {
+                min-width: 0;
+                overflow-wrap: anywhere
+            }
+
+            .api-side-link i {
+                color: #4f46e5;
+                flex: 0 0 auto;
+                width: 18px;
+                text-align: center
+            }
+
+            .api-side-link:hover, .api-side-link.active {
+                background: linear-gradient(135deg,#5b7cfa,#7c3aed);
+                color: #fff;
+                transform: translateY(-1px)
+            }
+
+                .api-side-link:hover i, .api-side-link.active i {
+                    color: #fff
+                }
+
+        .api-info-card {
+            background: rgba(255,255,255,.92);
+            border-radius: 16px;
+            padding: 1.15rem;
+            margin-top: 1.25rem;
+            box-shadow: 0 14px 34px rgba(45,80,160,.08);
+            border: 1px solid rgba(120,150,220,.16)
+        }
+
+        .api-info-icon, .api-dev-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 15px;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: .75rem;
+            background: linear-gradient(135deg,#7c3aed,#60a5fa);
+            box-shadow: 0 10px 20px rgba(124,58,237,.18)
+        }
+
+        .api-help-icon {
+            background: linear-gradient(135deg,#14b8a6,#67e8f9)
+        }
+
+        .api-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 24px;
+            padding: clamp(1.4rem,3vw,2.8rem);
+            background: radial-gradient(circle at 75% 30%,rgba(168,85,247,.18),transparent 28%),radial-gradient(circle at 95% 20%,rgba(236,72,153,.15),transparent 25%),linear-gradient(135deg,#eef6ff 0%,#f8efff 55%,#fff0f7 100%);
+            box-shadow: 0 18px 45px rgba(45,80,160,.10);
+            border: 1px solid rgba(120,150,220,.18);
+            margin-bottom: 1.25rem;
+            display: grid;
+            grid-template-columns: minmax(0,1fr) 260px;
+            gap: 1.5rem;
+            align-items: center
+        }
+
+            .api-hero h1 {
+                font-size: clamp(2rem,5vw,4rem);
+                font-weight: 900;
+                color: #172033;
+                line-height: 1.08;
+                margin-bottom: 1rem;
+                overflow-wrap: anywhere
+            }
+
+            .api-hero p {
+                max-width: 760px;
+                font-size: clamp(1rem,2vw,1.25rem);
+                color: #35415f;
+                line-height: 1.75;
+                margin-bottom: 0
+            }
+
+        .api-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+            margin-top: 1.7rem
+        }
+
+        .api-hero-art {
+            width: 100%;
+            max-width: 260px;
+            min-height: 135px;
+            border-radius: 20px;
+            background: rgba(255,255,255,.72);
+            box-shadow: 0 16px 35px rgba(91,124,250,.14);
+            border: 1px solid rgba(255,255,255,.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            justify-self: end;
+            padding: 1.2rem
+        }
+
+        .api-label {
+            width: 56px;
+            height: 56px;
+            border-radius: 13px;
+            background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            color: #fff;
+            font-size: 1.35rem;
+            font-weight: 900;
+            display: grid;
+            place-items: center;
+            margin-right: 1rem;
+            box-shadow: 0 10px 22px rgba(99,102,241,.22)
+        }
+
+        .api-hero-lines span {
+            display: block;
+            height: 10px;
+            border-radius: 999px;
+            margin: .7rem 0;
+            background: #dbe7ff
+        }
+
+            .api-hero-lines span:first-child {
+                width: 130px;
+                background: linear-gradient(90deg,#38bdf8,#60a5fa)
+            }
+
+        .api-btn-primary, .api-btn-light {
+            border-radius: 12px;
+            padding: .8rem 1.25rem;
+            font-weight: 900;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            min-height: 48px
+        }
+
+        .api-btn-primary {
+            background: linear-gradient(135deg,#6366f1,#7c3aed);
+            color: #fff;
+            border: 0;
+            box-shadow: 0 12px 28px rgba(99,102,241,.22)
+        }
+
+        .api-btn-light {
+            background: linear-gradient(135deg, #ecfeff 0%, #eef2ff 50%, #f5f3ff 100%);
+            color: #172033;
+            border: 1px solid #c7d2fe;
+            box-shadow: 0 12px 28px rgba(79, 70, 229, .10);
+        }
+
+            .api-btn-light i {
+                color: #4f46e5;
+            }
+
+            .api-btn-light:hover {
+                background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #ec4899 100%);
+                color: #fff !important;
+                border-color: transparent;
+                transform: translateY(-1px);
+            }
+
+                .api-btn-light:hover i {
+                    color: #fff !important;
+                }
+
+        .api-card {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255,255,255,.94);
+            border-radius: 18px;
+            padding: clamp(1rem,2vw,1.55rem);
+            margin-bottom: 1rem;
+            box-shadow: 0 14px 34px rgba(45,80,160,.08);
+            border: 1px solid rgba(120,150,220,.16);
+            min-width: 0
+        }
+
+            .api-card h2, .api-section-title, .api-code-title {
+                font-size: clamp(1.25rem,2.5vw,2rem);
+                font-weight: 900;
+                color: #2730d8;
+                margin-bottom: .8rem;
+                display: flex;
+                align-items: center;
+                gap: .6rem;
+                line-height: 1.2;
+                overflow-wrap: anywhere
+            }
+
+            .api-card p {
+                color: #35415f;
+                line-height: 1.75;
+                margin-bottom: .7rem;
+                font-size: clamp(.98rem,1.5vw,1.1rem);
+                overflow-wrap: anywhere
+            }
+
+        .api-soft-icon {
+            position: absolute;
+            right: 1.4rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,rgba(96,165,250,.16),rgba(244,114,182,.16));
+            display: grid;
+            place-items: center;
+            color: #3b82f6;
+            font-size: 2rem;
+            pointer-events: none
+        }
+
+        .has-soft-icon {
+            padding-right: 120px
+        }
+
+        .api-base-box {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+            background: linear-gradient(135deg,#e8f6ff,#e9fff8);
+            border: 1px solid #cceafa;
+            border-radius: 12px;
+            padding: .9rem 1rem;
+            color: #4f46e5;
+            font-family: Consolas,monospace;
+            font-weight: 900;
+            overflow-x: auto;
+            max-width: 100%
+        }
+
+        .api-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 14px
+        }
+
+        .api-endpoint-table, .api-model-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            box-shadow: inset 0 0 0 1px #e7edf8
+        }
+
+        .api-endpoint-table {
+            min-width: 900px
+        }
+
+        .api-model-table {
+            min-width: 540px;
+            font-size: .92rem
+        }
+
+            .api-endpoint-table td, .api-model-table th, .api-model-table td {
+                border: 1px solid #e7edf8;
+                padding: .72rem .8rem;
+                vertical-align: top;
+                color: #33415f
+            }
+
+            .api-model-table th {
+                background: linear-gradient(90deg,#efe7ff,#dff9fb);
+                color: #172033;
+                font-weight: 900
+            }
+
+        .api-method {
+            display: inline-block;
+            min-width: 58px;
+            text-align: center;
+            padding: .25rem .55rem;
+            border-radius: 8px;
+            font-weight: 900;
+            font-size: .8rem;
+            background: #e9fff4;
+            color: #16a34a
+        }
+
+            .api-method.blue {
+                background: #edf4ff;
+                color: #2563eb
+            }
+
+            .api-method.purple {
+                background: #f3edff;
+                color: #7c3aed
+            }
+
+            .api-method.orange {
+                background: #fff2df;
+                color: #f97316
+            }
+
+            .api-method.pink {
+                background: #fff0f7;
+                color: #db2777
+            }
+
+            .api-method.teal {
+                background: #e6fffb;
+                color: #0f766e
+            }
+
+        .api-path {
+            font-family: Consolas,monospace;
+            font-weight: 900;
+            color: #172033;
+            white-space: nowrap
+        }
+
+        .api-tag {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .25rem .6rem;
+            font-size: .78rem;
+            font-weight: 900;
+            background: #eef2ff;
+            color: #4338ca
+        }
+
+        .api-note {
+            margin-top: 1rem;
+            padding: .85rem 1rem;
+            border-radius: 12px;
+            background: linear-gradient(135deg,#e8f4ff,#f5f8ff);
+            color: #2d4f89;
+            font-weight: 700;
+            border: 1px solid #d8e9ff;
+            overflow-wrap: anywhere
+        }
+
+        .api-response-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            min-width: 0
+        }
+
+        .api-field {
+            display: inline-block;
+            padding: .18rem .45rem;
+            border-radius: 6px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-weight: 900;
+            font-family: Consolas,monospace;
+            white-space: nowrap
+        }
+
+        .api-code-title {
+            font-size: clamp(1.35rem, 3vw, 2.25rem);
+            margin: 1.25rem 0 .7rem;
+            padding: 1rem 1.25rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #d6e8ff 0%, #e2dbff 55%, #f0f4ff 100%);
+            border: 1px solid #c7d7ff;
+        }
+
+        .api-code-card {
+            position: relative;
+            border-radius: 16px;
+            padding: 1.2rem;
+            background: radial-gradient(circle at 82% 35%,rgba(244,114,182,.14),transparent 20%),radial-gradient(circle at 95% 85%,rgba(34,197,94,.14),transparent 18%),linear-gradient(135deg,#fff9dd,#fff5f8 55%,#eefcff);
+            border: 1px solid #f5e7b8;
+            box-shadow: 0 14px 34px rgba(45,80,160,.08);
+            overflow-x: auto;
+            max-width: 100%;
+            margin-bottom: 1rem
+        }
+
+            .api-code-card.green {
+                background: radial-gradient(circle at 82% 35%,rgba(20,184,166,.14),transparent 20%),radial-gradient(circle at 95% 85%,rgba(34,197,94,.14),transparent 18%),linear-gradient(135deg,#ecfff5,#f7fff9 55%,#eefcff);
+                border-color: #c8f5df
+            }
+
+            .api-code-card.blue {
+                background: linear-gradient(135deg,#eef6ff,#f7fbff 55%,#eff6ff);
+                border-color: #cfe2ff
+            }
+
+        pre.api-code {
+            margin: 0;
+            color: #243047;
+            font-family: Consolas,monospace;
+            font-size: clamp(.82rem,1.4vw,.95rem);
+            line-height: 1.55;
+            white-space: pre;
+            min-width: 720px;
+            padding-top: 2.2rem
+        }
+
+        .api-copy-btn {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            border: 1px solid #dce5f5;
+            background: #fff;
+            color: #1f2937;
+            border-radius: 9px;
+            padding: .35rem .7rem;
+            font-weight: 900;
+            font-size: .82rem;
+            z-index: 2
+        }
+
+        .api-dev-card {
+            background: rgba(255,255,255,.94);
+            border-radius: 18px;
+            padding: 1.35rem;
+            box-shadow: 0 14px 34px rgba(45,80,160,.08);
+            border: 1px solid rgba(120,150,220,.16);
+            min-width: 0;
+            margin-top: 1rem
+        }
+
+            .api-dev-card h3 {
+                color: #2730d8;
+                font-weight: 900;
+                margin: 1rem 0;
+                font-size: clamp(1.5rem,3vw,2.2rem)
+            }
+
+            .api-dev-card li {
+                margin-bottom: .75rem;
+                color: #35415f;
+                line-height: 1.6;
+                overflow-wrap: anywhere
+            }
+
+                .api-dev-card li::marker {
+                    color: #ec4899
+                }
+
+        .api-dev-icon {
+            background: linear-gradient(135deg,#ec4899,#f9a8d4)
+        }
+
+        .api-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3,minmax(0,1fr));
+            gap: 1rem;
+            margin-bottom: 1rem
+        }
+
+        .api-mini-card {
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(120,150,220,.16);
+            border-radius: 16px;
+            padding: 1rem;
+            box-shadow: 0 12px 28px rgba(45,80,160,.07)
+        }
+
+            .api-mini-card i {
+                width: 42px;
+                height: 42px;
+                border-radius: 14px;
+                display: grid;
+                place-items: center;
+                color: #fff;
+                background: linear-gradient(135deg,#6366f1,#60a5fa);
+                margin-bottom: .75rem
+            }
+
+            .api-mini-card h4 {
+                font-weight: 900;
+                color: #172033;
+                font-size: 1.05rem
+            }
+
+        .api-rate-limit-section {
+            margin-top: 2rem;
+        }
+
+        .api-doc-card {
+            background: #ffffff;
+            border: 1px solid #dbe4f0;
+            border-radius: 18px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        .api-rate-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.2rem 0;
+        }
+
+        .api-rate-box {
+            background: linear-gradient(135deg, #e7f0ff 0%, #efe9ff 100%);
+            border: 1px solid #cbd8ff;
+            border-radius: 16px;
+            padding: 1rem;
+        }
+
+            .api-rate-box h3 {
+                margin: 0 0 .4rem;
+                font-size: 1.05rem;
+            }
+
+        .api-key-btn {
+            margin-top: .8rem;
+            padding: .65rem 1.2rem;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        .api-btn-danger-soft {
+            border-radius: 12px;
+            padding: .8rem 1.25rem;
+            font-weight: 900;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            min-height: 48px;
+            background: linear-gradient(135deg, #fb7185, #ec4899);
+            color: #fff;
+            border: 0;
+            box-shadow: 0 12px 28px rgba(236, 72, 153, .22);
+        }
+
+        .api-rate-box.api-key-highlight {
+            background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 45%, #fce7f3 100%);
+            border: 1px solid #f9a8d4;
+            box-shadow: 0 14px 30px rgba(236, 72, 153, .10);
+        }
+
+        .api-rate-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+            margin-top: 1rem;
+        }
+
+        .api-request-note {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #fff7ed, #fff1f2);
+            border: 1px solid #fed7aa;
+            color: #7c2d12;
+            font-weight: 700;
+        }
+
+        .api-btn-primary:hover,
+        .api-btn-primary:hover i,
+        .api-btn-danger-soft:hover,
+        .api-btn-danger-soft:hover i {
+            color: #fff !important;
+            text-decoration: none;
+        }
+
+        .api-btn-primary:focus,
+        .api-btn-primary:focus i,
+        .api-btn-danger-soft:focus,
+        .api-btn-danger-soft:focus i {
+            color: #fff !important;
+        }
+
+        @@media (max-width: 768px) {
+            .api-rate-grid
+
+        {
+            grid-template-columns: 1fr;
+        }
+
+        }
+
+        @@media(max-width:1199px) {
+            .api-layout {
+                grid-template-columns: 215px minmax(0,1fr)
+            }
+
+            .api-hero {
+                grid-template-columns: minmax(0,1fr) 230px
+            }
+
+            .api-hero-art {
+                max-width: 230px;
+                min-height: 125px
+            }
+
+            .has-soft-icon {
+                padding-right: 100px
+            }
+
+            .api-soft-icon {
+                width: 74px;
+                height: 74px;
+                right: 1rem
+            }
+
+            .api-grid-3 {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+
+        @@media(max-width:991px) {
+            .api-layout {
+                grid-template-columns: 1fr
+            }
+
+            .api-sidebar {
+                position: static;
+                display: grid;
+                grid-template-columns: repeat(2,minmax(0,1fr));
+                gap: .65rem;
+                margin-bottom: 1rem
+            }
+
+            .api-side-link {
+                margin-bottom: 0
+            }
+
+            .api-info-card {
+                display: none
+            }
+
+            .api-hero {
+                grid-template-columns: 1fr
+            }
+
+            .api-hero-art {
+                display: none
+            }
+
+            .api-response-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @@media(max-width:767px) {
+            .api-doc-page {
+                padding: .85rem 0 3rem
+            }
+
+            .api-shell {
+                padding: 0 .75rem
+            }
+
+            .api-sidebar {
+                grid-template-columns: 1fr
+            }
+
+            .api-side-link {
+                padding: .85rem;
+                font-size: .95rem
+            }
+
+            .api-hero {
+                padding: 1.35rem;
+                border-radius: 20px
+            }
+
+                .api-hero h1 {
+                    font-size: clamp(1.75rem,9vw,2.55rem)
+                }
+
+            .api-hero-actions {
+                flex-direction: column
+            }
+
+            .api-btn-primary, .api-btn-light {
+                width: 100%
+            }
+
+            .api-card {
+                border-radius: 16px;
+                padding: 1rem
+            }
+
+            .has-soft-icon {
+                padding-right: 1rem
+            }
+
+            .api-soft-icon {
+                display: none !important
+            }
+
+            .api-base-box span {
+                white-space: normal;
+                overflow-wrap: anywhere
+            }
+
+            .api-code-title {
+                font-size: 1.45rem
+            }
+
+            .api-copy-btn {
+                top: .7rem;
+                right: .7rem
+            }
+
+            pre.api-code {
+                min-width: 620px;
+                font-size: .82rem
+            }
+
+            .api-grid-3 {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @@media(max-width:420px) {
+            .api-shell {
+                padding: 0 .55rem
+            }
+
+            .api-hero, .api-card, .api-dev-card, .api-code-card {
+                border-radius: 14px
+            }
+
+                .api-card h2, .api-section-title {
+                    font-size: 1.22rem
+                }
+
+            .api-code-title {
+                font-size: 1.28rem
+            }
+
+            pre.api-code {
+                min-width: 560px
+            }
+        }
+    </style>
+}
+
+<section class="api-doc-page">
+    <div class="api-shell">
+        <div class="api-layout">
+
+            <aside class="api-sidebar">
+                <a href="#overview" class="api-side-link active"><i class="fa-solid fa-house"></i><span>Overview</span></a>
+                <a href="#base-url" class="api-side-link"><i class="fa-solid fa-globe"></i><span>Base URL</span></a>
+                <a href="#products" class="api-side-link"><i class="fa-solid fa-box"></i><span>Product APIs</span></a>
+                <a href="#rate-limits" class="api-side-link"><i class="fa-solid fa-gauge-high"></i><span>Rate Limits</span></a>
+                <a href="#categories" class="api-side-link"><i class="fa-solid fa-layer-group"></i><span>Categories</span></a>
+                <a href="#collections" class="api-side-link"><i class="fa-solid fa-grip"></i><span>Collections</span></a>
+                <a href="#blogs" class="api-side-link"><i class="fa-solid fa-newspaper"></i><span>Blogs</span></a>
+                <a href="#seopages" class="api-side-link"><i class="fa-solid fa-sitemap"></i><span>SEO Pages</span></a>
+                <a href="#response" class="api-side-link"><i class="fa-solid fa-database"></i><span>Models</span></a>
+                <a href="#examples" class="api-side-link"><i class="fa-solid fa-terminal"></i><span>Examples</span></a>
+                <a href="#notes" class="api-side-link"><i class="fa-regular fa-circle-info"></i><span>Notes</span></a>
+
+                <div class="api-info-card">
+                    <div class="api-info-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <h5 class="fw-bold">Quick Info</h5>
+                    <ul class="small mb-0 ps-3">
+                        <li>Public JSON API</li>
+                        <li>HTTPS only</li>
+                        <li>Max count: 50</li>
+                        <li>CORS for approved domains</li>
+                    </ul>
+                </div>
+            </aside>
+
+            <main class="api-main">
+
+                <section class="api-hero">
+                    <div>
+                        <h1>As-Mart Product API Documentation</h1>
+                        <p>
+                            Use the As-Mart Public API to display products, categories, collections, and latest blog content
+                            on external websites, affiliate blogs, partner platforms, and ASP.NET Core applications.
+                        </p>
+                        <div class="api-hero-actions">
+                            <a href="#products" class="api-btn-primary">
+                                Get Started <i class="fa-solid fa-rocket"></i>
+                            </a>
+
+                            <a asp-controller="ApiKeys"
+                               asp-action="Index"
+                               class="api-btn-danger-soft">
+                                <i class="fa-solid fa-key"></i>
+                                Get API Key
+                            </a>
+
+                            <a href="/api/products/home-widget?count=6" target="_blank" class="api-btn-light">
+                                <i class="fa-solid fa-flask"></i>
+                                Test Home Widget
+                            </a>
+                        </div>
+                    </div>
+                    <div class="api-hero-art">
+                        <div class="api-label">API</div>
+                        <div class="api-hero-lines">
+                            <span></span><span style="width:150px;"></span><span style="width:95px;"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="api-card has-soft-icon" id="overview">
+                    <h2><i class="fa-solid fa-circle-info"></i> Overview</h2>
+                    <p>
+                        The As-Mart API provides public product and content data from As-Mart. Other websites can use it to show
+                        featured products, latest products, popular items, deals, top-rated products, category products,
+                        collections, related products, and blog posts.
+                    </p>
+                    <p>
+                        Only active products are returned. Use <strong>buyUrl</strong> for tracked outbound clicks and
+                        <strong>productUrl</strong> for the As-Mart product detail page.
+                    </p>
+                    <div class="api-soft-icon"><i class="fa-solid fa-chart-line"></i></div>
+                </section>
+
+                <section class="api-grid-3">
+                    <div class="api-mini-card">
+                        <i class="fa-solid fa-code"></i>
+                        <h4>JSON Responses</h4>
+                        <p class="mb-0">All endpoints return clean JSON for websites and apps.</p>
+                    </div>
+                    <div class="api-mini-card">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <h4>Rate Limited</h4>
+                        <p class="mb-0">Public endpoints are protected by rate limiting.</p>
+                    </div>
+                    <div class="api-mini-card">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <h4>Affiliate Ready</h4>
+                        <p class="mb-0">Use buyUrl to keep tracking and redirects controlled.</p>
+                    </div>
+                </section>
+
+                <section class="api-card has-soft-icon" id="base-url">
+                    <h2><i class="fa-solid fa-globe"></i> Base URLs</h2>
+                    <p>Product endpoints start with:</p>
+                    <div class="api-base-box"><i class="fa-solid fa-globe"></i><span>https://as-mart.com/api/products</span></div>
+                    <p class="mt-3">Other public resources:</p>
+                    <div class="api-base-box mb-2"><i class="fa-solid fa-layer-group"></i><span>https://as-mart.com/api/categories</span></div>
+                    <div class="api-base-box mb-2"><i class="fa-solid fa-grip"></i><span>https://as-mart.com/api/collections</span></div>
+                    <div class="api-base-box"><i class="fa-solid fa-newspaper"></i><span>https://as-mart.com/api/blogs</span></div>
+                    <div class="api-soft-icon"><i class="fa-solid fa-lock"></i></div>
+                </section>
+
+                <section class="api-card" id="products">
+                    <h2><i class="fa-solid fa-box"></i> Product API Endpoints</h2>
+                    <p>Use these endpoints to show As-Mart products on external websites.</p>
+
+                    <div class="api-table-wrap">
+                        <table class="api-endpoint-table">
+                            <tbody>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/products/featured?count=12</td><td><span class="api-tag">Products</span></td><td>Featured products selected by admin.</td></tr>
+                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/latest?count=12</td><td><span class="api-tag">Products</span></td><td>Latest active products.</td></tr>
+                                <tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/products/popular?count=12</td><td><span class="api-tag">Products</span></td><td>Popular products based on clicks and ratings.</td></tr>
+                                <tr><td><span class="api-method orange">GET</span></td><td class="api-path">/api/products/deals?count=12</td><td><span class="api-tag">Deals</span></td><td>Products marked as Deal of the Day.</td></tr>
+                                <tr><td><span class="api-method teal">GET</span></td><td class="api-path">/api/products/top-rated?count=12</td><td><span class="api-tag">Rating</span></td><td>Highest-rated products.</td></tr>
+                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/products/random?count=6</td><td><span class="api-tag">Widgets</span></td><td>Random active products for rotating widgets and ads.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/products/search?q=watch&amp;count=12</td><td><span class="api-tag">Search</span></td><td>Search by title, brand, or short description.</td></tr>
+                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/category/{categorySlug}?count=12</td><td><span class="api-tag">Category</span></td><td>Products from a specific category slug.</td></tr>
+                                <tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/products/brand/{brand}?count=12</td><td><span class="api-tag">Brand</span></td><td>Products from a specific brand.</td></tr>
+                                <tr><td><span class="api-method orange">GET</span></td><td class="api-path">/api/products/price-range?min=10&amp;max=100&amp;count=12</td><td><span class="api-tag">Filter</span></td><td>Products within a price range.</td></tr>
+                                <tr><td><span class="api-method teal">GET</span></td><td class="api-path">/api/products/related/{slug}?count=12</td><td><span class="api-tag">Related</span></td><td>Related products using product categories.</td></tr>
+                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/products/collection/{collectionSlug}?count=12</td><td><span class="api-tag">Collection</span></td><td>Products from a public collection.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/products/home-widget?count=8</td><td><span class="api-tag">Widget</span></td><td>Returns featured, deals, popular, and latest products in one response.</td></tr>
+                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/promote/{slug}</td><td><span class="api-tag">Ad</span></td><td>Single product for advertising/promotion.</td></tr>
+                                <tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/products/{slug}</td><td><span class="api-tag">Single</span></td><td>Single active product by SEO slug.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="api-note">
+                        <i class="fa-solid fa-circle-info me-1"></i>
+                        The <strong>count</strong> parameter defaults to 12 and maximum allowed value is 50.
+                    </div>
+                </section>
+
+                <section class="api-card" id="categories">
+                    <h2><i class="fa-solid fa-layer-group"></i> Category API</h2>
+                    <div class="api-table-wrap">
+                        <table class="api-endpoint-table">
+                            <tbody>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/categories</td><td>Returns all public categories with product counts.</td></tr>
+                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/category/{categorySlug}?count=12</td><td>Returns products for a specific category.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="api-card" id="collections">
+                    <h2><i class="fa-solid fa-grip"></i> Collection API</h2>
+                    <div class="api-table-wrap">
+                        <table class="api-endpoint-table">
+                            <tbody>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/collections</td><td>Returns all public collections with product counts.</td></tr>
+                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/products/collection/{collectionSlug}?count=12</td><td>Returns products from a selected collection.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="api-card" id="blogs">
+                    <h2><i class="fa-solid fa-newspaper"></i> Blog API</h2>
+                    <div class="api-table-wrap">
+                        <table class="api-endpoint-table">
+                            <tbody>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/blogs/latest?count=6</td><td>Returns latest As-Mart blog posts for external websites.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="api-card" id="seopages">
+                    <h2><i class="fa-solid fa-sitemap"></i> SEO Pages API</h2>
+
+                    <p>
+                        Use these endpoints to consume public As-Mart SEO guide pages. These are useful for guide widgets,
+                        AI search, sitemap tools, category pages, search tools, and external content integrations.
+                    </p>
+
+                    <div class="api-table-wrap">
+                        <table class="api-endpoint-table">
+                            <tbody>
+                                <tr>
+                                    <td><span class="api-method">GET</span></td>
+                                    <td class="api-path">/api/seopages?page=1&amp;pageSize=20</td>
+                                    <td><span class="api-tag">List</span></td>
+                                    <td>Returns paginated published SEO pages.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method blue">GET</span></td>
+                                    <td class="api-path">/api/seopages/{slug}</td>
+                                    <td><span class="api-tag">Single</span></td>
+                                    <td>Returns one published SEO page with intro, body, and FAQ JSON.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method purple">GET</span></td>
+                                    <td class="api-path">/api/seopages/latest?count=20</td>
+                                    <td><span class="api-tag">Latest</span></td>
+                                    <td>Returns newest published SEO pages.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method pink">GET</span></td>
+                                    <td class="api-path">/api/seopages/random?count=10</td>
+                                    <td><span class="api-tag">Widget</span></td>
+                                    <td>Returns random SEO pages for widgets or rotating links.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method orange">GET</span></td>
+                                    <td class="api-path">/api/seopages/search?q=laptop&amp;page=1&amp;pageSize=20</td>
+                                    <td><span class="api-tag">Search</span></td>
+                                    <td>Searches title, slug, H1, keyword, and meta description.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method teal">GET</span></td>
+                                    <td class="api-path">/api/seopages/filter?category=laptops&amp;brand=Apple&amp;template=best_of</td>
+                                    <td><span class="api-tag">Filter</span></td>
+                                    <td>Filters SEO pages by category, brand, template, price range, sort mode, and keyword.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method blue">GET</span></td>
+                                    <td class="api-path">/api/seopages/category/{categorySlug}?count=20</td>
+                                    <td><span class="api-tag">Category</span></td>
+                                    <td>Returns SEO pages from a selected category.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method">GET</span></td>
+                                    <td class="api-path">/api/seopages/categories</td>
+                                    <td><span class="api-tag">Categories</span></td>
+                                    <td>Returns SEO page categories with page counts.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method purple">GET</span></td>
+                                    <td class="api-path">/api/seopages/related/{slug}?count=10</td>
+                                    <td><span class="api-tag">Related</span></td>
+                                    <td>Returns related SEO pages from the same category.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method orange">GET</span></td>
+                                    <td class="api-path">/api/seopages/home-widget?count=8</td>
+                                    <td><span class="api-tag">Widget</span></td>
+                                    <td>Returns latest pages, random pages, and popular SEO categories.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method teal">GET</span></td>
+                                    <td class="api-path">/api/seopages/stats</td>
+                                    <td><span class="api-tag">Stats</span></td>
+                                    <td>Returns total SEO pages, published pages, category count, and last updated date.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method pink">GET</span></td>
+                                    <td class="api-path">/api/seopages/sitemap</td>
+                                    <td><span class="api-tag">Sitemap</span></td>
+                                    <td>Returns public SEO page URLs and update dates for crawlers and external sitemap tools.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method blue">GET</span></td>
+                                    <td class="api-path">/api/seopages/templates</td>
+                                    <td><span class="api-tag">Templates</span></td>
+                                    <td>Returns available SEO page template keys.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method purple">GET</span></td>
+                                    <td class="api-path">/api/seopages/template/{template}?count=20</td>
+                                    <td><span class="api-tag">Template</span></td>
+                                    <td>Returns SEO pages from a selected template key.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method">GET</span></td>
+                                    <td class="api-path">/api/seopages/brands</td>
+                                    <td><span class="api-tag">Brands</span></td>
+                                    <td>Returns available SEO page brands.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method orange">GET</span></td>
+                                    <td class="api-path">/api/seopages/brand/{brand}?count=20</td>
+                                    <td><span class="api-tag">Brand</span></td>
+                                    <td>Returns SEO pages for a selected brand.</td>
+                                </tr>
+
+                                <tr>
+                                    <td><span class="api-method teal">GET</span></td>
+                                    <td class="api-path">/api/seopages/ai?q=best laptop&amp;count=10</td>
+                                    <td><span class="api-tag">AI</span></td>
+                                    <td>Returns AI-friendly SEO search results with title, summary, URL, category, and keyword.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="api-note">
+                        <i class="fa-solid fa-circle-info me-1"></i>
+                        SEO Pages API only returns published pages where <strong>Status = 1</strong>.
+                    </div>
+                </section>
+
+                <section class="api-card" id="response">
+                    <h2><i class="fa-solid fa-database"></i> Response Models</h2>
+
+                    <h3 class="api-section-title"><i class="fa-solid fa-box"></i> Product Response</h3>
+                    <div class="api-response-grid">
+                        <div class="api-table-wrap">
+                            <table class="api-model-table">
+                                <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="api-field">id</span></td><td>int</td><td>Product ID.</td></tr>
+                                    <tr><td><span class="api-field">title</span></td><td>string</td><td>Product title.</td></tr>
+                                    <tr><td><span class="api-field">slug</span></td><td>string</td><td>SEO slug.</td></tr>
+                                    <tr><td><span class="api-field">shortDescription</span></td><td>string</td><td>Short product summary.</td></tr>
+                                    <tr><td><span class="api-field">brand</span></td><td>string</td><td>Brand name.</td></tr>
+                                    <tr><td><span class="api-field">price</span></td><td>decimal</td><td>Sale price.</td></tr>
+                                    <tr><td><span class="api-field">listPrice</span></td><td>decimal</td><td>Original/list price.</td></tr>
+                                    <tr><td><span class="api-field">currency</span></td><td>string</td><td>Currency code.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="api-table-wrap">
+                            <table class="api-model-table">
+                                <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="api-field">rating</span></td><td>decimal</td><td>Product rating.</td></tr>
+                                    <tr><td><span class="api-field">ratingCount</span></td><td>int</td><td>Total ratings.</td></tr>
+                                    <tr><td><span class="api-field">mainImageUrl</span></td><td>string</td><td>Main image URL.</td></tr>
+                                    <tr><td><span class="api-field">productUrl</span></td><td>string</td><td>As-Mart product page.</td></tr>
+                                    <tr><td><span class="api-field">buyUrl</span></td><td>string</td><td>Tracked buy redirect.</td></tr>
+                                    <tr><td><span class="api-field">isFeatured</span></td><td>bool</td><td>Featured flag.</td></tr>
+                                    <tr><td><span class="api-field">isDealOfTheDay</span></td><td>bool</td><td>Deal flag.</td></tr>
+                                    <tr><td><span class="api-field">categories</span></td><td>array</td><td>Category names.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="api-doc-section api-rate-limit-section" id="rate-limits">
+                    <div class="api-doc-card">
+                        <h2 class="api-code-title">
+                            <i class="fa-solid fa-gauge-high"></i>
+                            Rate Limits & API Key
+                        </h2>
+
+                        <p>
+                            As-Mart public APIs are rate limited to keep the service fast, stable, and protected from abuse.
+                            You can use public endpoints without an API key, but API key access is recommended for websites,
+                            apps, dashboards, partner platforms, and production integrations.
+                        </p>
+
+                        <div class="api-rate-grid">
+                            <div class="api-rate-box">
+                                <h3><i class="fa-solid fa-globe me-1"></i> Public Access</h3>
+                                <p><strong>60 requests per minute</strong></p>
+                                <p>No API key required. Best for testing, demos, and light usage.</p>
+                            </div>
+
+                            <div class="api-rate-box api-key-highlight">
+                                <h3><i class="fa-solid fa-key me-1"></i> API Key Access</h3>
+                                <p><strong>Higher limits available</strong></p>
+                                <p>
+                                    Use an API key for trusted websites, ASP.NET Core apps, affiliate blogs,
+                                    widgets, and production integrations.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="api-request-note">
+                            <i class="fa-solid fa-circle-info me-1"></i>
+                            Need more than 60 requests per minute? Create an API key first, then contact the As-Mart admin
+                            with your website URL and expected usage. Approved integrations can receive higher limits such as
+                            <strong>300, 500, 1000+</strong> requests per minute.
+                        </div>
+
+                        <p class="mt-3">
+                            When the rate limit is exceeded, the API returns:
+                        </p>
+
+                        <pre><code>429 Too Many Requests</code></pre>
+
+                        <div class="api-rate-actions">
+                            <a asp-controller="ApiKeys"
+                               asp-action="Index"
+                               class="btn btn-primary api-key-btn">
+                                <i class="fa-solid fa-key me-1"></i>
+                                Get API Key
+                            </a>
+
+                            <a href="#examples"
+                               class="btn btn-outline-primary api-key-btn">
+                                <i class="fa-solid fa-code me-1"></i>
+                                View Examples
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="examples">
+                    <h3 class="api-code-title"><i class="fa-solid fa-terminal"></i> Product JSON Response</h3>
+                    <div class="api-code-card">
+                        <button type="button" class="api-copy-btn">Copy</button>
+                        <pre class="api-code">[
+                          {
+                            "id": 101,
+                            "title": "Example Product Title",
+                            "slug": "example-product-title",
+                            "shortDescription": "Short product description here.",
+                            "brand": "Example Brand",
+                            "price": 49.99,
+                            "listPrice": 69.99,
+                            "currency": "USD",
+                            "rating": 4.6,
+                            "ratingCount": 1240,
+                            "mainImageUrl": "https://example.com/product.jpg",
+                            "productUrl": "https://as-mart.com/product/example-product-title",
+                            "buyUrl": "https://as-mart.com/product/go/101",
+                            "isFeatured": true,
+                            "isDealOfTheDay": false,
+                            "clickCount": 250,
+                            "categories": ["Electronics", "Smart Devices"]
+                          }
+                        ]</pre>
+                    </div>
+
+                    <h3 class="api-code-title"><i class="fa-solid fa-table-cells-large"></i> Home Widget Response</h3>
+                    <div class="api-code-card blue">
+                        <button type="button" class="api-copy-btn">Copy</button>
+                        <pre class="api-code">{
+                          "featured": [],
+                          "deals": [],
+                          "popular": [],
+                          "latest": []
+                        }</pre>
+                    </div>
+
+                    <h3 class="api-code-title"><i class="fa-solid fa-code"></i> JavaScript Fetch Example</h3>
+                    <div class="api-code-card green">
+                        <button type="button" class="api-copy-btn">Copy</button>
+                        <pre class="api-code">fetch("https://as-mart.com/api/products/home-widget?count=6")
+  .then(response => response.json())
+  .then(data => {
+      console.log(data.featured);
+      console.log(data.deals);
+      console.log(data.popular);
+      console.log(data.latest);
+  })
+  .catch(error => {
+      console.error("API Error:", error);
+  });</pre>
+                    </div>
+
+                    <h3 class="api-code-title"><i class="fa-solid fa-laptop-code"></i> ASP.NET Core HttpClient Example</h3>
+                    <div class="api-code-card green">
+                        <button type="button" class="api-copy-btn">Copy</button>
+                    <pre class="api-code">public class AsMartApiService
+{
+    private readonly HttpClient _httpClient;
+
+    public AsMartApiService(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
+    public async Task&lt;ProductHomeWidgetApiDto&gt; GetHomeWidgetAsync()
+    {
+        var result = await _httpClient.GetFromJsonAsync&lt;ProductHomeWidgetApiDto&gt;(
+            "https://as-mart.com/api/products/home-widget?count=8");
+
+        return result ?? new ProductHomeWidgetApiDto();
+    }
+}</pre>
+                    </div>
+                </section>
+
+                <aside class="api-dev-card" id="notes">
+                    <div class="api-dev-icon"><i class="fa-solid fa-terminal"></i></div>
+                    <h3>Developer Notes</h3>
+                    <ul>
+                        <li>Only active products are returned.</li>
+                        <li>Maximum <strong>count</strong> value is <strong>50</strong>.</li>
+                        <li>Use <strong>buyUrl</strong> instead of direct Amazon links for tracking.</li>
+                        <li>Use <strong>productUrl</strong> when linking to As-Mart product detail page.</li>
+                        <li>Use <strong>/api/products/promote/{slug}</strong> for one selected advertising product.</li>
+                        <li>Use <strong>/api/products/home-widget</strong> when you need multiple sections in one request.</li>
+                        <li>CORS is enabled for approved websites such as asifabrar.net.</li>
+                        <li>All endpoints return JSON and should be called using HTTPS.</li>
+                    </ul>
+                </aside>
+
+            </main>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.querySelectorAll(".api-copy-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            const code = this.parentElement.querySelector("pre")?.innerText ?? "";
+            navigator.clipboard.writeText(code).then(() => {
+                const oldText = this.innerText;
+                this.innerText = "Copied";
+                setTimeout(() => this.innerText = oldText, 1200);
+            });
+        });
+    });
+
+    const links = document.querySelectorAll(".api-side-link");
+    links.forEach(link => {
+        link.addEventListener("click", function () {
+            links.forEach(x => x.classList.remove("active"));
+            this.classList.add("active");
+        });
+    });
+</script>

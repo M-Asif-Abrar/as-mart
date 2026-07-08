@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using AsMart.Web.Services.Marketing;
+using AsMart.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,6 +55,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 
 builder.Services.Configure<AmazonAffiliateOptions>(builder.Configuration.GetSection("AmazonAffiliate"));
+builder.Services.Configure<FacebookGraphOptions>(builder.Configuration.GetSection("FacebookGraph"));
 
 builder.Services.AddScoped<IAffiliateLinkService, AffiliateLinkService>();
 builder.Services.AddScoped<ISlugService, SlugService>();
@@ -67,9 +69,31 @@ builder.Services.AddScoped<SeoProductSelector>();
 builder.Services.AddScoped<RedirectRuleRepository>();
 builder.Services.AddScoped<ErrorLogRepository>();
 
+builder.Services.AddScoped<IUtmTrackingService, UtmTrackingService>();
+
+builder.Services.AddHttpClient();
+
+builder.Services.AddScoped<IFacebookPagePublisher, FacebookPagePublisher>();
+builder.Services.AddHostedService<MarketingQueueAutoPublisherWorker>();
+
+builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AsMartPublicApi", policy =>
+    {
+        policy
+            .WithOrigins(
+                "https://asifabrar.net",
+                "https://www.asifabrar.net"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-builder.Services.AddScoped<IUtmTrackingService, UtmTrackingService>();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -89,40 +113,37 @@ builder.Services.AddRateLimiter(options =>
         return ValueTask.CompletedTask;
     };
 
-    options.AddPolicy("public", httpContext =>
+    options.AddPolicy("public-api", httpContext =>
     {
         var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-        return RateLimitPartition.GetFixedWindowLimiter($"public:{ip}", _ => new FixedWindowRateLimiterOptions
-        {
-            PermitLimit = 240,
-            Window = TimeSpan.FromMinutes(1),
-            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-            QueueLimit = 0
-        });
-    });
+        var clientId = httpContext.Items["ApiClientId"]?.ToString();
+        var rateLimit = httpContext.Items["ApiRateLimit"] as int? ?? 60;
 
-    options.AddPolicy("search", httpContext =>
-    {
-        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-
-        return RateLimitPartition.GetFixedWindowLimiter($"search:{ip}", _ => new FixedWindowRateLimiterOptions
+        if (!string.IsNullOrWhiteSpace(clientId))
         {
-            PermitLimit = 60,
-            Window = TimeSpan.FromMinutes(1),
-            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-            QueueLimit = 0
-        });
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: $"apikey:{clientId}",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = rateLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                });
+        }
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: $"anonymous:{ip}",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
     });
 });
-
-builder.Services.Configure<FacebookGraphOptions>(
-    builder.Configuration.GetSection("FacebookGraph"));
-
-builder.Services.AddHttpClient();
-
-builder.Services.AddScoped<IFacebookPagePublisher, FacebookPagePublisher>();
-builder.Services.AddHostedService<MarketingQueueAutoPublisherWorker>();
 
 var app = builder.Build();
 
@@ -155,6 +176,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseCors("AsMartPublicApi");
+
+app.UseMiddleware<ApiKeyMiddleware>();
+
 app.UseRateLimiter();
 
 app.UseAuthentication();
@@ -180,7 +205,8 @@ app.Use(async (context, next) =>
         path.StartsWith("/js", StringComparison.OrdinalIgnoreCase) ||
         path.StartsWith("/lib", StringComparison.OrdinalIgnoreCase) ||
         path.StartsWith("/images", StringComparison.OrdinalIgnoreCase) ||
-        path.StartsWith("/Pictures", StringComparison.OrdinalIgnoreCase))
+        path.StartsWith("/Pictures", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWith("/api", StringComparison.OrdinalIgnoreCase))
     {
         await next();
         return;
@@ -207,16 +233,16 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStatusCodePagesWithReExecute("/error/{0}");
 
+app.MapControllers();
+
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}")
-    .RequireRateLimiting("public");
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .RequireRateLimiting("public");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapRazorPages().RequireRateLimiting("public");
+app.MapRazorPages();
 
 app.Run();

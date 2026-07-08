@@ -4,6 +4,7 @@ using AsMart.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AsMart.Web.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260708032344_AddApiClientsTable")]
+    partial class AddApiClientsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,9 +55,6 @@ namespace AsMart.Web.Data.Migrations
                     b.Property<int>("RateLimitPerMinute")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("Website")
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
@@ -64,9 +64,7 @@ namespace AsMart.Web.Data.Migrations
                     b.HasIndex("ApiKey")
                         .IsUnique();
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ApiClients", (string)null);
+                    b.ToTable("ApiClients");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.ApplicationUser", b =>
@@ -1332,16 +1330,6 @@ namespace AsMart.Web.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AsMart.Web.Models.Entities.ApiClient", b =>
-                {
-                    b.HasOne("AsMart.Web.Models.Entities.ApplicationUser", "User")
-                        .WithMany("ApiClients")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("AsMart.Web.Models.Entities.BlogPost", b =>
                 {
                     b.HasOne("AsMart.Web.Models.Entities.ApplicationUser", "Author")
@@ -1677,8 +1665,6 @@ namespace AsMart.Web.Data.Migrations
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.ApplicationUser", b =>
                 {
-                    b.Navigation("ApiClients");
-
                     b.Navigation("ClickLogs");
 
                     b.Navigation("ProductStatuses");

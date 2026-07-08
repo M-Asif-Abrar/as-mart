@@ -38,10 +38,7 @@
 
     string GetAffiliateUrl(Product p)
     {
-        if (!string.IsNullOrWhiteSpace(p.AffiliateUrlOverride))
-            return p.AffiliateUrlOverride!;
-
-        return "/product/" + Uri.EscapeDataString((p.Slug ?? "").Trim());
+        return "/product/go/" + p.Id;
     }
 
     string GetProductUrl(Product p) => "/product/" + Uri.EscapeDataString((p.Slug ?? "").Trim());

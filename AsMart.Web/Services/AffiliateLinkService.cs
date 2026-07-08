@@ -1,6 +1,5 @@
 ﻿// Services/AffiliateLinkService.cs
 using Microsoft.Extensions.Options;
-using System;
 
 namespace AsMart.Web.Services
 {
@@ -13,10 +12,10 @@ namespace AsMart.Web.Services
             _options = options.Value;
         }
 
-        public string BuildProductUrl(string asin)
+        public string BuildProductUrl(string? asin)
         {
             if (string.IsNullOrWhiteSpace(asin))
-                throw new ArgumentException("ASIN is required", nameof(asin));
+                return "#";
 
             var domain = string.IsNullOrWhiteSpace(_options.DefaultDomain)
                 ? "www.amazon.com"
@@ -24,13 +23,10 @@ namespace AsMart.Web.Services
 
             var trackingId = _options.TrackingId?.Trim();
 
-            // Basic URL: https://www.amazon.com/dp/{ASIN}/?tag={TrackingId}
             var baseUrl = $"https://{domain}/dp/{asin.Trim()}";
 
-            if (!string.IsNullOrEmpty(trackingId))
-            {
+            if (!string.IsNullOrWhiteSpace(trackingId))
                 return $"{baseUrl}/?tag={Uri.EscapeDataString(trackingId)}";
-            }
 
             return baseUrl;
         }
