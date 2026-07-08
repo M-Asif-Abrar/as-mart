@@ -1,0 +1,204 @@
+﻿@model AsMart.Web.Models.Entities.ApiClient
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Delete API Key";
+}
+
+@section Styles {
+    <style>
+        .delete-api-page {
+            min-height: calc(100vh - 90px);
+            background: linear-gradient(135deg, #fff7f7 0%, #f8fafc 45%, #eef4ff 100%);
+            padding: 2rem 0;
+        }
+
+        .delete-api-card {
+            border: 0;
+            border-radius: 28px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 20px 55px rgba(15, 23, 42, .12);
+        }
+
+        .delete-api-hero {
+            background: radial-gradient(circle at top right, rgba(248, 113, 113, .28), transparent 35%), linear-gradient(135deg, #991b1b 0%, #dc2626 55%, #f97316 100%);
+            color: #fff;
+            padding: 2.2rem;
+        }
+
+        .delete-icon {
+            width: 78px;
+            height: 78px;
+            border-radius: 24px;
+            display: grid;
+            place-items: center;
+            background: rgba(255, 255, 255, .18);
+            border: 1px solid rgba(255, 255, 255, .28);
+            font-size: 2rem;
+            box-shadow: 0 14px 30px rgba(0, 0, 0, .18);
+        }
+
+        .delete-detail-box {
+            border-radius: 20px;
+            background: linear-gradient(135deg, #fff7ed 0%, #fff1f2 100%);
+            border: 1px solid #fecaca;
+            padding: 1.25rem;
+        }
+
+        .detail-label {
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: #64748b;
+            font-weight: 800;
+            margin-bottom: .25rem;
+        }
+
+        .detail-value {
+            font-weight: 800;
+            color: #111827;
+            word-break: break-word;
+        }
+
+        .danger-note {
+            border-radius: 18px;
+            padding: 1rem 1.15rem;
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #9f1239;
+            font-weight: 700;
+        }
+
+        .modern-btn {
+            border-radius: 14px;
+            padding: .8rem 1.25rem;
+            font-weight: 800;
+        }
+
+        @@media (max-width: 768px) {
+            .delete-api-page {
+                padding: 1rem 0;
+            }
+
+            .delete-api-hero {
+                padding: 1.5rem;
+            }
+
+                .delete-api-hero h1 {
+                    font-size: 1.55rem;
+                }
+
+            .delete-icon {
+                width: 64px;
+                height: 64px;
+                font-size: 1.5rem;
+            }
+
+            .action-row {
+                flex-direction: column;
+            }
+
+                .action-row .btn {
+                    width: 100%;
+                }
+        }
+    </style>
+}
+
+<div class="delete-api-page">
+    <div class="container">
+        <div class="delete-api-card">
+
+            <div class="delete-api-hero">
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <div class="delete-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+                    <div>
+                        <div class="text-white-50 fw-bold mb-1">Admin Action Required</div>
+                        <h1 class="fw-bold mb-1">Delete API Key?</h1>
+                        <p class="mb-0 text-white-50">
+                            This key will be permanently removed and any integration using it will stop working immediately.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 p-lg-5">
+
+                <div class="danger-note mb-4">
+                    <i class="fa-solid fa-circle-info me-2"></i>
+                    This action cannot be undone. If you only want to stop access temporarily, go back and use
+                    <strong>Disable</strong> instead of deleting the API key.
+                </div>
+
+                <div class="delete-detail-box mb-4">
+                    <div class="row g-4">
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="detail-label">Client</div>
+                            <div class="detail-value">@Model.Name</div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="detail-label">User</div>
+                            <div class="detail-value">@(Model.User?.Email ?? "System / External")</div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="detail-label">Website</div>
+                            <div class="detail-value">@(Model.Website ?? "Not provided")</div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="detail-label">Rate Limit</div>
+                            <div class="detail-value">@Model.RateLimitPerMinute requests / minute</div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success rounded-pill px-3 py-2">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary rounded-pill px-3 py-2">Inactive</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="detail-label">Last Used</div>
+                            <div class="detail-value">
+                                @(Model.LastUsedAt?.ToLocalTime().ToString("dd MMM yyyy hh:mm tt") ?? "Never")
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <form asp-action="DeleteConfirmed" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <div class="d-flex flex-wrap gap-3 action-row">
+                        <button type="submit" class="btn btn-danger modern-btn">
+                            <i class="fa-solid fa-trash me-2"></i>
+                            Yes, Delete API Key
+                        </button>
+
+                        <a asp-action="Index" class="btn btn-light border modern-btn">
+                            <i class="fa-solid fa-arrow-left me-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

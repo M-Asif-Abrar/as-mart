@@ -1,0 +1,16 @@
+﻿# ASP.NET Core secrets
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/appsettings.Local.json
+
+# IIS/server config if it contains secrets
+**/web.config
+
+# Logs
+**/logs/
+*.log
+
+# Build output
+bin/
+obj/
+.vs/

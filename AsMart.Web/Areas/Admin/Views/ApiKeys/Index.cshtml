@@ -93,12 +93,11 @@
                                         </button>
                                     </form>
 
-                                    <form asp-action="Delete" asp-route-id="@key.Id" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <button class="btn btn-sm btn-outline-danger">
-                                            Delete
-                                        </button>
-                                    </form>
+                                    <a asp-action="Delete"
+                                       asp-route-id="@key.Id"
+                                       class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </a>
                                 </td>
                             </tr>
                         }
