@@ -1,8 +1,9 @@
 ﻿// Data/ApplicationDbContext.cs
+using AsMart.Web.Models;
 using AsMart.Web.Models.Entities;
+using AsMart.Web.Models.Entities.Marketing;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using AsMart.Web.Models.Entities.Marketing;
 
 namespace AsMart.Web.Data
 {
@@ -41,6 +42,7 @@ namespace AsMart.Web.Data
         public DbSet<MarketingPostingQueue> MarketingPostingQueue => Set<MarketingPostingQueue>();
         public DbSet<MarketingPostingLog> MarketingPostingLogs => Set<MarketingPostingLog>();
         public DbSet<ApiClient> ApiClients { get; set; }
+        public DbSet<ApiUsageLog> ApiUsageLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -511,7 +513,6 @@ namespace AsMart.Web.Data
                 b.HasIndex(x => x.CreatedAt);
             });
 
-
             builder.Entity<ApiClient>(b =>
             {
                 b.ToTable("ApiClients");
@@ -544,6 +545,45 @@ namespace AsMart.Web.Data
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
+            builder.Entity<ApiUsageLog>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+
+                entity.HasIndex(x => x.ApiClientId);
+                entity.HasIndex(x => x.UserId);
+                entity.HasIndex(x => x.Endpoint);
+                entity.HasIndex(x => x.StatusCode);
+                entity.HasIndex(x => x.CreatedAt);
+
+                entity.HasOne(x => x.ApiClient)
+                    .WithMany()
+                    .HasForeignKey(x => x.ApiClientId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            builder.Entity<ApiUsageLog>(entity =>
+            {
+                entity.ToTable("ApiUsageLogs");
+
+                entity.HasKey(x => x.Id);
+
+                entity.HasIndex(x => x.ApiClientId);
+                entity.HasIndex(x => x.UserId);
+                entity.HasIndex(x => x.Endpoint);
+                entity.HasIndex(x => x.StatusCode);
+                entity.HasIndex(x => x.CreatedAt);
+
+                entity.HasIndex(x => new
+                {
+                    x.ApiClientId,
+                    x.CreatedAt
+                });
+
+                entity.HasOne(x => x.ApiClient)
+                    .WithMany()
+                    .HasForeignKey(x => x.ApiClientId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
         }
     }
 }

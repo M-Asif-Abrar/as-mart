@@ -1,0 +1,1333 @@
+﻿@model AsMart.Web.Models.ViewModels.MyApiUsageViewModel
+
+@{
+    ViewData["Title"] = "API Usage";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var quotaPercent = Model.MonthlyQuota > 0
+        ? Math.Min(
+            Model.RequestsThisMonth * 100d / Model.MonthlyQuota,
+            100)
+        : 0;
+
+    var remainingPercent = Model.MonthlyQuota > 0
+        ? Math.Max(100 - quotaPercent, 0)
+        : 100;
+
+    var quotaStatusClass = quotaPercent >= 90
+        ? "quota-danger"
+        : quotaPercent >= 70
+            ? "quota-warning"
+            : "quota-safe";
+}
+
+<div class="api-usage-page">
+    <div class="container py-4 py-lg-5">
+
+        <section class="usage-hero mb-4">
+            <div class="usage-hero__content">
+                <span class="usage-eyebrow">
+                    <i class="fa-solid fa-chart-line"></i>
+                    Developer Portal
+                </span>
+
+                <h1>@Model.ClientName</h1>
+
+                <p>
+                    Monitor API activity, monthly quota, response performance,
+                    endpoint usage and recent requests.
+                </p>
+
+                <div class="usage-hero__badges">
+                    @if (Model.IsActive)
+                    {
+                        <span class="usage-status usage-status--active">
+                            <span></span>
+                            Active API Key
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="usage-status usage-status--inactive">
+                            <span></span>
+                            Revoked API Key
+                        </span>
+                    }
+
+                    <span class="usage-limit-badge">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        @Model.RateLimitPerMinute requests/minute
+                    </span>
+                </div>
+            </div>
+
+            <div class="usage-hero__actions">
+                <a asp-action="Index"
+                   class="btn usage-back-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Back to API Keys
+                </a>
+            </div>
+        </section>
+
+        <section class="usage-stats-grid mb-4">
+            <article class="usage-stat-card usage-stat-card--blue">
+                <div class="usage-stat-card__icon">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                </div>
+
+                <div class="usage-stat-card__body">
+                    <span>Requests This Month</span>
+
+                    <strong>
+                        @Model.RequestsThisMonth.ToString("N0")
+                    </strong>
+
+                    <small>
+                        @Model.RequestsToday.ToString("N0") requests today
+                    </small>
+                </div>
+            </article>
+
+            <article class="usage-stat-card usage-stat-card--green">
+                <div class="usage-stat-card__icon">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+
+                <div class="usage-stat-card__body">
+                    <span>Remaining Quota</span>
+
+                    <strong>
+                        @if (Model.MonthlyQuota <= 0)
+                        {
+                            <text>Unlimited</text>
+                        }
+                        else
+                        {
+                            @Model.RemainingQuota.ToString("N0")
+                        }
+                    </strong>
+
+                    <small>
+                        Resets
+                        @Model.QuotaResetAt.ToLocalTime().ToString("dd MMM yyyy")
+                    </small>
+                </div>
+            </article>
+
+            <article class="usage-stat-card usage-stat-card--purple">
+                <div class="usage-stat-card__icon">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+
+                <div class="usage-stat-card__body">
+                    <span>Success Rate</span>
+
+                    <strong>
+                        @Model.SuccessRate.ToString("0.0")%
+                    </strong>
+
+                    <small>
+                        @Model.FailedRequestsThisMonth.ToString("N0") failed requests
+                    </small>
+                </div>
+            </article>
+
+            <article class="usage-stat-card usage-stat-card--orange">
+                <div class="usage-stat-card__icon">
+                    <i class="fa-solid fa-stopwatch"></i>
+                </div>
+
+                <div class="usage-stat-card__body">
+                    <span>Average Response</span>
+
+                    <strong>
+                        @Model.AverageResponseTimeMs.ToString("0") ms
+                    </strong>
+
+                    <small>
+                        Average response time this month
+                    </small>
+                </div>
+            </article>
+        </section>
+
+        <section class="usage-panel quota-panel mb-4">
+            <div class="usage-panel__header">
+                <div>
+                    <span class="usage-panel__icon">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </span>
+
+                    <div>
+                        <h2>Monthly Quota Usage</h2>
+
+                        <p>
+                            Track consumed requests and available monthly capacity.
+                        </p>
+                    </div>
+                </div>
+
+                @if (Model.MonthlyQuota <= 0)
+                {
+                    <span class="quota-unlimited-badge">
+                        Unlimited
+                    </span>
+                }
+                else
+                {
+                    <span class="quota-percentage @quotaStatusClass">
+                        @quotaPercent.ToString("0.0")%
+                    </span>
+                }
+            </div>
+
+            @if (Model.MonthlyQuota > 0)
+            {
+                <div class="quota-summary">
+                    <div>
+                        <span>Used</span>
+                        <strong>
+                            @Model.RequestsThisMonth.ToString("N0")
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Remaining</span>
+                        <strong>
+                            @Model.RemainingQuota.ToString("N0")
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Total Limit</span>
+                        <strong>
+                            @Model.MonthlyQuota.ToString("N0")
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="quota-progress">
+                    <div class="quota-progress__track">
+                        <div class="quota-progress__value @quotaStatusClass"
+                             style="width: @quotaPercent.ToString("0.##")%;">
+                        </div>
+                    </div>
+
+                    <div class="quota-progress__labels">
+                        <span>
+                            @quotaPercent.ToString("0.0")% used
+                        </span>
+
+                        <span>
+                            @remainingPercent.ToString("0.0")% available
+                        </span>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="quota-unlimited-state">
+                    <span>
+                        <i class="fa-solid fa-infinity"></i>
+                    </span>
+
+                    <div>
+                        <h3>Unlimited monthly quota</h3>
+
+                        <p>
+                            This API client currently has no monthly request limit.
+                        </p>
+                    </div>
+                </div>
+            }
+        </section>
+
+        <div class="usage-content-grid mb-4">
+
+            <section class="usage-panel api-details-panel">
+                <div class="usage-panel__header">
+                    <div>
+                        <span class="usage-panel__icon">
+                            <i class="fa-solid fa-key"></i>
+                        </span>
+
+                        <div>
+                            <h2>API Key Details</h2>
+                            <p>Configuration and current key status.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="api-details-list">
+                    <div class="api-detail-item">
+                        <span class="api-detail-item__label">
+                            API Key
+                        </span>
+
+                        <code class="api-key-value">
+                            @Model.MaskedApiKey
+                        </code>
+                    </div>
+
+                    <div class="api-detail-item">
+                        <span class="api-detail-item__label">
+                            Status
+                        </span>
+
+                        @if (Model.IsActive)
+                        {
+                            <span class="usage-status usage-status--active">
+                                <span></span>
+                                Active
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="usage-status usage-status--inactive">
+                                <span></span>
+                                Revoked
+                            </span>
+                        }
+                    </div>
+
+                    <div class="api-detail-item">
+                        <span class="api-detail-item__label">
+                            Website
+                        </span>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Website))
+                        {
+                            <a href="@Model.Website"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="api-detail-link">
+                                @Model.Website
+
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                        }
+                        else
+                        {
+                            <strong>Not specified</strong>
+                        }
+                    </div>
+
+                    <div class="api-detail-item">
+                        <span class="api-detail-item__label">
+                            Rate Limit
+                        </span>
+
+                        <strong>
+                            @Model.RateLimitPerMinute requests/minute
+                        </strong>
+                    </div>
+
+                    <div class="api-detail-item">
+                        <span class="api-detail-item__label">
+                            Created
+                        </span>
+
+                        <strong>
+                            @Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
+                        </strong>
+                    </div>
+
+                    <div class="api-detail-item">
+                        <span class="api-detail-item__label">
+                            Last Used
+                        </span>
+
+                        <strong>
+                            @(Model.LastUsedAt?.ToLocalTime()
+                                                        .ToString("dd MMM yyyy hh:mm tt")
+                                                        ?? "Never")
+                        </strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="usage-panel endpoints-panel">
+                <div class="usage-panel__header">
+                    <div>
+                        <span class="usage-panel__icon">
+                            <i class="fa-solid fa-code-branch"></i>
+                        </span>
+
+                        <div>
+                            <h2>Top Endpoints</h2>
+                            <p>Most frequently requested endpoints this month.</p>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.TopEndpoints.Any())
+                {
+                    <div class="endpoint-list">
+                        @{
+                            var maximumEndpointCount =
+                            Model.TopEndpoints.Max(x => x.RequestCount);
+                        }
+
+                        @foreach (var endpoint in Model.TopEndpoints)
+                        {
+                            var endpointPercent = maximumEndpointCount > 0
+                            ? endpoint.RequestCount * 100d /
+                            maximumEndpointCount
+                            : 0;
+
+                            <div class="endpoint-item">
+                                <div class="endpoint-item__top">
+                                    <code>@endpoint.Endpoint</code>
+
+                                    <strong>
+                                        @endpoint.RequestCount.ToString("N0")
+                                    </strong>
+                                </div>
+
+                                <div class="endpoint-progress">
+                                    <div style="width: @endpointPercent.ToString("0.##")%;">
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="usage-empty-state">
+                        <span>
+                            <i class="fa-solid fa-code"></i>
+                        </span>
+
+                        <h3>No endpoint activity</h3>
+
+                        <p>
+                            No endpoint requests have been recorded this month.
+                        </p>
+                    </div>
+                }
+            </section>
+        </div>
+
+        <section class="usage-panel recent-panel">
+            <div class="usage-panel__header">
+                <div>
+                    <span class="usage-panel__icon">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </span>
+
+                    <div>
+                        <h2>Recent API Requests</h2>
+
+                        <p>
+                            Latest API calls, response status and execution time.
+                        </p>
+                    </div>
+                </div>
+
+                <span class="recent-count-badge">
+                    @Model.RecentRequests.Count request(s)
+                </span>
+            </div>
+
+            @if (Model.RecentRequests.Any())
+            {
+                <div class="recent-table-wrap d-none d-lg-block">
+                    <table class="table recent-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Method</th>
+                                <th>Endpoint</th>
+                                <th>Status</th>
+                                <th class="text-end">Response</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var request in Model.RecentRequests)
+                            {
+                                var statusClass =
+                                request.StatusCode >= 500
+                                ? "status-danger"
+                                : request.StatusCode >= 400
+                                ? "status-warning"
+                                : request.StatusCode >= 300
+                                ? "status-info"
+                                : "status-success";
+
+                                var responseClass =
+                                request.ResponseTimeMs >= 2000
+                                ? "response-slow"
+                                : request.ResponseTimeMs >= 800
+                                ? "response-medium"
+                                : "response-fast";
+
+                                <tr>
+                                    <td>
+                                        <div class="request-date">
+                                            @(request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy"))
+                                        </div>
+
+                                        <small>
+                                            @(request.CreatedAt.ToLocalTime().ToString("hh:mm tt"))
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        <span class="method-badge">
+                                            @request.HttpMethod
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <code class="request-endpoint">
+                                            @request.Endpoint@request.QueryString
+                                        </code>
+                                    </td>
+
+                                    <td>
+                                        <span class="request-status @statusClass">
+                                            @request.StatusCode
+                                        </span>
+                                    </td>
+
+                                    <td class="text-end">
+                                        <span class="response-time @responseClass">
+                                            @request.ResponseTimeMs ms
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="recent-mobile-list d-lg-none">
+                    @foreach (var request in Model.RecentRequests)
+                    {
+                        var statusClass =
+                        request.StatusCode >= 500
+                        ? "status-danger"
+                        : request.StatusCode >= 400
+                        ? "status-warning"
+                        : request.StatusCode >= 300
+                        ? "status-info"
+                        : "status-success";
+
+                        var responseClass =
+                        request.ResponseTimeMs >= 2000
+                        ? "response-slow"
+                        : request.ResponseTimeMs >= 800
+                        ? "response-medium"
+                        : "response-fast";
+
+                        <article class="request-mobile-card">
+                            <div class="request-mobile-card__top">
+                                <div>
+                                    <span class="method-badge">
+                                        @request.HttpMethod
+                                    </span>
+
+                                    <span class="request-status @statusClass">
+                                        @request.StatusCode
+                                    </span>
+                                </div>
+
+                                <span class="response-time @responseClass">
+                                    @request.ResponseTimeMs ms
+                                </span>
+                            </div>
+
+                            <code class="request-mobile-card__endpoint">
+                                @request.Endpoint@request.QueryString
+                            </code>
+
+                            <div class="request-mobile-card__date">
+                                <i class="fa-regular fa-clock"></i>
+
+                                @request.CreatedAt
+                                .ToLocalTime()
+                                .ToString("dd MMM yyyy hh:mm tt")
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="usage-empty-state">
+                    <span>
+                        <i class="fa-solid fa-satellite-dish"></i>
+                    </span>
+
+                    <h3>No requests recorded</h3>
+
+                    <p>
+                        API request activity will appear here after this key is used.
+                    </p>
+                </div>
+            }
+        </section>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .api-usage-page {
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, rgba(79, 70, 229, .10), transparent 30%), radial-gradient(circle at top right, rgba(14, 165, 233, .10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+        }
+
+        .usage-hero,
+        .usage-panel,
+        .usage-stat-card {
+            border: 1px solid rgba(148, 163, 184, .22);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .07);
+        }
+
+        .usage-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            padding: 2rem;
+            border-radius: 28px;
+            background: linear-gradient( 135deg, rgba(255, 255, 255, .98), rgba(238, 242, 255, .95) );
+        }
+
+        .usage-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .48rem .75rem;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: .76rem;
+            font-weight: 900;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+        }
+
+        .usage-hero h1 {
+            margin: .75rem 0 .4rem;
+            color: #0f172a;
+            font-size: clamp(2rem, 4vw, 3.1rem);
+            font-weight: 950;
+            letter-spacing: -.04em;
+        }
+
+        .usage-hero p {
+            max-width: 760px;
+            margin: 0;
+            color: #64748b;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .usage-hero__badges {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .usage-status,
+        .usage-limit-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .42rem;
+            padding: .45rem .72rem;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+
+            .usage-status span {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+            }
+
+        .usage-status--active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+            .usage-status--active span {
+                background: #22c55e;
+            }
+
+        .usage-status--inactive {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+            .usage-status--inactive span {
+                background: #94a3b8;
+            }
+
+        .usage-limit-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .usage-back-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            min-height: 44px;
+            padding: .65rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .9);
+            color: #334155;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+            .usage-back-btn:hover,
+            .usage-back-btn:focus {
+                border-color: #6366f1;
+                background: #4f46e5;
+                color: #fff;
+            }
+
+        .usage-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .usage-stat-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 0;
+            padding: 1.25rem;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, .96);
+        }
+
+        .usage-stat-card__icon {
+            display: grid;
+            width: 52px;
+            height: 52px;
+            place-items: center;
+            flex-shrink: 0;
+            border-radius: 17px;
+            font-size: 1.1rem;
+        }
+
+        .usage-stat-card--blue .usage-stat-card__icon {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .usage-stat-card--green .usage-stat-card__icon {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .usage-stat-card--purple .usage-stat-card__icon {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        .usage-stat-card--orange .usage-stat-card__icon {
+            background: #ffedd5;
+            color: #ea580c;
+        }
+
+        .usage-stat-card__body {
+            min-width: 0;
+        }
+
+            .usage-stat-card__body span {
+                display: block;
+                margin-bottom: .3rem;
+                color: #64748b;
+                font-size: .75rem;
+                font-weight: 850;
+                letter-spacing: .035em;
+                text-transform: uppercase;
+            }
+
+            .usage-stat-card__body strong {
+                display: block;
+                overflow: hidden;
+                color: #0f172a;
+                font-size: clamp(1.45rem, 2vw, 2rem);
+                font-weight: 950;
+                letter-spacing: -.03em;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .usage-stat-card__body small {
+                display: block;
+                margin-top: .25rem;
+                color: #94a3b8;
+                font-size: .78rem;
+            }
+
+        .usage-panel {
+            padding: 1.4rem;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .97);
+        }
+
+        .usage-panel__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+            .usage-panel__header > div {
+                display: flex;
+                align-items: center;
+                gap: .8rem;
+                min-width: 0;
+            }
+
+        .usage-panel__icon {
+            display: grid;
+            width: 44px;
+            height: 44px;
+            place-items: center;
+            flex-shrink: 0;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #fff;
+        }
+
+        .usage-panel__header h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 1.12rem;
+            font-weight: 900;
+        }
+
+        .usage-panel__header p {
+            margin: .18rem 0 0;
+            color: #64748b;
+            font-size: .83rem;
+        }
+
+        .quota-percentage,
+        .quota-unlimited-badge,
+        .recent-count-badge {
+            padding: .45rem .7rem;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .quota-unlimited-badge {
+            background: #ecfeff;
+            color: #0e7490;
+        }
+
+        .quota-safe {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .quota-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .quota-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .quota-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .8rem;
+            margin-bottom: 1rem;
+        }
+
+            .quota-summary > div {
+                padding: .9rem 1rem;
+                border-radius: 15px;
+                background: #f8fafc;
+            }
+
+            .quota-summary span {
+                display: block;
+                color: #94a3b8;
+                font-size: .72rem;
+                font-weight: 850;
+                text-transform: uppercase;
+            }
+
+            .quota-summary strong {
+                display: block;
+                margin-top: .22rem;
+                color: #0f172a;
+                font-size: 1.1rem;
+                font-weight: 900;
+            }
+
+        .quota-progress__track {
+            height: 14px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e2e8f0;
+        }
+
+        .quota-progress__value {
+            height: 100%;
+            border-radius: inherit;
+            transition: width .3s ease;
+        }
+
+            .quota-progress__value.quota-safe {
+                background: linear-gradient(90deg, #22c55e, #16a34a);
+            }
+
+            .quota-progress__value.quota-warning {
+                background: linear-gradient(90deg, #f59e0b, #d97706);
+            }
+
+            .quota-progress__value.quota-danger {
+                background: linear-gradient(90deg, #ef4444, #dc2626);
+            }
+
+        .quota-progress__labels {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: .6rem;
+            color: #64748b;
+            font-size: .76rem;
+            font-weight: 700;
+        }
+
+        .quota-unlimited-state {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.1rem;
+            border-radius: 18px;
+            background: #ecfeff;
+        }
+
+            .quota-unlimited-state > span {
+                display: grid;
+                width: 48px;
+                height: 48px;
+                place-items: center;
+                flex-shrink: 0;
+                border-radius: 15px;
+                background: #cffafe;
+                color: #0891b2;
+                font-size: 1.2rem;
+            }
+
+            .quota-unlimited-state h3 {
+                margin: 0;
+                color: #164e63;
+                font-size: 1rem;
+                font-weight: 900;
+            }
+
+            .quota-unlimited-state p {
+                margin: .2rem 0 0;
+                color: #0e7490;
+                font-size: .84rem;
+            }
+
+        .usage-content-grid {
+            display: grid;
+            grid-template-columns: minmax(280px, .8fr) minmax(0, 1.6fr);
+            gap: 1rem;
+        }
+
+        .api-details-list {
+            display: grid;
+            gap: .7rem;
+        }
+
+        .api-detail-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .85rem .9rem;
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+
+        .api-detail-item__label {
+            color: #64748b;
+            font-size: .8rem;
+            font-weight: 800;
+        }
+
+        .api-detail-item strong {
+            color: #0f172a;
+            font-size: .82rem;
+            text-align: right;
+        }
+
+        .api-key-value {
+            display: inline-block;
+            max-width: 190px;
+            overflow: hidden;
+            padding: .4rem .55rem;
+            border-radius: 9px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: .76rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .api-detail-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            max-width: 220px;
+            overflow: hidden;
+            color: #2563eb;
+            font-size: .82rem;
+            font-weight: 800;
+            text-decoration: none;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .endpoint-list {
+            display: grid;
+            gap: .9rem;
+        }
+
+        .endpoint-item {
+            padding: .85rem .9rem;
+            border-radius: 15px;
+            background: #f8fafc;
+        }
+
+        .endpoint-item__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+        }
+
+            .endpoint-item__top code {
+                overflow: hidden;
+                color: #4f46e5;
+                font-size: .8rem;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .endpoint-item__top strong {
+                flex-shrink: 0;
+                color: #0f172a;
+                font-size: .85rem;
+            }
+
+        .endpoint-progress {
+            height: 7px;
+            margin-top: .65rem;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e2e8f0;
+        }
+
+            .endpoint-progress > div {
+                height: 100%;
+                border-radius: inherit;
+                background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            }
+
+        .recent-count-badge {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .recent-table-wrap {
+            overflow-x: auto;
+        }
+
+        .recent-table {
+            min-width: 850px;
+        }
+
+            .recent-table thead th {
+                padding: .85rem .8rem;
+                border-bottom: 1px solid #cbd5e1;
+                background: #f8fafc;
+                color: #475569;
+                font-size: .74rem;
+                font-weight: 900;
+                letter-spacing: .04em;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+
+            .recent-table tbody td {
+                padding: .9rem .8rem;
+                border-color: #e2e8f0;
+            }
+
+        .request-date {
+            color: #0f172a;
+            font-size: .83rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .recent-table small {
+            color: #94a3b8;
+        }
+
+        .method-badge,
+        .request-status,
+        .response-time {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .38rem .58rem;
+            border-radius: 9px;
+            font-size: .73rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .method-badge {
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .request-endpoint {
+            display: inline-block;
+            max-width: 420px;
+            overflow: hidden;
+            padding: .4rem .55rem;
+            border-radius: 9px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: .76rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-info {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .response-fast {
+            background: #ecfdf5;
+            color: #047857;
+        }
+
+        .response-medium {
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+        .response-slow {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .recent-mobile-list {
+            display: grid;
+            gap: .8rem;
+        }
+
+        .request-mobile-card {
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 17px;
+            background: #f8fafc;
+        }
+
+        .request-mobile-card__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+        }
+
+            .request-mobile-card__top > div {
+                display: flex;
+                gap: .4rem;
+            }
+
+        .request-mobile-card__endpoint {
+            display: block;
+            margin-top: .8rem;
+            overflow-wrap: anywhere;
+            color: #4f46e5;
+            font-size: .78rem;
+        }
+
+        .request-mobile-card__date {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            margin-top: .75rem;
+            color: #64748b;
+            font-size: .77rem;
+        }
+
+        .usage-empty-state {
+            padding: 2.5rem 1rem;
+            text-align: center;
+        }
+
+            .usage-empty-state > span {
+                display: inline-grid;
+                width: 58px;
+                height: 58px;
+                place-items: center;
+                border-radius: 18px;
+                background: #eef2ff;
+                color: #4f46e5;
+                font-size: 1.25rem;
+            }
+
+            .usage-empty-state h3 {
+                margin: .9rem 0 .3rem;
+                color: #0f172a;
+                font-size: 1rem;
+                font-weight: 900;
+            }
+
+            .usage-empty-state p {
+                margin: 0;
+                color: #64748b;
+                font-size: .84rem;
+            }
+
+        @@media (max-width: 1199.98px) {
+            .usage-stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .usage-content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .usage-hero {
+                align-items: stretch;
+                flex-direction: column;
+                padding: 1.4rem;
+            }
+
+            .usage-hero__actions,
+            .usage-back-btn {
+                width: 100%;
+            }
+
+            .usage-stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .usage-panel {
+                padding: 1rem;
+                border-radius: 20px;
+            }
+
+            .usage-panel__header {
+                align-items: flex-start;
+            }
+
+            .quota-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .api-detail-item {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: .4rem;
+            }
+
+                .api-detail-item strong {
+                    text-align: left;
+                }
+
+            .api-key-value,
+            .api-detail-link {
+                max-width: 100%;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .usage-hero h1 {
+                font-size: 1.85rem;
+            }
+
+            .usage-hero__badges {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .usage-status,
+            .usage-limit-badge {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .usage-panel__header {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .quota-percentage,
+            .quota-unlimited-badge,
+            .recent-count-badge {
+                align-self: flex-start;
+            }
+
+            .quota-progress__labels {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: .25rem;
+            }
+
+            .endpoint-item__top {
+                align-items: flex-start;
+            }
+
+                .endpoint-item__top code {
+                    overflow-wrap: anywhere;
+                    white-space: normal;
+                }
+        }
+    </style>
+}

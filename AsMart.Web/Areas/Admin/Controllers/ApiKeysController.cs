@@ -109,5 +109,41 @@ namespace AsMart.Web.Areas.Admin.Controllers
             TempData["Success"] = "API key deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateMonthlyQuota(
+    int id,
+    int monthlyQuota)
+        {
+            if (monthlyQuota < 0)
+            {
+                monthlyQuota = 0;
+            }
+
+            if (monthlyQuota > 10_000_000)
+            {
+                monthlyQuota = 10_000_000;
+            }
+
+            var client = await _db.ApiClients
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (client == null)
+            {
+                return NotFound();
+            }
+
+            client.MonthlyQuota = monthlyQuota;
+
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] =
+                monthlyQuota == 0
+                    ? "Monthly quota updated to unlimited."
+                    : $"Monthly quota updated to {monthlyQuota:N0} requests.";
+
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

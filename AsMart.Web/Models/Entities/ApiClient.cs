@@ -24,5 +24,7 @@ namespace AsMart.Web.Models.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastUsedAt { get; set; }
+
+        public int MonthlyQuota { get; set; } = 10000;
     }
 }

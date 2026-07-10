@@ -1,8 +1,9 @@
-﻿using System.Threading.RateLimiting;
-using AsMart.Web.Data;
+﻿using AsMart.Web.Data;
+using AsMart.Web.Middleware;
 using AsMart.Web.Models.Entities;
 using AsMart.Web.Services;
 using AsMart.Web.Services.Email;
+using AsMart.Web.Services.Marketing;
 using AsMart.Web.Services.Repositories;
 using AsMart.Web.Services.Repositories.ErrorPages;
 using AsMart.Web.Services.Repositories.Redirects;
@@ -10,8 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using AsMart.Web.Services.Marketing;
-using AsMart.Web.Middleware;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,7 +68,6 @@ builder.Services.AddScoped<SeoProductSelector>();
 
 builder.Services.AddScoped<RedirectRuleRepository>();
 builder.Services.AddScoped<ErrorLogRepository>();
-
 builder.Services.AddScoped<IUtmTrackingService, UtmTrackingService>();
 
 builder.Services.AddHttpClient();
@@ -85,7 +84,9 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "https://asifabrar.net",
-                "https://www.asifabrar.net"
+                "https://www.asifabrar.net",
+                "https://localhost:44300",
+                "https://localhost:5001"
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
@@ -150,19 +151,6 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-
-    app.Use(async (context, next) =>
-    {
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-
-        Console.WriteLine($"START {context.Request.Method} {context.Request.Path}");
-
-        await next();
-
-        sw.Stop();
-
-        Console.WriteLine($"END {context.Request.Method} {context.Request.Path} => {context.Response.StatusCode} in {sw.ElapsedMilliseconds} ms");
-    });
 }
 else
 {
@@ -171,19 +159,34 @@ else
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseCors("AsMartPublicApi");
 
-app.UseMiddleware<ApiKeyMiddleware>();
-
-app.UseRateLimiter();
-
 app.UseAuthentication();
 app.UseAuthorization();
+
+/*
+ * Resolve API client first.
+ */
+app.UseMiddleware<ApiKeyMiddleware>();
+
+/*
+ * Wrap quota and rate-limit middleware so 429 responses are logged.
+ */
+app.UseMiddleware<ApiUsageTrackingMiddleware>();
+
+/*
+ * Enforce monthly quota for identified API clients.
+ */
+app.UseMiddleware<ApiQuotaMiddleware>();
+
+/*
+ * Enforce per-minute rate limits.
+ */
+app.UseRateLimiter();
 
 app.Use(async (context, next) =>
 {

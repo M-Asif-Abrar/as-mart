@@ -9,23 +9,40 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h2 class="fw-bold mb-1">API Keys</h2>
-            <p class="text-muted mb-0">Manage API keys, users, status and rate limits.</p>
+            <p class="text-muted mb-0">
+                Manage API keys, users, status, rate limits and monthly quotas.
+            </p>
         </div>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success">@TempData["Success"]</div>
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
     }
 
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
                 <div class="col-md-10">
-                    <input name="q" value="@ViewBag.Search" class="form-control" placeholder="Search by name, email, website or key..." />
+                    <input name="q"
+                           value="@ViewBag.Search"
+                           class="form-control"
+                           placeholder="Search by name, email, website or key..." />
                 </div>
+
                 <div class="col-md-2">
-                    <button class="btn btn-primary w-100">Search</button>
+                    <button type="submit" class="btn btn-primary w-100">
+                        Search
+                    </button>
                 </div>
             </form>
         </div>
@@ -33,6 +50,7 @@
 
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body">
+
             <div class="table-responsive">
                 <table class="table align-middle">
                     <thead>
@@ -41,54 +59,140 @@
                             <th>User</th>
                             <th>Website</th>
                             <th>Rate Limit</th>
+                            <th>Monthly Quota</th>
                             <th>Status</th>
                             <th>Created</th>
                             <th>Last Used</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         @foreach (var key in Model)
                         {
                             <tr>
                                 <td>
                                     <strong>@key.Name</strong>
-                                    <div class="small text-muted">ID: @key.Id</div>
+                                    <div class="small text-muted">
+                                        ID: @key.Id
+                                    </div>
                                 </td>
 
                                 <td>
-                                    @(key.User?.Email ?? "System / External")
+                                    <span style="font-size:0.85rem; color:#6c757d;">
+                                        @(key.User?.Email ?? "System / External")
+                                    </span>
                                 </td>
 
-                                <td>@key.Website</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(key.Website))
+                                    {
+                                        <a href="@key.Website"
+                                           target="_blank"
+                                           rel="noopener noreferrer">
+                                            @key.Website
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Not specified</span>
+                                    }
+                                </td>
 
-                                <td style="width:180px;">
-                                    <form asp-action="UpdateRateLimit" method="post" class="d-flex gap-2">
+                                <td style="min-width: 210px;">
+                                    <form asp-action="UpdateRateLimit"
+                                          method="post"
+                                          class="d-flex gap-2 align-items-center">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@key.Id" />
-                                        <input type="number" name="rateLimitPerMinute" value="@key.RateLimitPerMinute" class="form-control form-control-sm" />
-                                        <button class="btn btn-sm btn-primary">Save</button>
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@key.Id" />
+
+                                        <input type="number"
+                                               name="rateLimitPerMinute"
+                                               value="@key.RateLimitPerMinute"
+                                               min="1"
+                                               max="10000"
+                                               class="form-control form-control-sm"
+                                               style="max-width: 110px;" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-primary">
+                                            Save
+                                        </button>
                                     </form>
+
+                                    <div class="small text-muted mt-1">
+                                        Requests per minute
+                                    </div>
+                                </td>
+
+                                <td style="min-width: 230px;">
+                                    <form asp-action="UpdateMonthlyQuota"
+                                          method="post"
+                                          class="d-flex gap-2 align-items-center">
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@key.Id" />
+
+                                        <input type="number"
+                                               name="monthlyQuota"
+                                               value="@key.MonthlyQuota"
+                                               min="0"
+                                               max="10000000"
+                                               class="form-control form-control-sm"
+                                               style="max-width: 130px;" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-primary">
+                                            Save
+                                        </button>
+                                    </form>
+
+                                    <div class="small text-muted mt-1">
+                                        Use 0 for unlimited
+                                    </div>
                                 </td>
 
                                 <td>
                                     @if (key.IsActive)
                                     {
-                                        <span class="badge bg-success">Active</span>
+                                        <span class="badge bg-success">
+                                            Active
+                                        </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary">Inactive</span>
+                                        <span class="badge bg-secondary">
+                                            Inactive
+                                        </span>
                                     }
+                            </td>
+
+                                <td>
+                                    <small style="font-size:0.82rem; color:#6c757d;">
+                                        @(key.CreatedAt.ToLocalTime().ToString("dd MMM yyyy hh:mm tt"))
+                                    </small>
                                 </td>
 
-                                <td>@key.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
-                                <td>@(key.LastUsedAt?.ToLocalTime().ToString("dd MMM yyyy hh:mm tt") ?? "Never")</td>
+                                <td>
+                                    <small style="font-size:0.82rem; color:#6c757d;">
+                                        @(key.LastUsedAt?.ToLocalTime().ToString("dd MMM yyyy hh:mm tt") ?? "Never")
+                                    </small>
+                                </td>
 
-                                <td class="text-end">
-                                    <form asp-action="ToggleStatus" asp-route-id="@key.Id" method="post" class="d-inline">
+                                <td class="text-end" style="min-width: 160px;">
+                                    <form asp-action="ToggleStatus"
+                                          asp-route-id="@key.Id"
+                                          method="post"
+                                          class="d-inline">
                                         @Html.AntiForgeryToken()
-                                        <button class="btn btn-sm btn-outline-warning">
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-warning">
                                             @(key.IsActive ? "Disable" : "Enable")
                                         </button>
                                     </form>
@@ -100,12 +204,13 @@
                                     </a>
                                 </td>
                             </tr>
-                        }
+                                                }
 
                         @if (!Model.Any())
                         {
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">
+                                <td colspan="9"
+                                    class="text-center text-muted py-4">
                                     No API keys found.
                                 </td>
                             </tr>
@@ -113,6 +218,7 @@
                     </tbody>
                 </table>
             </div>
+
         </div>
     </div>
 </div>
