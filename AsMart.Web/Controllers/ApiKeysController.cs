@@ -12,6 +12,14 @@ namespace AsMart.Web.Controllers
     [Authorize]
     public class ApiKeysController : Controller
     {
+        private static readonly int[] AllowedExpirationDays =
+        {
+            30,
+            90,
+            180,
+            365
+        };
+
         private readonly ApplicationDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IApiKeyService _apiKeyService;
@@ -52,7 +60,9 @@ namespace AsMart.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
             string name,
-            string? website)
+            string? website,
+            int expirationDays = 365,
+            string? notes = null)
         {
             var userId = _userManager.GetUserId(User);
 
@@ -62,7 +72,8 @@ namespace AsMart.Web.Controllers
             }
 
             name = name?.Trim() ?? string.Empty;
-            website = website?.Trim();
+            website = NormalizeOptionalValue(website);
+            notes = NormalizeOptionalValue(notes);
 
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -78,13 +89,25 @@ namespace AsMart.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!string.IsNullOrWhiteSpace(website) &&
-                website.Length > 300)
+            if (website?.Length > 300)
             {
                 TempData["Error"] =
                     "Website URL cannot exceed 300 characters.";
 
                 return RedirectToAction(nameof(Index));
+            }
+
+            if (notes?.Length > 1000)
+            {
+                TempData["Error"] =
+                    "Notes cannot exceed 1,000 characters.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!AllowedExpirationDays.Contains(expirationDays))
+            {
+                expirationDays = 365;
             }
 
             var clientCount = await _db.ApiClients
@@ -98,28 +121,34 @@ namespace AsMart.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var utcNow = DateTime.UtcNow;
             var apiKey = _apiKeyService.GenerateApiKey();
 
             var client = new ApiClient
             {
                 Name = name,
-                Website = string.IsNullOrWhiteSpace(website)
-                    ? null
-                    : website,
+                Website = website,
+                Notes = notes,
                 ApiKey = apiKey,
                 UserId = userId,
                 IsActive = true,
                 RateLimitPerMinute = 60,
-                MonthlyQuota = 10000,
-                CreatedAt = DateTime.UtcNow
+                MonthlyQuota = 10_000,
+                CreatedAt = utcNow,
+                ExpiresAt = utcNow.AddDays(expirationDays),
+                RevokedAt = null,
+                LastRotatedAt = null
             };
 
             _db.ApiClients.Add(client);
             await _db.SaveChangesAsync();
 
             TempData["Success"] =
-                "API key created successfully.";
+                $"API key created successfully. It expires in {expirationDays} days.";
 
+            /*
+             * The plain key is shown immediately after creation.
+             */
             TempData["NewApiKey"] = apiKey;
 
             return RedirectToAction(nameof(Index));
@@ -127,7 +156,62 @@ namespace AsMart.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Regenerate(int id)
+        public async Task<IActionResult> Rotate(
+            int id,
+            int expirationDays = 365)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Challenge();
+            }
+
+            if (!AllowedExpirationDays.Contains(expirationDays))
+            {
+                expirationDays = 365;
+            }
+
+            var client = await _db.ApiClients
+                .FirstOrDefaultAsync(x =>
+                    x.Id == id &&
+                    x.UserId == userId);
+
+            if (client == null)
+            {
+                return NotFound();
+            }
+
+            var utcNow = DateTime.UtcNow;
+            var newApiKey = _apiKeyService.GenerateApiKey();
+
+            /*
+             * Replacing ApiKey immediately invalidates the old credential.
+             */
+            client.ApiKey = newApiKey;
+            client.IsActive = true;
+            client.RevokedAt = null;
+            client.LastRotatedAt = utcNow;
+            client.LastUsedAt = null;
+            client.ExpiresAt = utcNow.AddDays(expirationDays);
+
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] =
+                "API key rotated successfully. The previous key is no longer valid.";
+
+            TempData["NewApiKey"] = newApiKey;
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        /*
+         * Temporary disabling.
+         * This does not mark the credential as permanently revoked.
+         */
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Disable(int id)
         {
             var userId = _userManager.GetUserId(User);
 
@@ -141,22 +225,28 @@ namespace AsMart.Web.Controllers
                 return NotFound();
             }
 
-            var newApiKey = _apiKeyService.GenerateApiKey();
+            if (client.RevokedAt.HasValue)
+            {
+                TempData["Error"] =
+                    "A revoked API key cannot be disabled or reactivated. Rotate it instead.";
 
-            client.ApiKey = newApiKey;
-            client.IsActive = true;
-            client.LastUsedAt = null;
+                return RedirectToAction(nameof(Index));
+            }
+
+            client.IsActive = false;
 
             await _db.SaveChangesAsync();
 
             TempData["Success"] =
-                "API key regenerated. The previous key is no longer valid.";
-
-            TempData["NewApiKey"] = newApiKey;
+                "API key disabled successfully.";
 
             return RedirectToAction(nameof(Index));
         }
 
+        /*
+         * Permanent revocation.
+         * A revoked key cannot be activated again.
+         */
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Revoke(int id)
@@ -173,11 +263,16 @@ namespace AsMart.Web.Controllers
                 return NotFound();
             }
 
-            client.IsActive = false;
-            await _db.SaveChangesAsync();
+            if (!client.RevokedAt.HasValue)
+            {
+                client.IsActive = false;
+                client.RevokedAt = DateTime.UtcNow;
+
+                await _db.SaveChangesAsync();
+            }
 
             TempData["Success"] =
-                "API key revoked successfully.";
+                "API key permanently revoked. Rotate it to generate a new credential.";
 
             return RedirectToAction(nameof(Index));
         }
@@ -198,7 +293,25 @@ namespace AsMart.Web.Controllers
                 return NotFound();
             }
 
+            if (client.RevokedAt.HasValue)
+            {
+                TempData["Error"] =
+                    "A revoked API key cannot be activated. Rotate it instead.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (client.ExpiresAt.HasValue &&
+                client.ExpiresAt.Value <= DateTime.UtcNow)
+            {
+                TempData["Error"] =
+                    "An expired API key cannot be activated. Rotate it instead.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
             client.IsActive = true;
+
             await _db.SaveChangesAsync();
 
             TempData["Success"] =
@@ -263,8 +376,8 @@ namespace AsMart.Web.Controllers
 
             var averageResponseTime =
                 await monthlyLogs.AnyAsync()
-                    ? await monthlyLogs
-                        .AverageAsync(x => x.ResponseTimeMs)
+                    ? await monthlyLogs.AverageAsync(
+                        x => x.ResponseTimeMs)
                     : 0;
 
             var model = new MyApiUsageViewModel
@@ -274,26 +387,31 @@ namespace AsMart.Web.Controllers
                 MaskedApiKey =
                     _apiKeyService.MaskApiKey(client.ApiKey),
                 Website = client.Website,
-                IsActive = client.IsActive,
+                IsActive = client.IsUsable,
                 RateLimitPerMinute =
                     client.RateLimitPerMinute,
                 MonthlyQuota = client.MonthlyQuota,
                 RequestsThisMonth = requestsThisMonth,
+
                 RemainingQuota = client.MonthlyQuota <= 0
                     ? int.MaxValue
                     : Math.Max(
                         client.MonthlyQuota - requestsThisMonth,
                         0),
+
                 RequestsToday = await _db.ApiUsageLogs
                     .AsNoTracking()
                     .CountAsync(x =>
                         x.ApiClientId == client.Id &&
                         x.CreatedAt >= today),
+
                 FailedRequestsThisMonth = failedRequests,
+
                 SuccessRate = requestsThisMonth > 0
                     ? successfulRequests * 100d /
                       requestsThisMonth
                     : 0,
+
                 AverageResponseTimeMs = averageResponseTime,
                 CreatedAt = client.CreatedAt,
                 LastUsedAt = client.LastUsedAt,
@@ -329,6 +447,15 @@ namespace AsMart.Web.Controllers
             };
 
             return View(model);
+        }
+
+        private static string? NormalizeOptionalValue(string? value)
+        {
+            value = value?.Trim();
+
+            return string.IsNullOrWhiteSpace(value)
+                ? null
+                : value;
         }
     }
 }

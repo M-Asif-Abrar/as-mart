@@ -1,9 +1,11 @@
 ﻿using AsMart.Web.Data;
+using AsMart.Web.Models.Api;
+using AsMart.Web.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace AsMart.Web.Middleware
 {
-    public class ApiQuotaMiddleware
+    public sealed class ApiQuotaMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ApiQuotaMiddleware> _logger;
@@ -18,7 +20,7 @@ namespace AsMart.Web.Middleware
 
         public async Task InvokeAsync(
             HttpContext context,
-            IServiceScopeFactory scopeFactory)
+            ApplicationDbContext db)
         {
             if (!context.Request.Path.StartsWithSegments("/api"))
             {
@@ -31,8 +33,7 @@ namespace AsMart.Web.Middleware
                 ApiKeyMiddleware.ApiClientIdItem);
 
             /*
-             * Anonymous/public API calls are controlled by the
-             * per-minute rate limiter, not client monthly quota.
+             * Anonymous requests do not have a monthly client quota.
              */
             if (!clientId.HasValue)
             {
@@ -45,77 +46,88 @@ namespace AsMart.Web.Middleware
                 ApiKeyMiddleware.ApiMonthlyQuotaItem);
 
             /*
-             * Null or zero quota means unlimited.
-             * Change this behavior if you want zero to block all usage.
+             * Zero or negative currently means unlimited.
              */
-            if (!monthlyQuota.HasValue || monthlyQuota.Value <= 0)
+            if (!monthlyQuota.HasValue ||
+                monthlyQuota.Value <= 0)
             {
                 await _next(context);
                 return;
             }
 
-            var now = DateTime.UtcNow;
+            var utcNow = DateTime.UtcNow;
 
-            var monthStart = new DateTime(
-                now.Year,
-                now.Month,
+            var monthStartUtc = new DateTime(
+                utcNow.Year,
+                utcNow.Month,
                 1,
                 0,
                 0,
                 0,
                 DateTimeKind.Utc);
 
-            var nextMonth = monthStart.AddMonths(1);
-
-            using var scope = scopeFactory.CreateScope();
-
-            var db = scope.ServiceProvider
-                .GetRequiredService<ApplicationDbContext>();
+            var resetAtUtc = monthStartUtc.AddMonths(1);
 
             var requestsUsed = await db.ApiUsageLogs
                 .AsNoTracking()
-                .CountAsync(x =>
-                    x.ApiClientId == clientId.Value &&
-                    x.CreatedAt >= monthStart &&
-                    x.CreatedAt < nextMonth);
+                .CountAsync(
+                    x =>
+                        x.ApiClientId == clientId.Value &&
+                        x.CreatedAt >= monthStartUtc &&
+                        x.CreatedAt < resetAtUtc,
+                    context.RequestAborted);
 
             SetQuotaHeaders(
                 context,
                 monthlyQuota.Value,
                 requestsUsed,
-                nextMonth);
+                resetAtUtc);
 
-            if (requestsUsed >= monthlyQuota.Value)
+            if (requestsUsed < monthlyQuota.Value)
             {
-                _logger.LogWarning(
-                    "Monthly API quota exceeded. ClientId: {ClientId}, Used: {Used}, Quota: {Quota}",
-                    clientId.Value,
-                    requestsUsed,
-                    monthlyQuota.Value);
-
-                context.Response.StatusCode =
-                    StatusCodes.Status429TooManyRequests;
-
-                context.Response.ContentType =
-                    "application/json; charset=utf-8";
-
-                context.Response.Headers["Cache-Control"] = "no-store";
-
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    success = false,
-                    statusCode = StatusCodes.Status429TooManyRequests,
-                    message = "Monthly API quota exceeded.",
-                    quota = monthlyQuota.Value,
-                    used = requestsUsed,
-                    remaining = 0,
-                    resetAt = nextMonth
-                });
-
+                await _next(context);
                 return;
             }
 
-            await _next(context);
+            _logger.LogWarning(
+                "Monthly API quota exceeded. ClientId: {ClientId}, Used: {Used}, Quota: {Quota}, TraceId: {TraceId}",
+                clientId.Value,
+                requestsUsed,
+                monthlyQuota.Value,
+                context.TraceIdentifier);
+
+            context.Response.Clear();
+
+            context.Response.StatusCode =
+                StatusCodes.Status429TooManyRequests;
+
+            context.Response.ContentType =
+                "application/json; charset=utf-8";
+
+            context.Response.Headers.CacheControl = "no-store";
+
+            SetQuotaHeaders(
+                context,
+                monthlyQuota.Value,
+                requestsUsed,
+                resetAtUtc);
+
+            var response =
+                ApiResponseFactory.Error<object>(
+                    ApiErrorCodes.MonthlyQuotaExceeded,
+                    "The monthly API request quota has been exceeded.",
+                    context.TraceIdentifier,
+                    meta: new
+                    {
+                        monthlyQuota = monthlyQuota.Value,
+                        requestsUsed,
+                        remaining = 0,
+                        resetAtUtc
+                    });
+
+            await context.Response.WriteAsJsonAsync(
+                response,
+                context.RequestAborted);
         }
 
         private static int? GetIntItem(
@@ -132,16 +144,18 @@ namespace AsMart.Web.Middleware
                 return intValue;
             }
 
-            return int.TryParse(value?.ToString(), out var parsedValue)
-                ? parsedValue
-                : null;
+            return int.TryParse(
+                value?.ToString(),
+                out var parsedValue)
+                    ? parsedValue
+                    : null;
         }
 
         private static void SetQuotaHeaders(
             HttpContext context,
             int quota,
             int used,
-            DateTime resetAt)
+            DateTime resetAtUtc)
         {
             context.Response.Headers["X-Monthly-Quota-Limit"] =
                 quota.ToString();
@@ -153,7 +167,7 @@ namespace AsMart.Web.Middleware
                 Math.Max(quota - used, 0).ToString();
 
             context.Response.Headers["X-Monthly-Quota-Reset"] =
-                resetAt.ToString("O");
+                resetAtUtc.ToString("O");
         }
     }
 }

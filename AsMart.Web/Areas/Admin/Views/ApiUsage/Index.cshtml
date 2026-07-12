@@ -11,667 +11,1230 @@
     var failedRate = Model.RequestsToday > 0
         ? ((double)Model.FailedRequestsToday / Model.RequestsToday) * 100
         : 0;
+
+    var firstPageToShow = Math.Max(1, Model.Page - 2);
+    var lastPageToShow = Math.Min(Model.TotalPages, Model.Page + 2);
+}
+
+@section Styles {
+    <style>
+        .api-usage-page {
+            min-height: calc(100vh - 80px);
+            padding: 1.25rem;
+            background: radial-gradient(circle at top left, rgba(59,130,246,.16), transparent 32%), radial-gradient(circle at top right, rgba(249,115,22,.13), transparent 35%), linear-gradient(135deg, #f8fafc 0%, #eef2ff 48%, #fff7ed 100%);
+        }
+
+        .api-usage-shell {
+            width: min(100%, 1720px);
+            margin: 0 auto;
+        }
+
+        .api-hero,
+        .api-stat-card,
+        .api-mini-card,
+        .api-panel,
+        .api-filter-panel {
+            border: 1px solid rgba(148,163,184,.24);
+            background: rgba(255,255,255,.95);
+            box-shadow: 0 18px 45px rgba(15,23,42,.07);
+        }
+
+        .api-hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+            padding: 1.6rem;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(239,246,255,.92));
+        }
+
+        .api-kicker {
+            display: inline-flex;
+            padding: .35rem .7rem;
+            margin-bottom: .65rem;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+        .api-hero h1 {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(1.8rem, 4vw, 2.7rem);
+            font-weight: 950;
+            letter-spacing: -.04em;
+        }
+
+        .api-hero p {
+            max-width: 760px;
+            margin: .35rem 0 0;
+            color: #64748b;
+        }
+
+        .api-hero-actions {
+            display: flex;
+            gap: .7rem;
+            flex-wrap: wrap;
+        }
+
+        .api-action-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            padding: .72rem 1rem;
+            border-radius: 999px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: .2s ease;
+            white-space: nowrap;
+        }
+
+        .api-action-link--primary {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: #fff;
+            box-shadow: 0 14px 30px rgba(37,99,235,.22);
+        }
+
+        .api-action-link--light {
+            border: 1px solid rgba(148,163,184,.35);
+            background: #fff;
+            color: #334155;
+        }
+
+        .api-action-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .api-action-link--primary:hover {
+            color: #fff;
+        }
+
+        .api-action-link--light:hover {
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .api-stat-card {
+            position: relative;
+            min-height: 165px;
+            padding: 1.25rem;
+            overflow: hidden;
+            border-radius: 24px;
+        }
+
+            .api-stat-card::before {
+                content: "";
+                position: absolute;
+                right: -35px;
+                bottom: -45px;
+                width: 120px;
+                height: 120px;
+                border-radius: 999px;
+                opacity: .18;
+            }
+
+        .stat-blue::before {
+            background: #2563eb;
+        }
+
+        .stat-green::before {
+            background: #16a34a;
+        }
+
+        .stat-red::before {
+            background: #dc2626;
+        }
+
+        .stat-purple::before {
+            background: #7c3aed;
+        }
+
+        .api-stat-icon {
+            display: grid;
+            width: 44px;
+            height: 44px;
+            place-items: center;
+            margin-bottom: .8rem;
+            border-radius: 16px;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .api-stat-card span,
+        .api-mini-card span {
+            display: block;
+            color: #64748b;
+            font-size: .86rem;
+            font-weight: 800;
+        }
+
+        .api-stat-card strong,
+        .api-mini-card strong {
+            display: block;
+            margin-top: .35rem;
+            color: #0f172a;
+            font-size: 2rem;
+            font-weight: 950;
+            line-height: 1.1;
+        }
+
+        .api-stat-card small,
+        .api-mini-card p {
+            margin: .35rem 0 0;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .api-mini-card {
+            padding: 1.15rem;
+            border-radius: 24px;
+        }
+
+        .api-panel,
+        .api-filter-panel {
+            padding: 1.25rem;
+            border-radius: 24px;
+        }
+
+        .api-panel-head,
+        .api-filter-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .api-panel h5,
+        .api-filter-panel h5 {
+            margin: 0;
+            color: #0f172a;
+            font-weight: 950;
+        }
+
+        .api-panel p,
+        .api-filter-panel p {
+            margin: .15rem 0 0;
+            color: #64748b;
+            font-size: .9rem;
+        }
+
+        .api-filter-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: .9rem;
+        }
+
+        .api-filter-field label {
+            display: block;
+            margin-bottom: .4rem;
+            color: #475569;
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+        .api-filter-field .form-control,
+        .api-filter-field .form-select {
+            min-height: 44px;
+            border-radius: 12px;
+            border-color: #dbe3ef;
+            box-shadow: none;
+        }
+
+            .api-filter-field .form-control:focus,
+            .api-filter-field .form-select:focus {
+                border-color: #818cf8;
+                box-shadow: 0 0 0 .2rem rgba(99,102,241,.12);
+            }
+
+        .api-filter-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: .65rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .api-filter-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            min-height: 42px;
+            padding: .6rem .9rem;
+            border-radius: 12px;
+            font-size: .82rem;
+            font-weight: 900;
+        }
+
+        .api-filter-btn--apply {
+            border: 0;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: #fff;
+        }
+
+        .api-filter-btn--clear {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #475569;
+            text-decoration: none;
+        }
+
+        .api-filter-summary {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            flex-wrap: wrap;
+        }
+
+        .api-filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .38rem .62rem;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: .76rem;
+            font-weight: 800;
+        }
+
+        .api-list-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 140px;
+            gap: 1rem;
+            align-items: center;
+            padding: .85rem 0;
+            border-bottom: 1px solid rgba(148,163,184,.18);
+        }
+
+            .api-list-row code,
+            .api-table code {
+                padding: .22rem .48rem;
+                border-radius: .5rem;
+                background: #eef2ff;
+                color: #4f46e5;
+                white-space: nowrap;
+            }
+
+            .api-list-row span {
+                display: block;
+                margin-top: .25rem;
+                color: #64748b;
+                font-size: .82rem;
+            }
+
+        .api-progress {
+            height: 9px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e2e8f0;
+        }
+
+            .api-progress div {
+                height: 100%;
+                border-radius: inherit;
+                background: linear-gradient(135deg, #38bdf8, #6366f1);
+            }
+
+        .api-status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .8rem;
+        }
+
+        .api-status-pill {
+            padding: 1rem;
+            border: 1px solid rgba(148,163,184,.2);
+            border-radius: 18px;
+        }
+
+            .api-status-pill span {
+                font-size: .9rem;
+                font-weight: 900;
+            }
+
+            .api-status-pill strong {
+                display: block;
+                margin-top: .15rem;
+                color: #0f172a;
+                font-size: 1.6rem;
+            }
+
+        .status-green {
+            background: #ecfdf5;
+            color: #047857;
+        }
+
+        .status-orange {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .status-red {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .status-blue {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .api-client-list {
+            display: grid;
+            gap: .8rem;
+        }
+
+        .api-client-item {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            padding: .85rem;
+            border: 1px solid rgba(148,163,184,.2);
+            border-radius: 18px;
+            background: linear-gradient(135deg, #f8fafc, #eef2ff);
+        }
+
+        .api-client-avatar {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            flex: 0 0 42px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: #fff;
+            font-weight: 950;
+        }
+
+        .api-client-body {
+            min-width: 0;
+            flex: 1;
+        }
+
+            .api-client-body strong {
+                display: block;
+                color: #0f172a;
+            }
+
+            .api-client-body small {
+                color: #64748b;
+            }
+
+        .api-count {
+            padding: .35rem .65rem;
+            border-radius: 999px;
+            background: #fff;
+            color: #4f46e5;
+            font-weight: 900;
+        }
+
+        .api-table-wrap {
+            overflow-x: auto;
+        }
+
+        .api-table {
+            min-width: 900px;
+        }
+
+            .api-table thead th {
+                background: #f8fafc;
+                color: #475569;
+                font-size: .78rem;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                white-space: nowrap;
+            }
+
+            .api-table tbody td {
+                vertical-align: middle;
+            }
+
+        .api-method {
+            display: inline-flex;
+            padding: .25rem .55rem;
+            border-radius: 999px;
+            background: #0f172a;
+            color: #fff;
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+        .api-client-badge {
+            display: inline-flex;
+            padding: .28rem .6rem;
+            border-radius: 999px;
+            font-size: .8rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+            .api-client-badge.public {
+                background: #f1f5f9;
+                color: #475569;
+            }
+
+            .api-client-badge.key {
+                background: #dcfce7;
+                color: #166534;
+            }
+
+        .api-response-fast {
+            color: #047857;
+            font-weight: 800;
+        }
+
+        .api-response-medium {
+            color: #b45309;
+            font-weight: 800;
+        }
+
+        .api-response-slow {
+            color: #b91c1c;
+            font-weight: 800;
+        }
+
+        .api-pagination-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .api-result-count {
+            color: #64748b;
+            font-size: .84rem;
+            font-weight: 700;
+        }
+
+        .api-pagination {
+            display: flex;
+            gap: .35rem;
+            flex-wrap: wrap;
+        }
+
+        .api-page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+            min-height: 38px;
+            padding: .45rem .65rem;
+            border: 1px solid #dbe3ef;
+            border-radius: 10px;
+            background: #fff;
+            color: #475569;
+            font-size: .8rem;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+            .api-page-link.active {
+                border-color: transparent;
+                background: linear-gradient(135deg, #2563eb, #7c3aed);
+                color: #fff;
+            }
+
+            .api-page-link.disabled {
+                pointer-events: none;
+                opacity: .45;
+            }
+
+        .api-empty {
+            padding: 1rem;
+            border-radius: 16px;
+            background: #f8fafc;
+            color: #64748b;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .api-filter-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .api-hero {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .api-list-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .api-usage-page {
+                padding: .85rem;
+            }
+
+            .api-filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .api-filter-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+                .api-filter-actions .btn,
+                .api-filter-actions a {
+                    width: 100%;
+                }
+
+            .api-pagination-wrap {
+                align-items: stretch;
+                flex-direction: column;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .api-hero {
+                padding: 1.1rem;
+                border-radius: 20px;
+            }
+
+            .api-action-link {
+                width: 100%;
+            }
+
+            .api-stat-card strong,
+            .api-mini-card strong {
+                font-size: 1.55rem;
+            }
+
+            .api-panel,
+            .api-filter-panel {
+                padding: 1rem;
+                border-radius: 20px;
+            }
+
+            .api-status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .api-page-link {
+                flex: 1;
+            }
+        }
+    </style>
 }
 
 <div class="api-usage-page">
-    <div class="api-hero">
-        <div>
-            <span class="api-kicker">As-Mart Public API</span>
-            <h1>API Usage Dashboard</h1>
-            <p>Monitor API traffic, client activity, endpoint demand, response health, and recent requests.</p>
-        </div>
+    <div class="api-usage-shell">
 
-        <div class="api-hero-actions">
-            <a asp-area="Admin" asp-controller="ApiKeys" asp-action="Index" class="api-btn api-btn-primary">
-                <i class="fas fa-key"></i> Manage API Keys
-            </a>
-            <a href="/api/products/featured?count=6" target="_blank" class="api-btn api-btn-light">
-                <i class="fas fa-vial"></i> Test API
-            </a>
-        </div>
-    </div>
+        <section class="api-hero">
+            <div>
+                <span class="api-kicker">As-Mart Public API</span>
+                <h1>API Usage Dashboard</h1>
+                <p>
+                    Monitor API traffic, client activity, endpoint demand, response health, and filtered request history.
+                </p>
+            </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-xl-3 col-md-6">
-            <div class="api-stat-card stat-blue">
-                <div class="api-stat-icon"><i class="fas fa-server"></i></div>
-                <span>Total Requests</span>
-                <strong>@Model.TotalRequests</strong>
-                <small>All tracked API calls</small>
+            <div class="api-hero-actions">
+                <a asp-area="Admin"
+                   asp-controller="ApiKeys"
+                   asp-action="Index"
+                   class="api-action-link api-action-link--primary">
+                    <i class="fas fa-key"></i>
+                    Manage API Keys
+                </a>
+
+                <a href="/api/products/featured?count=6"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="api-action-link api-action-link--light">
+                    <i class="fas fa-vial"></i>
+                    Test Public API
+                </a>
+            </div>
+        </section>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-warning rounded-4">
+                @Html.ValidationSummary()
+            </div>
+        }
+
+        <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="api-stat-card stat-blue">
+                    <div class="api-stat-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <span>Total Requests</span>
+                    <strong>@Model.TotalRequests.ToString("N0")</strong>
+                    <small>All tracked API calls</small>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="api-stat-card stat-green">
+                    <div class="api-stat-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <span>Requests Today</span>
+                    <strong>@Model.RequestsToday.ToString("N0")</strong>
+                    <small>@successRate.ToString("0.0")% success rate</small>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="api-stat-card stat-red">
+                    <div class="api-stat-icon">
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+                    <span>Failed Today</span>
+                    <strong>@Model.FailedRequestsToday.ToString("N0")</strong>
+                    <small>@failedRate.ToString("0.0")% failed requests</small>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="api-stat-card stat-purple">
+                    <div class="api-stat-icon">
+                        <i class="fas fa-gauge-high"></i>
+                    </div>
+                    <span>Average Response</span>
+                    <strong>@Model.AverageResponseTimeMs.ToString("0") ms</strong>
+                    <small>Average API response time</small>
+                </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="api-stat-card stat-green">
-                <div class="api-stat-icon"><i class="fas fa-calendar-day"></i></div>
-                <span>Requests Today</span>
-                <strong>@Model.RequestsToday</strong>
-                <small>@successRate.ToString("0.0")% success rate</small>
+        <div class="row g-3 mb-4">
+            <div class="col-lg-4">
+                <div class="api-mini-card">
+                    <span>Public Requests</span>
+                    <strong>@Model.PublicRequests.ToString("N0")</strong>
+                    <p>Requests without an API key.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="api-mini-card">
+                    <span>API Key Requests</span>
+                    <strong>@Model.ApiKeyRequests.ToString("N0")</strong>
+                    <p>Requests linked to registered clients.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="api-mini-card">
+                    <span>Tracked Clients</span>
+                    <strong>@Model.TopClients.Count.ToString("N0")</strong>
+                    <p>Clients represented in the top-usage list.</p>
+                </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="api-stat-card stat-red">
-                <div class="api-stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
-                <span>Failed Today</span>
-                <strong>@Model.FailedRequestsToday</strong>
-                <small>@failedRate.ToString("0.0")% failed requests</small>
-            </div>
-        </div>
+        <section class="api-filter-panel mb-4">
+            <div class="api-filter-head">
+                <div>
+                    <h5>Filter Request History</h5>
+                    <p>
+                        Narrow the request log by client, route, status, date, access type, and response time.
+                    </p>
+                </div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="api-stat-card stat-purple">
-                <div class="api-stat-icon"><i class="fas fa-gauge-high"></i></div>
-                <span>Average Response</span>
-                <strong>@Model.AverageResponseTimeMs.ToString("0") ms</strong>
-                <small>Average API speed</small>
+                @if (Model.HasActiveFilters)
+                {
+                    <span class="api-filter-chip">
+                        <i class="fas fa-filter"></i>
+                        Filters active
+                    </span>
+                }
             </div>
-        </div>
-    </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-lg-4">
-            <div class="api-mini-card">
-                <span>Public Requests</span>
-                <strong>@Model.PublicRequests</strong>
-                <p>Requests without API key.</p>
-            </div>
-        </div>
+            <form method="get"
+                  asp-area="Admin"
+                  asp-controller="ApiUsage"
+                  asp-action="Index">
 
-        <div class="col-lg-4">
-            <div class="api-mini-card">
-                <span>API Key Requests</span>
-                <strong>@Model.ApiKeyRequests</strong>
-                <p>Requests linked with registered clients.</p>
-            </div>
-        </div>
+                <div class="api-filter-grid">
+                    <div class="api-filter-field">
+                        <label for="clientId">Client</label>
+                        <select id="clientId"
+                                name="clientId"
+                                class="form-select">
+                            <option value="">All clients</option>
 
-        <div class="col-lg-4">
-            <div class="api-mini-card">
-                <span>Tracked Clients</span>
-                <strong>@Model.TopClients.Count</strong>
-                <p>Clients with recent API activity.</p>
-            </div>
-        </div>
-    </div>
+                            @foreach (var client in Model.ClientOptions)
+                            {
+                                var label = string.IsNullOrWhiteSpace(client.Email)
+                                ? $"{client.Name} (ID: {client.Id})"
+                                : $"{client.Name} — {client.Email}";
 
-    <div class="row g-4 mb-4">
-        <div class="col-xl-7">
-            <div class="api-panel">
-                <div class="api-panel-head">
-                    <div>
-                        <h5>Top Endpoints</h5>
-                        <p>Most requested API routes.</p>
+                                <option value="@client.Id"
+                                        selected="@(Model.ClientId == client.Id)">
+                                    @label
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="api-filter-field">
+                        <label for="endpoint">Endpoint contains</label>
+                        <input id="endpoint"
+                               name="endpoint"
+                               value="@Model.Endpoint"
+                               class="form-control"
+                               placeholder="/api/products/featured" />
+                    </div>
+
+                    <div class="api-filter-field">
+                        <label for="statusCode">Status code</label>
+                        <input id="statusCode"
+                               name="statusCode"
+                               value="@Model.StatusCode"
+                               type="number"
+                               min="100"
+                               max="599"
+                               class="form-control"
+                               placeholder="200, 401, 429..." />
+                    </div>
+
+                    <div class="api-filter-field">
+                        <label for="requestType">Request type</label>
+                        <select id="requestType"
+                                name="requestType"
+                                class="form-select">
+                            <option value="all"
+                                    selected="@(Model.RequestType == "all")">
+                                Public and API key
+                            </option>
+                            <option value="public"
+                                    selected="@(Model.RequestType == "public")">
+                                Public only
+                            </option>
+                            <option value="apikey"
+                                    selected="@(Model.RequestType == "apikey")">
+                                API key only
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="api-filter-field">
+                        <label for="from">From date</label>
+                        <input id="from"
+                               name="from"
+                               type="date"
+                               value="@(Model.From?.ToString("yyyy-MM-dd"))"
+                               class="form-control" />
+                    </div>
+
+                    <div class="api-filter-field">
+                        <label for="to">To date</label>
+                        <input id="to"
+                               name="to"
+                               type="date"
+                               value="@(Model.To?.ToString("yyyy-MM-dd"))"
+                               class="form-control" />
+                    </div>
+
+                    <div class="api-filter-field">
+                        <label for="minimumResponseTimeMs">
+                            Minimum response time
+                        </label>
+                        <input id="minimumResponseTimeMs"
+                               name="minimumResponseTimeMs"
+                               value="@Model.MinimumResponseTimeMs"
+                               type="number"
+                               min="0"
+                               class="form-control"
+                               placeholder="Milliseconds" />
+                    </div>
+
+                    <div class="api-filter-field">
+                        <label for="pageSize">Rows per page</label>
+                        <select id="pageSize"
+                                name="pageSize"
+                                class="form-select">
+                            <option value="25" selected="@(Model.PageSize == 25)">25</option>
+                            <option value="50" selected="@(Model.PageSize == 50)">50</option>
+                            <option value="100" selected="@(Model.PageSize == 100)">100</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="api-list">
-                    @foreach (var item in Model.TopEndpoints)
-                    {
-                        var percent = Model.TotalRequests > 0 ? ((double)item.Count / Model.TotalRequests) * 100 : 0;
+                <div class="api-filter-actions">
+                    <a asp-area="Admin"
+                       asp-controller="ApiUsage"
+                       asp-action="Index"
+                       class="api-filter-btn api-filter-btn--clear">
+                        <i class="fas fa-rotate-left"></i>
+                        Clear Filters
+                    </a>
 
-                        <div class="api-list-row">
-                            <div>
-                                <code>@item.Endpoint</code>
-                                <span>@item.Count requests</span>
-                            </div>
-                            <div class="api-progress">
-                                <div style="width:@percent.ToString("0.##")%"></div>
-                            </div>
+                    <button type="submit"
+                            class="btn api-filter-btn api-filter-btn--apply">
+                        <i class="fas fa-magnifying-glass"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-7">
+                <div class="api-panel h-100">
+                    <div class="api-panel-head">
+                        <div>
+                            <h5>Top Endpoints</h5>
+                            <p>Most requested API routes across all tracked traffic.</p>
                         </div>
-                    }
-
-                    @if (!Model.TopEndpoints.Any())
-                    {
-                        <div class="api-empty">No endpoint activity yet.</div>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-5">
-            <div class="api-panel">
-                <div class="api-panel-head">
-                    <div>
-                        <h5>Status Summary</h5>
-                        <p>HTTP response code breakdown.</p>
                     </div>
-                </div>
 
-                <div class="api-status-grid">
-                    @foreach (var item in Model.StatusSummary)
-                    {
-                        var cls = item.StatusCode >= 500 ? "status-red"
-                        : item.StatusCode >= 400 ? "status-orange"
-                        : item.StatusCode >= 300 ? "status-blue"
-                        : "status-green";
+                    <div class="api-list">
+                        @foreach (var item in Model.TopEndpoints)
+                        {
+                            var percent = Model.TotalRequests > 0
+                            ? ((double)item.Count / Model.TotalRequests) * 100
+                            : 0;
 
-                        <div class="api-status-pill @cls">
-                            <span>@item.StatusCode</span>
-                            <strong>@item.Count</strong>
-                        </div>
-                    }
+                            <div class="api-list-row">
+                                <div>
+                                    <code>@item.Endpoint</code>
+                                    <span>@item.Count.ToString("N0") requests</span>
+                                </div>
 
-                    @if (!Model.StatusSummary.Any())
-                    {
-                        <div class="api-empty">No status data yet.</div>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-xl-5">
-            <div class="api-panel h-100">
-                <div class="api-panel-head">
-                    <div>
-                        <h5>Top API Clients</h5>
-                        <p>Highest usage by registered API users.</p>
-                    </div>
-                </div>
-
-                <div class="api-client-list">
-                    @foreach (var item in Model.TopClients)
-                    {
-                        <div class="api-client-item">
-                            <div class="api-client-avatar">
-                                @item.ClientName.Substring(0, 1).ToUpper()
+                                <div class="api-progress">
+                                    <div style="width:@percent.ToString("0.##")%"></div>
+                                </div>
                             </div>
+                        }
 
-                            <div class="api-client-body">
-                                <strong>@item.ClientName</strong>
-                                <small>
-                                    Last used:
-                                    @(item.LastUsedAt?.ToLocalTime().ToString("dd MMM yyyy hh:mm tt") ?? "Not used")
+                        @if (!Model.TopEndpoints.Any())
+                        {
+                            <div class="api-empty">
+                                No endpoint activity yet.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-5">
+                <div class="api-panel h-100">
+                    <div class="api-panel-head">
+                        <div>
+                            <h5>Status Summary</h5>
+                            <p>HTTP response-code breakdown across all traffic.</p>
+                        </div>
+                    </div>
+
+                    <div class="api-status-grid">
+                        @foreach (var item in Model.StatusSummary)
+                        {
+                            var cssClass = item.StatusCode >= 500
+                            ? "status-red"
+                            : item.StatusCode >= 400
+                            ? "status-orange"
+                            : item.StatusCode >= 300
+                            ? "status-blue"
+                            : "status-green";
+
+                            <div class="api-status-pill @cssClass">
+                                <span>@item.StatusCode</span>
+                                <strong>@item.Count.ToString("N0")</strong>
+                            </div>
+                        }
+
+                        @if (!Model.StatusSummary.Any())
+                        {
+                            <div class="api-empty">
+                                No status data yet.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-4">
+                <div class="api-panel h-100">
+                    <div class="api-panel-head">
+                        <div>
+                            <h5>Top API Clients</h5>
+                            <p>Highest usage by registered API clients.</p>
+                        </div>
+                    </div>
+
+                    <div class="api-client-list">
+                        @foreach (var item in Model.TopClients)
+                        {
+                            var firstCharacter =
+                            string.IsNullOrWhiteSpace(item.ClientName)
+                            ? "?"
+                            : item.ClientName[..1].ToUpperInvariant();
+
+                            <div class="api-client-item">
+                                <div class="api-client-avatar">
+                                    @firstCharacter
+                                </div>
+
+                                <div class="api-client-body">
+                                    <strong>@item.ClientName</strong>
+                                    <small>
+                                        Last used:
+                                        @(item.LastUsedAt.HasValue
+                                                                            ? item.LastUsedAt.Value
+                                                                            .ToLocalTime()
+                                                                            .ToString("dd MMM yyyy, hh:mm tt")
+                                                                            : "Not used")
                                 </small>
                             </div>
 
-                            <span class="api-count">@item.Count</span>
-                        </div>
-                    }
+                                <span class="api-count">
+                                    @item.Count.ToString("N0")
+                                </span>
+                            </div>
+                                                }
 
-                    @if (!Model.TopClients.Any())
-                    {
-                        <div class="api-empty">No API key client usage yet. Current requests are public.</div>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-7">
-            <div class="api-panel h-100">
-                <div class="api-panel-head">
-                    <div>
-                        <h5>Recent API Requests</h5>
-                        <p>Latest 75 API calls.</p>
+                        @if (!Model.TopClients.Any())
+                        {
+                            <div class="api-empty">
+                                No API-key client usage yet.
+                            </div>
+                        }
                     </div>
                 </div>
+            </div>
 
-                <div class="table-responsive api-table-wrap">
-                    <table class="table api-table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Client</th>
-                                <th>Method</th>
-                                <th>Endpoint</th>
-                                <th>Status</th>
-                                <th class="text-end">Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var log in Model.RecentLogs)
-                            {
-                                var statusClass = log.StatusCode >= 500
-                                ? "danger"
-                                : log.StatusCode >= 400
-                                ? "warning"
-                                : "success";
+            <div class="col-xl-8">
+                <div class="api-panel h-100">
+                    <div class="api-panel-head">
+                        <div>
+                            <h5>Request History</h5>
+                            <p>
+                                Paginated API calls matching the selected filters.
+                            </p>
+                        </div>
 
+                        <div class="api-filter-summary">
+                            <span class="api-filter-chip">
+                                @Model.TotalFilteredRequests.ToString("N0") results
+                            </span>
+                            <span class="api-filter-chip">
+                                Page @Model.Page of @Model.TotalPages
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive api-table-wrap">
+                        <table class="table api-table align-middle mb-0">
+                            <thead>
                                 <tr>
-                                    <td>@log.CreatedAt.ToLocalTime().ToString("dd MMM, hh:mm tt")</td>
-                                    <td>
-                                        <span class="api-client-badge @(log.ClientName == "Public" ? "public" : "key")">
-                                            @log.ClientName
-                                        </span>
-                                    </td>
-                                    <td><span class="api-method">@log.Method</span></td>
-                                    <td><code>@log.Endpoint</code></td>
-                                    <td><span class="badge bg-@statusClass">@log.StatusCode</span></td>
-                                    <td class="text-end">@log.ResponseTimeMs ms</td>
+                                    <th>Date</th>
+                                    <th>Client</th>
+                                    <th>Method</th>
+                                    <th>Endpoint</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Response</th>
                                 </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var log in Model.RecentLogs)
+                                {
+                                    var statusClass = log.StatusCode >= 500
+                                    ? "danger"
+                                    : log.StatusCode >= 400
+                                    ? "warning"
+                                    : log.StatusCode >= 300
+                                    ? "info"
+                                    : "success";
+
+                                    var responseClass = log.ResponseTimeMs >= 1000
+                                    ? "api-response-slow"
+                                    : log.ResponseTimeMs >= 500
+                                    ? "api-response-medium"
+                                    : "api-response-fast";
+
+                                    var fullEndpoint = string.IsNullOrWhiteSpace(log.QueryString)
+                                    ? log.Endpoint
+                                    : $"{log.Endpoint}{log.QueryString}";
+
+                                    <tr>
+                                        <td>
+                                            @(log.CreatedAt
+                                                                                    .ToLocalTime()
+                                                                                    .ToString("dd MMM yyyy, hh:mm tt"))
+                                    </td>
+
+                                        <td>
+                                            <span class="api-client-badge @(log.ApiClientId.HasValue ? "key" : "public")">
+                                                @log.ClientName
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <span class="api-method">
+                                                @log.Method
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <code title="@fullEndpoint">
+                                                @fullEndpoint
+                                            </code>
+                                        </td>
+
+                                        <td>
+                                            <span class="badge bg-@statusClass">
+                                                @log.StatusCode
+                                            </span>
+                                        </td>
+
+                                        <td class="text-end">
+                                            <span class="@responseClass">
+                                                @log.ResponseTimeMs ms
+                                            </span>
+                                        </td>
+                                    </tr>
+                                                                }
+
+                                @if (!Model.RecentLogs.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6"
+                                            class="text-center text-muted py-5">
+                                            No API requests match the selected filters.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="api-pagination-wrap">
+                        <div class="api-result-count">
+                            Showing @Model.FirstItemNumber–@Model.LastItemNumber
+                            of @Model.TotalFilteredRequests.ToString("N0") requests
+                        </div>
+
+                        <nav class="api-pagination"
+                             aria-label="API usage pagination">
+
+                            <a asp-area="Admin"
+                               asp-controller="ApiUsage"
+                               asp-action="Index"
+                               asp-route-clientId="@Model.ClientId"
+                               asp-route-endpoint="@Model.Endpoint"
+                               asp-route-statusCode="@Model.StatusCode"
+                               asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
+                               asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
+                               asp-route-requestType="@Model.RequestType"
+                               asp-route-minimumResponseTimeMs="@Model.MinimumResponseTimeMs"
+                               asp-route-pageSize="@Model.PageSize"
+                               asp-route-page="@(Model.Page - 1)"
+                               class="api-page-link @(!Model.HasPreviousPage ? "disabled" : "")">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+
+                            @if (firstPageToShow > 1)
+                            {
+                                <a asp-area="Admin"
+                                   asp-controller="ApiUsage"
+                                   asp-action="Index"
+                                   asp-route-clientId="@Model.ClientId"
+                                   asp-route-endpoint="@Model.Endpoint"
+                                   asp-route-statusCode="@Model.StatusCode"
+                                   asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
+                                   asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
+                                   asp-route-requestType="@Model.RequestType"
+                                   asp-route-minimumResponseTimeMs="@Model.MinimumResponseTimeMs"
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-page="1"
+                                   class="api-page-link">
+                                    1
+                                </a>
+
+                                @if (firstPageToShow > 2)
+                                {
+                                    <span class="api-page-link disabled">…</span>
+                                }
                             }
 
-                            @if (!Model.RecentLogs.Any())
+                            @for (var pageNumber = firstPageToShow;
+                                                        pageNumber <= lastPageToShow;
+                                                        pageNumber++)
                             {
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">
-                                        No API requests tracked yet.
-                                    </td>
-                                </tr>
+                                <a asp-area="Admin"
+                                   asp-controller="ApiUsage"
+                                   asp-action="Index"
+                                   asp-route-clientId="@Model.ClientId"
+                                   asp-route-endpoint="@Model.Endpoint"
+                                   asp-route-statusCode="@Model.StatusCode"
+                                   asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
+                                   asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
+                                   asp-route-requestType="@Model.RequestType"
+                                   asp-route-minimumResponseTimeMs="@Model.MinimumResponseTimeMs"
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-page="@pageNumber"
+                                   class="api-page-link @(pageNumber == Model.Page ? "active" : "")">
+                                    @pageNumber
+                                </a>
                             }
-                        </tbody>
-                    </table>
+
+                            @if (lastPageToShow < Model.TotalPages)
+                            {
+                                @if (lastPageToShow < Model.TotalPages - 1)
+                                {
+                                    <span class="api-page-link disabled">…</span>
+                                }
+
+                                <a asp-area="Admin"
+                                   asp-controller="ApiUsage"
+                                   asp-action="Index"
+                                   asp-route-clientId="@Model.ClientId"
+                                   asp-route-endpoint="@Model.Endpoint"
+                                   asp-route-statusCode="@Model.StatusCode"
+                                   asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
+                                   asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
+                                   asp-route-requestType="@Model.RequestType"
+                                   asp-route-minimumResponseTimeMs="@Model.MinimumResponseTimeMs"
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-page="@Model.TotalPages"
+                                   class="api-page-link">
+                                    @Model.TotalPages
+                                </a>
+                            }
+
+                            <a asp-area="Admin"
+                               asp-controller="ApiUsage"
+                               asp-action="Index"
+                               asp-route-clientId="@Model.ClientId"
+                               asp-route-endpoint="@Model.Endpoint"
+                               asp-route-statusCode="@Model.StatusCode"
+                               asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
+                               asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
+                               asp-route-requestType="@Model.RequestType"
+                               asp-route-minimumResponseTimeMs="@Model.MinimumResponseTimeMs"
+                               asp-route-pageSize="@Model.PageSize"
+                               asp-route-page="@(Model.Page + 1)"
+                               class="api-page-link @(!Model.HasNextPage ? "disabled" : "")">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .api-usage-page {
-        min-height: calc(100vh - 80px);
-        padding: 1.5rem;
-        background: radial-gradient(circle at top left, rgba(59,130,246,.18), transparent 32%), radial-gradient(circle at top right, rgba(249,115,22,.16), transparent 35%), linear-gradient(135deg, #f8fafc 0%, #eef2ff 48%, #fff7ed 100%);
-    }
-
-    .api-hero {
-        display: flex;
-        justify-content: space-between;
-        gap: 1.2rem;
-        align-items: center;
-        padding: 1.6rem;
-        border-radius: 28px;
-        margin-bottom: 1.5rem;
-        background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(239,246,255,.9));
-        border: 1px solid rgba(148,163,184,.25);
-        box-shadow: 0 22px 55px rgba(15,23,42,.08);
-    }
-
-    .api-kicker {
-        display: inline-flex;
-        padding: .35rem .7rem;
-        border-radius: 999px;
-        background: #e0f2fe;
-        color: #0369a1;
-        font-size: .78rem;
-        font-weight: 900;
-        margin-bottom: .65rem;
-    }
-
-    .api-hero h1 {
-        font-weight: 950;
-        color: #0f172a;
-        margin: 0;
-        letter-spacing: -.04em;
-    }
-
-    .api-hero p {
-        margin: .35rem 0 0;
-        color: #64748b;
-        max-width: 720px;
-    }
-
-    .api-hero-actions {
-        display: flex;
-        gap: .7rem;
-        flex-wrap: wrap;
-    }
-
-    .api-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-        border-radius: 999px;
-        padding: .75rem 1rem;
-        font-weight: 800;
-        text-decoration: none;
-        white-space: nowrap;
-        transition: .2s ease;
-    }
-
-    .api-btn-primary {
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
-        color: #fff;
-        box-shadow: 0 14px 30px rgba(37,99,235,.22);
-    }
-
-    .api-btn-light {
-        background: #fff;
-        color: #334155;
-        border: 1px solid rgba(148,163,184,.35);
-    }
-
-    .api-btn:hover {
-        transform: translateY(-2px);
-        color: #fff;
-    }
-
-    .api-btn-light:hover {
-        background: #0f172a;
-    }
-
-    .api-stat-card,
-    .api-mini-card,
-    .api-panel {
-        background: rgba(255,255,255,.94);
-        border: 1px solid rgba(148,163,184,.24);
-        border-radius: 24px;
-        box-shadow: 0 18px 45px rgba(15,23,42,.07);
-    }
-
-    .api-stat-card {
-        position: relative;
-        overflow: hidden;
-        padding: 1.25rem;
-        min-height: 165px;
-    }
-
-        .api-stat-card:before {
-            content: "";
-            position: absolute;
-            inset: auto -35px -45px auto;
-            width: 120px;
-            height: 120px;
-            border-radius: 999px;
-            opacity: .18;
-        }
-
-    .stat-blue:before {
-        background: #2563eb;
-    }
-
-    .stat-green:before {
-        background: #16a34a;
-    }
-
-    .stat-red:before {
-        background: #dc2626;
-    }
-
-    .stat-purple:before {
-        background: #7c3aed;
-    }
-
-    .api-stat-icon {
-        width: 44px;
-        height: 44px;
-        display: grid;
-        place-items: center;
-        border-radius: 16px;
-        margin-bottom: .8rem;
-        background: #f1f5f9;
-        color: #0f172a;
-    }
-
-    .api-stat-card span,
-    .api-mini-card span {
-        display: block;
-        color: #64748b;
-        font-weight: 800;
-        font-size: .86rem;
-    }
-
-    .api-stat-card strong,
-    .api-mini-card strong {
-        display: block;
-        color: #0f172a;
-        font-size: 2rem;
-        font-weight: 950;
-        line-height: 1.1;
-        margin-top: .35rem;
-    }
-
-    .api-stat-card small,
-    .api-mini-card p {
-        color: #64748b;
-        margin: .35rem 0 0;
-        font-weight: 600;
-    }
-
-    .api-mini-card {
-        padding: 1.15rem;
-    }
-
-    .api-panel {
-        padding: 1.25rem;
-    }
-
-    .api-panel-head {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .api-panel h5 {
-        font-weight: 950;
-        color: #0f172a;
-        margin: 0;
-    }
-
-    .api-panel p {
-        color: #64748b;
-        margin: .15rem 0 0;
-        font-size: .9rem;
-    }
-
-    .api-list-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 140px;
-        gap: 1rem;
-        align-items: center;
-        padding: .85rem 0;
-        border-bottom: 1px solid rgba(148,163,184,.18);
-    }
-
-        .api-list-row code,
-        .api-table code {
-            color: #4f46e5;
-            background: #eef2ff;
-            padding: .22rem .48rem;
-            border-radius: .5rem;
-            white-space: nowrap;
-        }
-
-        .api-list-row span {
-            display: block;
-            color: #64748b;
-            font-size: .82rem;
-            margin-top: .25rem;
-        }
-
-    .api-progress {
-        height: 9px;
-        border-radius: 999px;
-        overflow: hidden;
-        background: #e2e8f0;
-    }
-
-        .api-progress div {
-            height: 100%;
-            border-radius: inherit;
-            background: linear-gradient(135deg, #38bdf8, #6366f1);
-        }
-
-    .api-status-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: .8rem;
-    }
-
-    .api-status-pill {
-        border-radius: 18px;
-        padding: 1rem;
-        border: 1px solid rgba(148,163,184,.2);
-    }
-
-        .api-status-pill span {
-            font-weight: 900;
-            font-size: .9rem;
-        }
-
-        .api-status-pill strong {
-            display: block;
-            font-size: 1.6rem;
-            margin-top: .15rem;
-            color: #0f172a;
-        }
-
-    .status-green {
-        background: #ecfdf5;
-        color: #047857;
-    }
-
-    .status-orange {
-        background: #fff7ed;
-        color: #c2410c;
-    }
-
-    .status-red {
-        background: #fef2f2;
-        color: #b91c1c;
-    }
-
-    .status-blue {
-        background: #eff6ff;
-        color: #1d4ed8;
-    }
-
-    .api-client-list {
-        display: grid;
-        gap: .8rem;
-    }
-
-    .api-client-item {
-        display: flex;
-        align-items: center;
-        gap: .8rem;
-        padding: .85rem;
-        border-radius: 18px;
-        background: linear-gradient(135deg, #f8fafc, #eef2ff);
-        border: 1px solid rgba(148,163,184,.2);
-    }
-
-    .api-client-avatar {
-        width: 42px;
-        height: 42px;
-        border-radius: 15px;
-        display: grid;
-        place-items: center;
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
-        color: #fff;
-        font-weight: 950;
-    }
-
-    .api-client-body {
-        min-width: 0;
-        flex: 1;
-    }
-
-        .api-client-body strong {
-            display: block;
-            color: #0f172a;
-        }
-
-        .api-client-body small {
-            color: #64748b;
-        }
-
-    .api-count {
-        padding: .35rem .65rem;
-        border-radius: 999px;
-        background: #fff;
-        color: #4f46e5;
-        font-weight: 900;
-    }
-
-    .api-table-wrap {
-        max-height: 520px;
-        overflow: auto;
-    }
-
-    .api-table thead th {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        background: #f8fafc;
-        color: #475569;
-        font-size: .82rem;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-    }
-
-    .api-method {
-        display: inline-flex;
-        padding: .25rem .55rem;
-        border-radius: 999px;
-        background: #0f172a;
-        color: #fff;
-        font-size: .78rem;
-        font-weight: 900;
-    }
-
-    .api-client-badge {
-        display: inline-flex;
-        border-radius: 999px;
-        padding: .28rem .6rem;
-        font-size: .8rem;
-        font-weight: 800;
-    }
-
-        .api-client-badge.public {
-            background: #f1f5f9;
-            color: #475569;
-        }
-
-        .api-client-badge.key {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-    .api-empty {
-        padding: 1rem;
-        color: #64748b;
-        background: #f8fafc;
-        border-radius: 16px;
-        text-align: center;
-        font-weight: 700;
-    }
-
-    @@media (max-width: 991.98px) {
-        .api-hero {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-        .api-list-row {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @@media (max-width: 575.98px) {
-        .api-usage-page {
-            padding: .85rem;
-        }
-
-        .api-hero {
-            padding: 1.1rem;
-            border-radius: 20px;
-        }
-
-            .api-hero h1 {
-                font-size: 1.7rem;
-            }
-
-        .api-btn {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .api-stat-card strong,
-        .api-mini-card strong {
-            font-size: 1.55rem;
-        }
-
-        .api-panel {
-            padding: 1rem;
-            border-radius: 20px;
-        }
-
-        .api-status-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>

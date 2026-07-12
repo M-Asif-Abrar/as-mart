@@ -41,8 +41,8 @@ namespace AsMart.Web.Data
         public DbSet<MarketingCaptionVariation> MarketingCaptionVariations => Set<MarketingCaptionVariation>();
         public DbSet<MarketingPostingQueue> MarketingPostingQueue => Set<MarketingPostingQueue>();
         public DbSet<MarketingPostingLog> MarketingPostingLogs => Set<MarketingPostingLog>();
-        public DbSet<ApiClient> ApiClients { get; set; }
-        public DbSet<ApiUsageLog> ApiUsageLogs { get; set; }
+        public DbSet<ApiClient> ApiClients => Set<ApiClient>();
+        public DbSet<ApiUsageLog> ApiUsageLogs => Set<ApiUsageLog>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -530,14 +530,35 @@ namespace AsMart.Web.Data
                 b.Property(x => x.Website)
                     .HasMaxLength(300);
 
+                b.Property(x => x.UserId)
+                    .HasMaxLength(450);
+
+                b.Property(x => x.IsActive)
+                    .IsRequired();
+
                 b.Property(x => x.RateLimitPerMinute)
+                    .IsRequired();
+
+                b.Property(x => x.MonthlyQuota)
                     .IsRequired();
 
                 b.Property(x => x.CreatedAt)
                     .IsRequired();
 
+                b.Property(x => x.LastUsedAt);
+                b.Property(x => x.ExpiresAt);
+                b.Property(x => x.RevokedAt);
+                b.Property(x => x.LastRotatedAt);
+
+                b.Property(x => x.Notes)
+                    .HasMaxLength(1000);
+
                 b.HasIndex(x => x.ApiKey)
                     .IsUnique();
+
+                b.HasIndex(x => x.UserId);
+                b.HasIndex(x => x.ExpiresAt);
+                b.HasIndex(x => x.RevokedAt);
 
                 b.HasOne(x => x.User)
                     .WithMany(x => x.ApiClients)
@@ -545,41 +566,45 @@ namespace AsMart.Web.Data
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
-            builder.Entity<ApiUsageLog>(entity =>
+            builder.Entity<ApiUsageLog>(b =>
             {
-                entity.HasKey(x => x.Id);
+                b.ToTable("ApiUsageLogs");
 
-                entity.HasIndex(x => x.ApiClientId);
-                entity.HasIndex(x => x.UserId);
-                entity.HasIndex(x => x.Endpoint);
-                entity.HasIndex(x => x.StatusCode);
-                entity.HasIndex(x => x.CreatedAt);
+                b.HasKey(x => x.Id);
 
-                entity.HasOne(x => x.ApiClient)
-                    .WithMany()
-                    .HasForeignKey(x => x.ApiClientId)
-                    .OnDelete(DeleteBehavior.SetNull);
-            });
+                b.Property(x => x.UserId)
+                    .HasMaxLength(128);
 
-            builder.Entity<ApiUsageLog>(entity =>
-            {
-                entity.ToTable("ApiUsageLogs");
+                b.Property(x => x.HttpMethod)
+                    .IsRequired()
+                    .HasMaxLength(20);
 
-                entity.HasKey(x => x.Id);
+                b.Property(x => x.Endpoint)
+                    .IsRequired()
+                    .HasMaxLength(500);
 
-                entity.HasIndex(x => x.ApiClientId);
-                entity.HasIndex(x => x.UserId);
-                entity.HasIndex(x => x.Endpoint);
-                entity.HasIndex(x => x.StatusCode);
-                entity.HasIndex(x => x.CreatedAt);
+                b.Property(x => x.QueryString)
+                    .HasMaxLength(500);
 
-                entity.HasIndex(x => new
+                b.Property(x => x.IpAddress)
+                    .HasMaxLength(100);
+
+                b.Property(x => x.UserAgent)
+                    .HasMaxLength(500);
+
+                b.HasIndex(x => x.ApiClientId);
+                b.HasIndex(x => x.UserId);
+                b.HasIndex(x => x.Endpoint);
+                b.HasIndex(x => x.StatusCode);
+                b.HasIndex(x => x.CreatedAt);
+
+                b.HasIndex(x => new
                 {
                     x.ApiClientId,
                     x.CreatedAt
                 });
 
-                entity.HasOne(x => x.ApiClient)
+                b.HasOne(x => x.ApiClient)
                     .WithMany()
                     .HasForeignKey(x => x.ApiClientId)
                     .OnDelete(DeleteBehavior.SetNull);

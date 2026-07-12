@@ -1,9 +1,11 @@
 ﻿using AsMart.Web.Data;
+using AsMart.Web.Models.Api;
 using AsMart.Web.Models.DTOs;
 using AsMart.Web.Models.Entities;
+using AsMart.Web.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 
 namespace AsMart.Web.Controllers.Api
 {
@@ -11,7 +13,12 @@ namespace AsMart.Web.Controllers.Api
     [Route("api/products")]
     [Produces("application/json")]
     [EnableRateLimiting("public-api")]
-    public class ProductsApiController : ControllerBase
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+    public sealed class ProductsApiController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
 
@@ -21,7 +28,10 @@ namespace AsMart.Web.Controllers.Api
         }
 
         [HttpGet("featured")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> Featured([FromQuery] int count = 12)
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Featured(
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
 
@@ -31,26 +41,38 @@ namespace AsMart.Web.Controllers.Api
                 .ThenByDescending(p => p.Rating ?? 0)
                 .ThenByDescending(p => p.CreatedAt)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Featured products retrieved successfully.");
         }
 
         [HttpGet("latest")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> Latest([FromQuery] int count = 12)
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Latest(
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
 
             var products = await BaseProductQuery()
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Latest products retrieved successfully.");
         }
 
         [HttpGet("popular")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> Popular([FromQuery] int count = 12)
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Popular(
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
 
@@ -59,13 +81,19 @@ namespace AsMart.Web.Controllers.Api
                 .ThenByDescending(p => p.Rating ?? 0)
                 .ThenByDescending(p => p.RatingCount ?? 0)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Popular products retrieved successfully.");
         }
 
         [HttpGet("deals")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> Deals([FromQuery] int count = 12)
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Deals(
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
 
@@ -73,13 +101,19 @@ namespace AsMart.Web.Controllers.Api
                 .Where(p => p.IsDealOfTheDay)
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Deal products retrieved successfully.");
         }
 
         [HttpGet("top-rated")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> TopRated([FromQuery] int count = 12)
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> TopRated(
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
 
@@ -89,33 +123,53 @@ namespace AsMart.Web.Controllers.Api
                 .ThenByDescending(p => p.RatingCount ?? 0)
                 .ThenByDescending(p => p.ClickCount)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Top-rated products retrieved successfully.");
         }
 
         [HttpGet("random")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> Random([FromQuery] int count = 6)
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Random(
+            [FromQuery] int count = 6,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
 
             var products = await BaseProductQuery()
-                .OrderBy(p => Guid.NewGuid())
+                .OrderBy(_ => Guid.NewGuid())
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Random products retrieved successfully.");
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> Search(
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Search(
             [FromQuery] string? q,
-            [FromQuery] int count = 12)
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
 
             if (string.IsNullOrWhiteSpace(q))
-                return BadRequest("Search keyword is required.");
+            {
+                return BadRequest(ApiResponseFactory.Error(
+                    ApiErrorCodes.ValidationFailed,
+                    "A search keyword is required.",
+                    HttpContext.TraceIdentifier,
+                    new Dictionary<string, string[]>
+                    {
+                        ["q"] = ["The q query parameter is required."]
+                    }));
+            }
 
             q = q.Trim();
 
@@ -128,35 +182,62 @@ namespace AsMart.Web.Controllers.Api
                 .ThenByDescending(p => p.ClickCount)
                 .ThenByDescending(p => p.Rating ?? 0)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Product search completed successfully.",
+                new { query = q });
         }
 
         [HttpGet("category/{categorySlug}")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> ByCategory(
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> ByCategory(
             string categorySlug,
-            [FromQuery] int count = 12)
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
+            categorySlug = categorySlug.Trim();
+
+            var categoryExists = await _db.Categories
+                .AsNoTracking()
+                .AnyAsync(c => c.Slug == categorySlug, cancellationToken);
+
+            if (!categoryExists)
+            {
+                return NotFound(ApiResponseFactory.Error(
+                    ApiErrorCodes.CategoryNotFound,
+                    $"No category was found for slug '{categorySlug}'.",
+                    HttpContext.TraceIdentifier));
+            }
 
             var products = await BaseProductQuery()
-                .Where(p => p.ProductCategories.Any(pc => pc.Category.Slug == categorySlug))
+                .Where(p => p.ProductCategories.Any(
+                    pc => pc.Category.Slug == categorySlug))
                 .OrderByDescending(p => p.IsFeatured)
                 .ThenByDescending(p => p.Rating ?? 0)
                 .ThenByDescending(p => p.CreatedAt)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Category products retrieved successfully.",
+                new { categorySlug });
         }
 
         [HttpGet("brand/{brand}")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> ByBrand(
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> ByBrand(
             string brand,
-            [FromQuery] int count = 12)
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
+            brand = brand.Trim();
 
             var products = await BaseProductQuery()
                 .Where(p => p.Brand != null && p.Brand == brand)
@@ -164,95 +245,192 @@ namespace AsMart.Web.Controllers.Api
                 .ThenByDescending(p => p.Rating ?? 0)
                 .ThenByDescending(p => p.CreatedAt)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Brand products retrieved successfully.",
+                new { brand });
         }
 
         [HttpGet("price-range")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> PriceRange(
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> PriceRange(
             [FromQuery] decimal? min,
             [FromQuery] decimal? max,
-            [FromQuery] int count = 12)
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
 
-            if (min == null && max == null)
-                return BadRequest("Minimum or maximum price is required.");
+            if (!min.HasValue && !max.HasValue)
+            {
+                return BadRequest(ApiResponseFactory.Error(
+                    ApiErrorCodes.ValidationFailed,
+                    "At least one price boundary is required.",
+                    HttpContext.TraceIdentifier,
+                    new Dictionary<string, string[]>
+                    {
+                        ["priceRange"] = ["Provide min, max, or both."]
+                    }));
+            }
+
+            if (min.HasValue && min.Value < 0)
+            {
+                return BadRequest(ApiResponseFactory.Error(
+                    ApiErrorCodes.ValidationFailed,
+                    "The minimum price cannot be negative.",
+                    HttpContext.TraceIdentifier,
+                    new Dictionary<string, string[]>
+                    {
+                        ["min"] = ["The minimum price must be zero or greater."]
+                    }));
+            }
+
+            if (max.HasValue && max.Value < 0)
+            {
+                return BadRequest(ApiResponseFactory.Error(
+                    ApiErrorCodes.ValidationFailed,
+                    "The maximum price cannot be negative.",
+                    HttpContext.TraceIdentifier,
+                    new Dictionary<string, string[]>
+                    {
+                        ["max"] = ["The maximum price must be zero or greater."]
+                    }));
+            }
+
+            if (min.HasValue && max.HasValue && min.Value > max.Value)
+            {
+                return BadRequest(ApiResponseFactory.Error(
+                    ApiErrorCodes.ValidationFailed,
+                    "The minimum price cannot exceed the maximum price.",
+                    HttpContext.TraceIdentifier,
+                    new Dictionary<string, string[]>
+                    {
+                        ["min"] = ["The minimum price must be less than or equal to the maximum price."]
+                    }));
+            }
 
             var query = BaseProductQuery();
 
-            if (min != null)
+            if (min.HasValue)
+            {
                 query = query.Where(p => p.Price >= min.Value);
+            }
 
-            if (max != null)
+            if (max.HasValue)
+            {
                 query = query.Where(p => p.Price <= max.Value);
+            }
 
             var products = await query
                 .OrderBy(p => p.Price)
                 .ThenByDescending(p => p.Rating ?? 0)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Products in the requested price range were retrieved successfully.",
+                new { min, max });
         }
 
         [HttpGet("related/{slug}")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> Related(
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Related(
             string slug,
-            [FromQuery] int count = 12)
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
+            slug = slug.Trim();
 
             var product = await _db.Products
                 .AsNoTracking()
                 .Include(p => p.ProductCategories)
-                .FirstOrDefaultAsync(p => p.Slug == slug && p.IsActive);
+                .FirstOrDefaultAsync(
+                    p => p.Slug == slug && p.IsActive,
+                    cancellationToken);
 
-            if (product == null)
-                return NotFound();
+            if (product is null)
+            {
+                return NotFound(ApiResponseFactory.Error(
+                    ApiErrorCodes.ProductNotFound,
+                    $"No active product was found for slug '{slug}'.",
+                    HttpContext.TraceIdentifier));
+            }
 
             var categoryIds = product.ProductCategories
                 .Select(pc => pc.CategoryId)
                 .Distinct()
                 .ToList();
 
-            if (!categoryIds.Any())
-                return Ok(new List<PublicProductApiDto>());
+            if (categoryIds.Count == 0)
+            {
+                return Ok(ApiResponseFactory.Success(
+                    new List<PublicProductApiDto>(),
+                    "No related products were found.",
+                    new
+                    {
+                        requestedCount = count,
+                        returnedCount = 0,
+                        sourceProductSlug = slug
+                    }));
+            }
 
             var relatedProducts = await BaseProductQuery()
                 .Where(p =>
                     p.Id != product.Id &&
-                    p.ProductCategories.Any(pc => categoryIds.Contains(pc.CategoryId)))
-                .OrderByDescending(p => p.ProductCategories.Count(pc => categoryIds.Contains(pc.CategoryId)))
+                    p.ProductCategories.Any(
+                        pc => categoryIds.Contains(pc.CategoryId)))
+                .OrderByDescending(p =>
+                    p.ProductCategories.Count(
+                        pc => categoryIds.Contains(pc.CategoryId)))
                 .ThenByDescending(p => p.Rating ?? 0)
                 .ThenByDescending(p => p.RatingCount ?? 0)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(relatedProducts.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                relatedProducts,
+                count,
+                "Related products retrieved successfully.",
+                new { sourceProductSlug = slug });
         }
 
         [HttpGet("collection/{collectionSlug}")]
-        public async Task<ActionResult<List<PublicProductApiDto>>> ByCollection(
+        [ProducesResponseType(typeof(ApiResponse<List<PublicProductApiDto>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> ByCollection(
             string collectionSlug,
-            [FromQuery] int count = 12)
+            [FromQuery] int count = 12,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
+            collectionSlug = collectionSlug.Trim();
 
             var products = await BaseProductQuery()
-                .Where(p => p.CollectionProducts.Any(cp => cp.Collection.Slug == collectionSlug))
+                .Where(p => p.CollectionProducts.Any(
+                    cp => cp.Collection.Slug == collectionSlug))
                 .OrderByDescending(p => p.IsFeatured)
                 .ThenByDescending(p => p.Rating ?? 0)
                 .ThenByDescending(p => p.CreatedAt)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(products.Select(ToPublicDto).ToList());
+            return ProductsListResponse(
+                products,
+                count,
+                "Collection products retrieved successfully.",
+                new { collectionSlug });
         }
 
         [HttpGet("home-widget")]
-        public async Task<ActionResult<ProductHomeWidgetApiDto>> HomeWidget([FromQuery] int count = 8)
+        [ProducesResponseType(typeof(ApiResponse<ProductHomeWidgetApiDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> HomeWidget(
+            [FromQuery] int count = 8,
+            CancellationToken cancellationToken = default)
         {
             count = NormalizeCount(count);
 
@@ -261,56 +439,79 @@ namespace AsMart.Web.Controllers.Api
                 .OrderByDescending(p => p.ClickCount)
                 .ThenByDescending(p => p.Rating ?? 0)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             var deals = await BaseProductQuery()
                 .Where(p => p.IsDealOfTheDay)
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             var popular = await BaseProductQuery()
                 .OrderByDescending(p => p.ClickCount)
                 .ThenByDescending(p => p.Rating ?? 0)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             var latest = await BaseProductQuery()
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return Ok(new ProductHomeWidgetApiDto
+            var data = new ProductHomeWidgetApiDto
             {
                 Featured = featured.Select(ToPublicDto).ToList(),
                 Deals = deals.Select(ToPublicDto).ToList(),
                 Popular = popular.Select(ToPublicDto).ToList(),
                 Latest = latest.Select(ToPublicDto).ToList()
-            });
+            };
+
+            return Ok(ApiResponseFactory.Success(
+                data,
+                "Product home-widget data retrieved successfully.",
+                new { requestedCountPerSection = count }));
         }
 
         [HttpGet("promote/{slug}")]
-        public async Task<ActionResult<PublicProductApiDto>> Promote(string slug)
+        [ProducesResponseType(typeof(ApiResponse<PublicProductApiDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Promote(
+            string slug,
+            CancellationToken cancellationToken = default)
         {
+            slug = slug.Trim();
+
             var product = await BaseProductQuery()
-                .FirstOrDefaultAsync(p => p.Slug == slug);
+                .FirstOrDefaultAsync(p => p.Slug == slug, cancellationToken);
 
-            if (product == null)
-                return NotFound();
+            if (product is null)
+            {
+                return ProductNotFound(slug);
+            }
 
-            return Ok(ToPublicDto(product));
+            return Ok(ApiResponseFactory.Success(
+                ToPublicDto(product),
+                "Product promotion data retrieved successfully."));
         }
 
         [HttpGet("{slug}")]
-        public async Task<ActionResult<PublicProductApiDto>> BySlug(string slug)
+        [ProducesResponseType(typeof(ApiResponse<PublicProductApiDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> BySlug(
+            string slug,
+            CancellationToken cancellationToken = default)
         {
+            slug = slug.Trim();
+
             var product = await BaseProductQuery()
-                .FirstOrDefaultAsync(p => p.Slug == slug);
+                .FirstOrDefaultAsync(p => p.Slug == slug, cancellationToken);
 
-            if (product == null)
-                return NotFound();
+            if (product is null)
+            {
+                return ProductNotFound(slug);
+            }
 
-            return Ok(ToPublicDto(product));
+            return Ok(ApiResponseFactory.Success(
+                ToPublicDto(product),
+                "Product retrieved successfully."));
         }
 
         private IQueryable<Product> BaseProductQuery()
@@ -324,21 +525,49 @@ namespace AsMart.Web.Controllers.Api
                 .Where(p => p.IsActive);
         }
 
+        private IActionResult ProductsListResponse(
+            IEnumerable<Product> products,
+            int requestedCount,
+            string message,
+            object? additionalMeta = null)
+        {
+            var data = products
+                .Select(ToPublicDto)
+                .ToList();
+
+            var meta = new
+            {
+                requestedCount,
+                returnedCount = data.Count,
+                context = additionalMeta
+            };
+
+            return Ok(ApiResponseFactory.Success(data, message, meta));
+        }
+
+        private IActionResult ProductNotFound(string slug)
+        {
+            return NotFound(ApiResponseFactory.Error(
+                ApiErrorCodes.ProductNotFound,
+                $"No active product was found for slug '{slug}'.",
+                HttpContext.TraceIdentifier));
+        }
+
         private PublicProductApiDto ToPublicDto(Product product)
         {
             var productUrl = Url.Action(
                 action: "Details",
                 controller: "Product",
                 values: new { slug = product.Slug },
-                protocol: Request.Scheme
-            ) ?? $"/product/{product.Slug}";
+                protocol: Request.Scheme)
+                ?? $"/product/{product.Slug}";
 
             var buyUrl = Url.Action(
                 action: "Go",
                 controller: "Product",
                 values: new { id = product.Id },
-                protocol: Request.Scheme
-            ) ?? $"/product/go/{product.Id}";
+                protocol: Request.Scheme)
+                ?? $"/product/go/{product.Id}";
 
             return new PublicProductApiDto
             {
@@ -370,12 +599,11 @@ namespace AsMart.Web.Controllers.Api
         private static int NormalizeCount(int count)
         {
             if (count <= 0)
+            {
                 return 12;
+            }
 
-            if (count > 50)
-                return 50;
-
-            return count;
+            return Math.Min(count, 50);
         }
     }
 }

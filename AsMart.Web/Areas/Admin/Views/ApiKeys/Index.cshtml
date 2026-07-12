@@ -2,223 +2,766 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "API Key Administration";
+
+    var mask = ViewBag.MaskApiKey as Func<string, string>;
+    var totalKeys = Model.Count;
+    var usableKeys = Model.Count(x => x.IsUsable);
+    var expiredKeys = Model.Count(x => x.IsExpired);
+    var revokedKeys = Model.Count(x => x.IsRevoked);
 }
 
-<div class="container-fluid py-4">
+@section Styles {
+    <style>
+        .api-admin-page {
+            min-height: 100vh;
+            padding: 1.5rem 0 3rem;
+            background: radial-gradient(circle at top left, rgba(79,70,229,.10), transparent 32%), radial-gradient(circle at top right, rgba(14,165,233,.08), transparent 28%), linear-gradient(180deg,#f8fafc 0%,#eef2ff 100%);
+        }
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">API Keys</h2>
-            <p class="text-muted mb-0">
-                Manage API keys, users, status, rate limits and monthly quotas.
-            </p>
-        </div>
-    </div>
+        .api-admin-shell {
+            width: min(100%, 1680px);
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">
-            @TempData["Success"]
-        </div>
-    }
+        .api-admin-hero,
+        .api-search-panel,
+        .api-client-card {
+            border: 1px solid rgba(148,163,184,.22);
+            background: rgba(255,255,255,.96);
+            box-shadow: 0 18px 45px rgba(15,23,42,.07);
+        }
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">
-            @TempData["Error"]
-        </div>
-    }
+        .api-admin-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding: 1.7rem;
+            border-radius: 28px;
+        }
 
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-10">
-                    <input name="q"
-                           value="@ViewBag.Search"
-                           class="form-control"
-                           placeholder="Search by name, email, website or key..." />
-                </div>
+        .api-admin-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .45rem .75rem;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: .78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
 
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">
-                        Search
+        .api-admin-hero h1 {
+            margin: .65rem 0 .35rem;
+            color: #0f172a;
+            font-size: clamp(1.8rem,4vw,2.8rem);
+            font-weight: 900;
+            letter-spacing: -.03em;
+        }
+
+        .api-admin-hero p {
+            margin: 0;
+            max-width: 760px;
+            color: #64748b;
+        }
+
+        .api-admin-stats {
+            display: grid;
+            grid-template-columns: repeat(4,minmax(95px,1fr));
+            gap: .75rem;
+            min-width: min(100%,520px);
+        }
+
+        .api-admin-stat {
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            background: #f8fafc;
+            text-align: center;
+        }
+
+            .api-admin-stat span {
+                display: block;
+                color: #64748b;
+                font-size: .72rem;
+                font-weight: 800;
+                text-transform: uppercase;
+            }
+
+            .api-admin-stat strong {
+                display: block;
+                margin-top: .25rem;
+                color: #0f172a;
+                font-size: 1.5rem;
+                font-weight: 900;
+            }
+
+        .api-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+            border: 0;
+            border-radius: 18px;
+        }
+
+        .api-new-key {
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.1rem;
+            border: 1px solid #fde68a;
+            border-radius: 18px;
+            background: linear-gradient(135deg,#fffbeb,#fff7ed);
+        }
+
+        .api-new-key__row {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-top: .7rem;
+        }
+
+        .api-new-key code {
+            flex: 1;
+            padding: .7rem .85rem;
+            overflow-wrap: anywhere;
+            border-radius: 12px;
+            background: #fff;
+            color: #9a3412;
+        }
+
+        .api-search-panel {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border-radius: 22px;
+        }
+
+        .api-search-form {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) auto;
+            gap: .75rem;
+        }
+
+            .api-search-form .form-control {
+                min-height: 48px;
+                border-radius: 14px;
+                border-color: #dbe3ef;
+                box-shadow: none;
+            }
+
+        .api-search-btn {
+            min-width: 130px;
+            border: 0;
+            border-radius: 14px;
+            background: linear-gradient(135deg,#4f46e5,#7c3aed);
+            color: #fff;
+            font-weight: 800;
+        }
+
+            .api-search-btn:hover,
+            .api-search-btn:focus {
+                color: #fff;
+                background: linear-gradient(135deg,#4338ca,#6d28d9);
+            }
+
+        .api-client-card {
+            margin-bottom: 1.25rem;
+            overflow: hidden;
+            border-radius: 24px;
+        }
+
+        .api-client-card__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.35rem;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .api-client-title {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            flex-wrap: wrap;
+        }
+
+            .api-client-title h2 {
+                margin: 0;
+                color: #0f172a;
+                font-size: 1.35rem;
+                font-weight: 900;
+            }
+
+        .api-client-subtitle {
+            margin-top: .3rem;
+            color: #64748b;
+            font-size: .88rem;
+        }
+
+        .api-key-mask {
+            display: inline-block;
+            max-width: 100%;
+            margin-top: .7rem;
+            padding: .45rem .65rem;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #f1f5f9;
+            color: #c026d3;
+            font-size: .8rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .45rem .72rem;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+            .api-status::before {
+                content: "";
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+
+        .api-status--active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .api-status--expired {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .api-status--revoked {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .api-status--disabled {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .api-header-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: .5rem;
+            flex-wrap: wrap;
+        }
+
+            .api-header-actions form {
+                margin: 0;
+            }
+
+        .api-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            min-height: 38px;
+            padding: .5rem .8rem;
+            border-radius: 11px;
+            font-size: .8rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .api-client-card__body {
+            padding: 1.35rem;
+        }
+
+        .api-info-grid {
+            display: grid;
+            grid-template-columns: repeat(4,minmax(0,1fr));
+            gap: .85rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .api-info-box {
+            min-width: 0;
+            padding: 1rem;
+            border: 1px solid #e8edf4;
+            border-radius: 16px;
+            background: #f8fafc;
+        }
+
+        .api-info-label {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            margin-bottom: .35rem;
+            color: #64748b;
+            font-size: .76rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .api-info-value {
+            color: #0f172a;
+            font-size: .9rem;
+            font-weight: 800;
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+        }
+
+            .api-info-value a {
+                color: #2563eb;
+                text-decoration: none;
+            }
+
+        .api-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.35fr .72fr;
+            gap: .85rem;
+            align-items: stretch;
+        }
+
+        .api-setting-card {
+            height: 100%;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            background: #fff;
+        }
+
+        .api-setting-title {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: .8rem;
+            color: #0f172a;
+            font-size: .95rem;
+            font-weight: 900;
+        }
+
+        .api-setting-card .form-label {
+            color: #475569;
+            font-size: .79rem;
+            font-weight: 800;
+        }
+
+        .api-setting-card .form-control {
+            min-height: 44px;
+            border-radius: 12px;
+            border-color: #dbe3ef;
+            box-shadow: none;
+        }
+
+        .api-setting-card textarea.form-control {
+            min-height: 94px;
+            resize: vertical;
+        }
+
+        .api-setting-card .form-control:focus {
+            border-color: #818cf8;
+            box-shadow: 0 0 0 .2rem rgba(99,102,241,.12);
+        }
+
+        .api-save-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            min-height: 38px;
+            border: 0;
+            border-radius: 11px;
+            background: linear-gradient(135deg,#2563eb,#4f46e5);
+            color: #fff;
+            font-size: .8rem;
+            font-weight: 800;
+        }
+
+            .api-save-btn:hover,
+            .api-save-btn:focus {
+                color: #fff;
+                background: linear-gradient(135deg,#1d4ed8,#4338ca);
+            }
+
+        .api-helper {
+            margin-top: .55rem;
+            color: #64748b;
+            font-size: .76rem;
+        }
+
+        .api-status-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .api-status-note {
+            margin-top: .8rem;
+            color: #64748b;
+            font-size: .8rem;
+            line-height: 1.55;
+        }
+
+        .api-revoked-date {
+            margin-top: .75rem;
+            color: #b91c1c;
+            font-size: .78rem;
+            font-weight: 700;
+        }
+
+        .api-empty {
+            padding: 3rem 1rem;
+            border: 1px dashed #cbd5e1;
+            border-radius: 22px;
+            background: rgba(255,255,255,.85);
+            text-align: center;
+            color: #64748b;
+        }
+
+        @@media (max-width: 1399.98px) {
+            .api-form-grid,
+            .api-info-grid {
+                grid-template-columns: repeat(2,minmax(0,1fr));
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .api-admin-hero {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .api-admin-stats {
+                min-width: 0;
+                width: 100%;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .api-admin-shell {
+                padding: 0 .75rem;
+            }
+
+            .api-admin-hero {
+                padding: 1.2rem;
+                border-radius: 22px;
+            }
+
+            .api-admin-stats {
+                grid-template-columns: repeat(2,minmax(0,1fr));
+            }
+
+            .api-search-form {
+                grid-template-columns: 1fr;
+            }
+
+            .api-search-btn {
+                width: 100%;
+            }
+
+            .api-client-card__header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .api-header-actions {
+                justify-content: flex-start;
+            }
+
+            .api-info-grid,
+            .api-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .api-header-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+                .api-header-actions .btn,
+                .api-header-actions form,
+                .api-header-actions button {
+                    width: 100%;
+                }
+
+            .api-client-card__body {
+                padding: 1rem;
+            }
+
+            .api-new-key__row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+}
+
+<div class="api-admin-page">
+    <div class="api-admin-shell">
+        <section class="api-admin-hero">
+            <div>
+                <span class="api-admin-eyebrow">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    API Administration
+                </span>
+                <h1>API Key Administration</h1>
+                <p>Manage clients, access state, rate limits, quotas, expiration, rotation and revocation from one secure dashboard.</p>
+            </div>
+
+            <div class="api-admin-stats">
+                <div class="api-admin-stat"><span>Total</span><strong>@totalKeys</strong></div>
+                <div class="api-admin-stat"><span>Usable</span><strong>@usableKeys</strong></div>
+                <div class="api-admin-stat"><span>Expired</span><strong>@expiredKeys</strong></div>
+                <div class="api-admin-stat"><span>Revoked</span><strong>@revokedKeys</strong></div>
+            </div>
+        </section>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success api-alert" role="alert">
+                <i class="fa-solid fa-circle-check mt-1"></i>
+                <span>@TempData["Success"]</span>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger api-alert" role="alert">
+                <i class="fa-solid fa-circle-exclamation mt-1"></i>
+                <span>@TempData["Error"]</span>
+            </div>
+        }
+
+        @if (TempData["NewApiKey"] != null)
+        {
+            <div class="api-new-key">
+                <strong><i class="fa-solid fa-key me-2"></i>New API key generated</strong>
+                <div class="api-helper">Copy and store it securely. The previous credential is no longer valid.</div>
+                <div class="api-new-key__row">
+                    <code id="adminNewApiKey">@TempData["NewApiKey"]</code>
+                    <button type="button" class="btn btn-dark" onclick="copyAdminApiKey(this)">
+                        <i class="fa-regular fa-copy me-1"></i>Copy
                     </button>
                 </div>
+            </div>
+        }
+
+        <section class="api-search-panel">
+            <form method="get" class="api-search-form">
+                <input name="q" value="@ViewBag.Search" class="form-control" autocomplete="off" placeholder="Search by name, email, website, notes or API key..." />
+                <button type="submit" class="btn api-search-btn">
+                    <i class="fa-solid fa-magnifying-glass me-1"></i>Search
+                </button>
             </form>
-        </div>
-    </div>
+        </section>
 
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body">
+        @if (Model.Any())
+        {
+            @foreach (var key in Model)
+            {
+                var statusClass = key.LifecycleStatus switch
+                {
+                    "Active" => "api-status--active",
+                    "Expired" => "api-status--expired",
+                    "Revoked" => "api-status--revoked",
+                    _ => "api-status--disabled"
+                };
 
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead>
-                        <tr>
-                            <th>Client</th>
-                            <th>User</th>
-                            <th>Website</th>
-                            <th>Rate Limit</th>
-                            <th>Monthly Quota</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Last Used</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
+                <article class="api-client-card">
+                    <header class="api-client-card__header">
+                        <div>
+                            <div class="api-client-title">
+                                <h2>@key.Name</h2>
+                                <span class="api-status @statusClass">@key.LifecycleStatus</span>
+                            </div>
 
-                    <tbody>
-                        @foreach (var key in Model)
-                        {
-                            <tr>
-                                <td>
-                                    <strong>@key.Name</strong>
-                                    <div class="small text-muted">
-                                        ID: @key.Id
-                                    </div>
-                                </td>
+                            <div class="api-client-subtitle">
+                                Client ID: @key.Id <span class="mx-1">•</span> @(key.User?.Email ?? "System / External")
+                            </div>
 
-                                <td>
-                                    <span style="font-size:0.85rem; color:#6c757d;">
-                                        @(key.User?.Email ?? "System / External")
-                                    </span>
-                                </td>
+                            <code class="api-key-mask">@(mask?.Invoke(key.ApiKey) ?? "********")</code>
+                        </div>
 
-                                <td>
+                        <div class="api-header-actions">
+                            <form asp-action="Rotate" asp-route-id="@key.Id" method="post" onsubmit="return confirm('Rotate this API key? The current key will stop working immediately.');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="expirationDays" value="365" />
+                                <button type="submit" class="btn btn-outline-primary api-action-btn">
+                                    <i class="fa-solid fa-rotate"></i>Rotate
+                                </button>
+                            </form>
+
+                            @if (!key.IsRevoked)
+                            {
+                                <form asp-action="Revoke" asp-route-id="@key.Id" method="post" onsubmit="return confirm('Permanently revoke this API key?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger api-action-btn">
+                                        <i class="fa-solid fa-ban"></i>Revoke
+                                    </button>
+                                </form>
+                            }
+
+                            <a asp-action="Delete" asp-route-id="@key.Id" class="btn btn-outline-danger api-action-btn">
+                                <i class="fa-solid fa-trash"></i>Delete
+                            </a>
+                        </div>
+                    </header>
+
+                    <div class="api-client-card__body">
+                        <div class="api-info-grid">
+                            <div class="api-info-box">
+                                <div class="api-info-label"><i class="fa-solid fa-globe"></i>Website</div>
+                                <div class="api-info-value">
                                     @if (!string.IsNullOrWhiteSpace(key.Website))
                                     {
-                                        <a href="@key.Website"
-                                           target="_blank"
-                                           rel="noopener noreferrer">
-                                            @key.Website
+                                        <a href="@key.Website" target="_blank" rel="noopener noreferrer">
+                                            @key.Website <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i>
                                         </a>
                                     }
                                     else
                                     {
-                                        <span class="text-muted">Not specified</span>
+                                        <span>Not specified</span>
                                     }
-                                </td>
+                            </div>
+                        </div>
 
-                                <td style="min-width: 210px;">
-                                    <form asp-action="UpdateRateLimit"
-                                          method="post"
-                                          class="d-flex gap-2 align-items-center">
-                                        @Html.AntiForgeryToken()
+                        <div class="api-info-box">
+                            <div class="api-info-label"><i class="fa-regular fa-calendar-plus"></i>Created</div>
+                            <div class="api-info-value">
+                                @(key.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt"))
+                            </div>
+                        </div>
 
-                                        <input type="hidden"
-                                               name="id"
-                                               value="@key.Id" />
+                        <div class="api-info-box">
+                            <div class="api-info-label"><i class="fa-regular fa-clock"></i>Last Used</div>
+                            <div class="api-info-value">
+                                @(key.LastUsedAt.HasValue
+                                                            ? key.LastUsedAt.Value.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
+                                                            : "Never")
+                                                                  </div>
+                                                              </div>
 
-                                        <input type="number"
-                                               name="rateLimitPerMinute"
-                                               value="@key.RateLimitPerMinute"
-                                               min="1"
-                                               max="10000"
-                                               class="form-control form-control-sm"
-                                               style="max-width: 110px;" />
+                        <div class="api-info-box">
+                            <div class="api-info-label"><i class="fa-solid fa-rotate"></i>Last Rotated</div>
+                            <div class="api-info-value">
+                                @(key.LastRotatedAt.HasValue
+                                                            ? key.LastRotatedAt.Value.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
+                                                            : "Never")
+                        </div>
+                    </div>
+                </div>
 
-                                        <button type="submit"
-                                                class="btn btn-sm btn-primary">
-                                            Save
-                                        </button>
-                                    </form>
+                        <div class="api-form-grid">
+                            <form asp-action="UpdateRateLimit" method="post" class="api-setting-card">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@key.Id" />
+                                <div class="api-setting-title"><i class="fa-solid fa-gauge-high text-primary"></i>Rate Limit</div>
+                                <label class="form-label">Requests per minute</label>
+                                <input type="number" name="rateLimitPerMinute" value="@key.RateLimitPerMinute" min="1" max="10000" class="form-control mb-3" />
+                                <button type="submit" class="btn api-save-btn"><i class="fa-solid fa-floppy-disk"></i>Save Rate Limit</button>
+                            </form>
 
-                                    <div class="small text-muted mt-1">
-                                        Requests per minute
-                                    </div>
-                                </td>
+                            <form asp-action="UpdateMonthlyQuota" method="post" class="api-setting-card">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@key.Id" />
+                                <div class="api-setting-title"><i class="fa-solid fa-chart-column text-primary"></i>Monthly Quota</div>
+                                <label class="form-label">Requests per month</label>
+                                <input type="number" name="monthlyQuota" value="@key.MonthlyQuota" min="0" max="10000000" class="form-control mb-3" />
+                                <button type="submit" class="btn api-save-btn"><i class="fa-solid fa-floppy-disk"></i>Save Quota</button>
+                                <div class="api-helper">Use 0 for unlimited monthly requests.</div>
+                            </form>
 
-                                <td style="min-width: 230px;">
-                                    <form asp-action="UpdateMonthlyQuota"
-                                          method="post"
-                                          class="d-flex gap-2 align-items-center">
-                                        @Html.AntiForgeryToken()
+                            <form asp-action="UpdateLifecycle" method="post" class="api-setting-card">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@key.Id" />
+                                <div class="api-setting-title"><i class="fa-solid fa-calendar-days text-primary"></i>Lifecycle</div>
+                                <label class="form-label">Expiration date</label>
+                                <input type="date" name="expiresOn" required value="@(key.ExpiresAt?.ToString("yyyy-MM-dd"))" class="form-control mb-3" />
+                                <label class="form-label">Internal notes</label>
+                                <textarea name="notes" maxlength="1000" rows="3" class="form-control mb-3" placeholder="Add internal notes...">@key.Notes</textarea>
+                                <button type="submit" class="btn api-save-btn"><i class="fa-solid fa-floppy-disk"></i>Save Lifecycle</button>
+                            </form>
 
-                                        <input type="hidden"
-                                               name="id"
-                                               value="@key.Id" />
+                            <div class="api-setting-card api-status-panel">
+                                <div>
+                                    <div class="api-setting-title"><i class="fa-solid fa-power-off text-primary"></i>Access Status</div>
+                                    <span class="api-status @statusClass">@key.LifecycleStatus</span>
 
-                                        <input type="number"
-                                               name="monthlyQuota"
-                                               value="@key.MonthlyQuota"
-                                               min="0"
-                                               max="10000000"
-                                               class="form-control form-control-sm"
-                                               style="max-width: 130px;" />
-
-                                        <button type="submit"
-                                                class="btn btn-sm btn-outline-primary">
-                                            Save
-                                        </button>
-                                    </form>
-
-                                    <div class="small text-muted mt-1">
-                                        Use 0 for unlimited
-                                    </div>
-                                </td>
-
-                                <td>
-                                    @if (key.IsActive)
+                            @if (!key.IsRevoked && !key.IsExpired)
                                     {
-                                        <span class="badge bg-success">
-                                            Active
-                                        </span>
+                                        <div class="api-status-note">Temporarily enable or disable this key without revoking it.</div>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary">
-                                            Inactive
-                                        </span>
+                                        <div class="api-status-note">Rotate the key to generate a new credential and restore access.</div>
                                     }
-                            </td>
 
-                                <td>
-                                    <small style="font-size:0.82rem; color:#6c757d;">
-                                        @(key.CreatedAt.ToLocalTime().ToString("dd MMM yyyy hh:mm tt"))
-                                    </small>
-                                </td>
+                                    @if (key.RevokedAt.HasValue)
+                                    {
+                                        <div class="api-revoked-date">
+                                            Revoked: @(key.RevokedAt.Value.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt"))
+                                        </div>
+                                    }
+                                </div>
 
-                                <td>
-                                    <small style="font-size:0.82rem; color:#6c757d;">
-                                        @(key.LastUsedAt?.ToLocalTime().ToString("dd MMM yyyy hh:mm tt") ?? "Never")
-                                    </small>
-                                </td>
-
-                                <td class="text-end" style="min-width: 160px;">
-                                    <form asp-action="ToggleStatus"
-                                          asp-route-id="@key.Id"
-                                          method="post"
-                                          class="d-inline">
+                                @if (!key.IsRevoked && !key.IsExpired)
+                                {
+                                    <form asp-action="ToggleStatus" asp-route-id="@key.Id" method="post" class="mt-3">
                                         @Html.AntiForgeryToken()
-
-                                        <button type="submit"
-                                                class="btn btn-sm btn-outline-warning">
-                                            @(key.IsActive ? "Disable" : "Enable")
+                                        <button type="submit" class="btn @(key.IsActive ? "btn-outline-warning" : "btn-outline-success") api-action-btn w-100">
+                                            <i class="fa-solid @(key.IsActive ? "fa-pause" : "fa-play")"></i>
+                                            @(key.IsActive ? "Disable Key" : "Enable Key")
                                         </button>
                                     </form>
-
-                                    <a asp-action="Delete"
-                                       asp-route-id="@key.Id"
-                                       class="btn btn-sm btn-outline-danger">
-                                        Delete
-                                    </a>
-                                </td>
-                            </tr>
-                                                }
-
-                        @if (!Model.Any())
-                        {
-                            <tr>
-                                <td colspan="9"
-                                    class="text-center text-muted py-4">
-                                    No API keys found.
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            }
+        }
+        else
+        {
+            <div class="api-empty">
+                <i class="fa-solid fa-key fa-2x mb-3"></i>
+                <h3 class="fw-bold text-dark">No API keys found</h3>
+                <p class="mb-0">No API clients match the current search criteria.</p>
             </div>
-
-        </div>
+        }
     </div>
 </div>
+
+<script>
+    async function copyAdminApiKey(button) {
+        const element = document.getElementById("adminNewApiKey");
+
+        if (!element) {
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(element.innerText.trim());
+
+            const originalHtml = button.innerHTML;
+            button.innerHTML = '<i class="fa-solid fa-check me-1"></i>Copied';
+            button.disabled = true;
+
+            setTimeout(() => {
+                button.innerHTML = originalHtml;
+                button.disabled = false;
+            }, 1800);
+        } catch {
+            alert("Could not copy the API key. Please copy it manually.");
+        }
+    }
+</script>
