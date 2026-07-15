@@ -4,6 +4,7 @@ using AsMart.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AsMart.Web.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260713104012_AddApiKeyHashSecurityPhase1")]
+    partial class AddApiKeyHashSecurityPhase1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,13 +96,15 @@ namespace AsMart.Web.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApiKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("ApiKeyHash")
-                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("ApiKeyPrefix")
-                        .IsRequired()
                         .HasMaxLength(24)
                         .HasColumnType("nvarchar(24)");
 
@@ -137,7 +142,6 @@ namespace AsMart.Web.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
-                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Website")
@@ -146,8 +150,13 @@ namespace AsMart.Web.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ApiKey")
+                        .IsUnique()
+                        .HasFilter("[ApiKey] IS NOT NULL");
+
                     b.HasIndex("ApiKeyHash")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[ApiKeyHash] IS NOT NULL");
 
                     b.HasIndex("ApiKeyPrefix");
 
@@ -157,7 +166,7 @@ namespace AsMart.Web.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ApiClients", (string)null);
+                    b.ToTable("ApiClients");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.ApplicationUser", b =>
@@ -330,7 +339,7 @@ namespace AsMart.Web.Data.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("BlogPosts", (string)null);
+                    b.ToTable("BlogPosts");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.BlogPostCategory", b =>
@@ -345,7 +354,7 @@ namespace AsMart.Web.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("BlogPostCategories", (string)null);
+                    b.ToTable("BlogPostCategories");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.BlogPostRating", b =>
@@ -379,7 +388,7 @@ namespace AsMart.Web.Data.Migrations
                     b.HasIndex("BlogPostId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("BlogPostRatings", (string)null);
+                    b.ToTable("BlogPostRatings");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.BlogPostTag", b =>
@@ -394,7 +403,7 @@ namespace AsMart.Web.Data.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("BlogPostTags", (string)null);
+                    b.ToTable("BlogPostTags");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.Category", b =>
@@ -438,7 +447,7 @@ namespace AsMart.Web.Data.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.ClickLog", b =>
@@ -547,7 +556,7 @@ namespace AsMart.Web.Data.Migrations
 
                     b.HasIndex("SocialTargetId", "ClickType", "ClickedAt");
 
-                    b.ToTable("ClickLogs", (string)null);
+                    b.ToTable("ClickLogs");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.Collection", b =>
@@ -579,7 +588,7 @@ namespace AsMart.Web.Data.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Collections", (string)null);
+                    b.ToTable("Collections");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.CollectionProduct", b =>
@@ -594,7 +603,7 @@ namespace AsMart.Web.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("CollectionProducts", (string)null);
+                    b.ToTable("CollectionProducts");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.Marketing.MarketingCampaign", b =>
@@ -1060,7 +1069,7 @@ namespace AsMart.Web.Data.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.ProductCategory", b =>
@@ -1075,7 +1084,7 @@ namespace AsMart.Web.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("ProductCategories", (string)null);
+                    b.ToTable("ProductCategories");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.ProductTag", b =>
@@ -1090,7 +1099,7 @@ namespace AsMart.Web.Data.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("ProductTags", (string)null);
+                    b.ToTable("ProductTags");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.SeoPage", b =>
@@ -1225,7 +1234,7 @@ namespace AsMart.Web.Data.Migrations
                     b.HasIndex("Key")
                         .IsUnique();
 
-                    b.ToTable("Settings", (string)null);
+                    b.ToTable("Settings");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.Tag", b =>
@@ -1251,7 +1260,7 @@ namespace AsMart.Web.Data.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Tags", (string)null);
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("AsMart.Web.Models.Entities.UserProductStatus", b =>
@@ -1287,7 +1296,7 @@ namespace AsMart.Web.Data.Migrations
 
                     b.HasIndex("UserId", "ProductId", "State");
 
-                    b.ToTable("UserProductStatuses", (string)null);
+                    b.ToTable("UserProductStatuses");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

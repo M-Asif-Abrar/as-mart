@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using System.Reflection;
 using System.Threading.RateLimiting;
+using AsMart.Web.Models.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,7 +90,23 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<IFacebookPagePublisher, FacebookPagePublisher>();
 builder.Services.AddHostedService<MarketingQueueAutoPublisherWorker>();
 
-builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+builder.Services
+    .AddOptions<ApiKeySecurityOptions>()
+    .Bind(
+        builder.Configuration.GetSection(
+            ApiKeySecurityOptions.SectionName))
+    .ValidateDataAnnotations()
+    .Validate(
+        options =>
+            !string.IsNullOrWhiteSpace(
+                options.HashingPepper) &&
+            options.HashingPepper.Length >= 32,
+        "ApiKeySecurity:HashingPepper must contain at least 32 characters.")
+    .ValidateOnStart();
+
+builder.Services.AddScoped<IApiKeyService,ApiKeyService>();
+
+builder.Services.AddHostedService<ApiKeyLegacyBackfillHostedService>();
 
 builder.Services.AddCors(options =>
 {
@@ -240,6 +257,8 @@ builder.Services.AddSwaggerGen(options =>
     options.CustomSchemaIds(type =>
         type.FullName?.Replace("+", ".") ?? type.Name);
 });
+
+builder.Services.AddHostedService<ApiKeyLegacyBackfillHostedService>();
 
 builder.Services.AddRateLimiter(options =>
 {

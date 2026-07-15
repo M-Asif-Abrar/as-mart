@@ -4,7 +4,6 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "API Key Administration";
 
-    var mask = ViewBag.MaskApiKey as Func<string, string>;
     var totalKeys = Model.Count;
     var usableKeys = Model.Count(x => x.IsUsable);
     var expiredKeys = Model.Count(x => x.IsExpired);
@@ -542,20 +541,7 @@
             </div>
         }
 
-        @if (TempData["NewApiKey"] != null)
-        {
-            <div class="api-new-key">
-                <strong><i class="fa-solid fa-key me-2"></i>New API key generated</strong>
-                <div class="api-helper">Copy and store it securely. The previous credential is no longer valid.</div>
-                <div class="api-new-key__row">
-                    <code id="adminNewApiKey">@TempData["NewApiKey"]</code>
-                    <button type="button" class="btn btn-dark" onclick="copyAdminApiKey(this)">
-                        <i class="fa-regular fa-copy me-1"></i>Copy
-                    </button>
-                </div>
-            </div>
-        }
-
+        
         <section class="api-search-panel">
             <form method="get" class="api-search-form">
                 <input name="q" value="@ViewBag.Search" class="form-control" autocomplete="off" placeholder="Search by name, email, website, notes or API key..." />
@@ -589,7 +575,7 @@
                                 Client ID: @key.Id <span class="mx-1">•</span> @(key.User?.Email ?? "System / External")
                             </div>
 
-                            <code class="api-key-mask">@(mask?.Invoke(key.ApiKey) ?? "********")</code>
+                            <code class="api-key-mask">@key.MaskedApiKey</code>
                         </div>
 
                         <div class="api-header-actions">

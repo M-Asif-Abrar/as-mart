@@ -1,8 +1,11 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
 using AsMart.Web.Data;
 using AsMart.Web.Models.Api;
 using AsMart.Web.Models.Entities;
+using AsMart.Web.Models.Security;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace AsMart.Web.Services
 {
@@ -16,9 +19,11 @@ namespace AsMart.Web.Services
             string? apiKey,
             CancellationToken cancellationToken = default);
 
-        string GenerateApiKey();
+        ApiKeyMaterial GenerateApiKeyMaterial();
 
-        string MaskApiKey(string apiKey);
+        string ComputeHash(string rawApiKey);
+
+        string CreatePrefix(string rawApiKey);
 
         Task UpdateLastUsedAsync(
             int clientId,
@@ -27,11 +32,30 @@ namespace AsMart.Web.Services
 
     public sealed class ApiKeyService : IApiKeyService
     {
-        private readonly ApplicationDbContext _db;
+        private const int PrefixLength = 18;
+        private const int RequiredPepperLength = 32;
 
-        public ApiKeyService(ApplicationDbContext db)
+        private readonly ApplicationDbContext _db;
+        private readonly byte[] _pepperBytes;
+
+        public ApiKeyService(
+            ApplicationDbContext db,
+            IOptions<ApiKeySecurityOptions> options)
         {
             _db = db;
+
+            ArgumentNullException.ThrowIfNull(options);
+
+            var pepper = options.Value.HashingPepper?.Trim();
+
+            if (string.IsNullOrWhiteSpace(pepper) ||
+                pepper.Length < RequiredPepperLength)
+            {
+                throw new InvalidOperationException(
+                    $"ApiKeySecurity:HashingPepper must contain at least {RequiredPepperLength} characters.");
+            }
+
+            _pepperBytes = Encoding.UTF8.GetBytes(pepper);
         }
 
         public async Task<ApiKeyValidationResult> ValidateApiKeyAsync(
@@ -45,11 +69,17 @@ namespace AsMart.Web.Services
             }
 
             var normalizedApiKey = apiKey.Trim();
+            var apiKeyHash = ComputeHash(normalizedApiKey);
 
+            /*
+             * Phase 2:
+             * API keys are validated only through ApiKeyHash.
+             * No plaintext lookup or legacy backfill remains.
+             */
             var client = await _db.ApiClients
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
-                    x => x.ApiKey == normalizedApiKey,
+                    x => x.ApiKeyHash == apiKeyHash,
                     cancellationToken);
 
             if (client is null)
@@ -80,10 +110,6 @@ namespace AsMart.Web.Services
             return ApiKeyValidationResult.Valid(client);
         }
 
-        /*
-         * Kept temporarily for backward compatibility with any existing code.
-         * New middleware should use ValidateApiKeyAsync().
-         */
         public async Task<ApiClient?> GetClientAsync(
             string? apiKey,
             CancellationToken cancellationToken = default)
@@ -95,29 +121,58 @@ namespace AsMart.Web.Services
             return result.Client;
         }
 
-        public string GenerateApiKey()
+        public ApiKeyMaterial GenerateApiKeyMaterial()
         {
-            var bytes = RandomNumberGenerator.GetBytes(32);
+            /*
+             * Generates 256 bits of cryptographically secure random data.
+             */
+            var randomBytes =
+                RandomNumberGenerator.GetBytes(32);
 
             var encoded = Convert
-                .ToBase64String(bytes)
+                .ToBase64String(randomBytes)
                 .TrimEnd('=')
                 .Replace('+', '-')
                 .Replace('/', '_');
 
-            return $"asmart_{encoded}";
+            var rawApiKey = $"asmart_{encoded}";
+
+            return new ApiKeyMaterial(
+                RawKey: rawApiKey,
+                Hash: ComputeHash(rawApiKey),
+                Prefix: CreatePrefix(rawApiKey));
         }
 
-        public string MaskApiKey(string apiKey)
+        public string ComputeHash(string rawApiKey)
         {
-            if (string.IsNullOrWhiteSpace(apiKey) ||
-                apiKey.Length < 16)
-            {
-                return "********";
-            }
+            ArgumentException.ThrowIfNullOrWhiteSpace(
+                rawApiKey);
 
-            return
-                $"{apiKey[..10]}********************************{apiKey[^6..]}";
+            var normalizedApiKey = rawApiKey.Trim();
+
+            using var hmac =
+                new HMACSHA256(_pepperBytes);
+
+            var hashBytes = hmac.ComputeHash(
+                Encoding.UTF8.GetBytes(normalizedApiKey));
+
+            /*
+             * HMAC-SHA256 produces 32 bytes.
+             * Hex encoding produces exactly 64 characters.
+             */
+            return Convert.ToHexString(hashBytes);
+        }
+
+        public string CreatePrefix(string rawApiKey)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(
+                rawApiKey);
+
+            var normalizedApiKey = rawApiKey.Trim();
+
+            return normalizedApiKey.Length <= PrefixLength
+                ? normalizedApiKey
+                : normalizedApiKey[..PrefixLength];
         }
 
         public async Task UpdateLastUsedAsync(
@@ -125,7 +180,8 @@ namespace AsMart.Web.Services
             CancellationToken cancellationToken = default)
         {
             var utcNow = DateTime.UtcNow;
-            var updateThreshold = utcNow.AddMinutes(-5);
+            var updateThreshold =
+                utcNow.AddMinutes(-5);
 
             await _db.ApiClients
                 .Where(x =>

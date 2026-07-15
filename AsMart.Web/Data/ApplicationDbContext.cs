@@ -523,9 +523,18 @@ namespace AsMart.Web.Data
                     .IsRequired()
                     .HasMaxLength(150);
 
-                b.Property(x => x.ApiKey)
+                /*
+                 * Phase 2 security:
+                 * only the irreversible hash and non-sensitive prefix
+                 * are persisted. The plaintext ApiKey column is removed.
+                 */
+                b.Property(x => x.ApiKeyHash)
                     .IsRequired()
-                    .HasMaxLength(200);
+                    .HasMaxLength(64);
+
+                b.Property(x => x.ApiKeyPrefix)
+                    .IsRequired()
+                    .HasMaxLength(24);
 
                 b.Property(x => x.Website)
                     .HasMaxLength(300);
@@ -533,8 +542,8 @@ namespace AsMart.Web.Data
                 b.Property(x => x.UserId)
                     .HasMaxLength(450);
 
-                b.Property(x => x.IsActive)
-                    .IsRequired();
+                b.Property(x => x.Notes)
+                    .HasMaxLength(1000);
 
                 b.Property(x => x.RateLimitPerMinute)
                     .IsRequired();
@@ -542,19 +551,24 @@ namespace AsMart.Web.Data
                 b.Property(x => x.MonthlyQuota)
                     .IsRequired();
 
+                b.Property(x => x.IsActive)
+                    .IsRequired();
+
                 b.Property(x => x.CreatedAt)
                     .IsRequired();
 
-                b.Property(x => x.LastUsedAt);
-                b.Property(x => x.ExpiresAt);
-                b.Property(x => x.RevokedAt);
-                b.Property(x => x.LastRotatedAt);
-
-                b.Property(x => x.Notes)
-                    .HasMaxLength(1000);
-
-                b.HasIndex(x => x.ApiKey)
+                /*
+                 * A key hash uniquely identifies one API credential.
+                 * No filtered index is needed because ApiKeyHash is required.
+                 */
+                b.HasIndex(x => x.ApiKeyHash)
                     .IsUnique();
+
+                /*
+                 * Prefix is intentionally not unique. It is used only for
+                 * masked display and optional administrative searching.
+                 */
+                b.HasIndex(x => x.ApiKeyPrefix);
 
                 b.HasIndex(x => x.UserId);
                 b.HasIndex(x => x.ExpiresAt);

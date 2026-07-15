@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AsMart.Web.Controllers
 {
     [Authorize]
-    public class ApiKeysController : Controller
+    public sealed class ApiKeysController : Controller
     {
         private static readonly int[] AllowedExpirationDays =
         {
@@ -19,6 +19,10 @@ namespace AsMart.Web.Controllers
             180,
             365
         };
+
+        private const int MaximumKeysPerUser = 10;
+        private const int DefaultRateLimitPerMinute = 60;
+        private const int DefaultMonthlyQuota = 10_000;
 
         private readonly ApplicationDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -35,11 +39,12 @@ namespace AsMart.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            CancellationToken cancellationToken)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = GetCurrentUserId();
 
-            if (string.IsNullOrWhiteSpace(userId))
+            if (userId is null)
             {
                 return Challenge();
             }
@@ -48,10 +53,7 @@ namespace AsMart.Web.Controllers
                 .AsNoTracking()
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(x => x.CreatedAt)
-                .ToListAsync();
-
-            ViewBag.MaskApiKey =
-                new Func<string, string>(_apiKeyService.MaskApiKey);
+                .ToListAsync(cancellationToken);
 
             return View(clients);
         }
@@ -62,11 +64,12 @@ namespace AsMart.Web.Controllers
             string name,
             string? website,
             int expirationDays = 365,
-            string? notes = null)
+            string? notes = null,
+            CancellationToken cancellationToken = default)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = GetCurrentUserId();
 
-            if (string.IsNullOrWhiteSpace(userId))
+            if (userId is null)
             {
                 return Challenge();
             }
@@ -75,152 +78,144 @@ namespace AsMart.Web.Controllers
             website = NormalizeOptionalValue(website);
             notes = NormalizeOptionalValue(notes);
 
-            if (string.IsNullOrWhiteSpace(name))
+            var validationError = ValidateInput(name, website, notes);
+
+            if (validationError is not null)
             {
-                TempData["Error"] = "API key name is required.";
+                TempData["Error"] = validationError;
                 return RedirectToAction(nameof(Index));
             }
 
-            if (name.Length > 150)
-            {
-                TempData["Error"] =
-                    "API key name cannot exceed 150 characters.";
-
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (website?.Length > 300)
-            {
-                TempData["Error"] =
-                    "Website URL cannot exceed 300 characters.";
-
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (notes?.Length > 1000)
-            {
-                TempData["Error"] =
-                    "Notes cannot exceed 1,000 characters.";
-
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (!AllowedExpirationDays.Contains(expirationDays))
-            {
-                expirationDays = 365;
-            }
+            expirationDays = NormalizeExpirationDays(expirationDays);
 
             var clientCount = await _db.ApiClients
-                .CountAsync(x => x.UserId == userId);
+                .CountAsync(
+                    x => x.UserId == userId,
+                    cancellationToken);
 
-            if (clientCount >= 10)
+            if (clientCount >= MaximumKeysPerUser)
             {
                 TempData["Error"] =
-                    "You can create a maximum of 10 API keys.";
+                    $"You can create a maximum of {MaximumKeysPerUser} API keys.";
 
                 return RedirectToAction(nameof(Index));
             }
 
             var utcNow = DateTime.UtcNow;
-            var apiKey = _apiKeyService.GenerateApiKey();
+            var material = _apiKeyService.GenerateApiKeyMaterial();
 
             var client = new ApiClient
             {
                 Name = name,
                 Website = website,
                 Notes = notes,
-                ApiKey = apiKey,
+
+                // Never persist the full raw key.
+                ApiKeyHash = material.Hash,
+                ApiKeyPrefix = material.Prefix,
+
                 UserId = userId,
                 IsActive = true,
-                RateLimitPerMinute = 60,
-                MonthlyQuota = 10_000,
+                RateLimitPerMinute = DefaultRateLimitPerMinute,
+                MonthlyQuota = DefaultMonthlyQuota,
                 CreatedAt = utcNow,
                 ExpiresAt = utcNow.AddDays(expirationDays),
                 RevokedAt = null,
-                LastRotatedAt = null
+                LastRotatedAt = null,
+                LastUsedAt = null
             };
 
             _db.ApiClients.Add(client);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
 
-            TempData["Success"] =
-                $"API key created successfully. It expires in {expirationDays} days.";
-
-            /*
-             * The plain key is shown immediately after creation.
-             */
-            TempData["NewApiKey"] = apiKey;
-
-            return RedirectToAction(nameof(Index));
+            return View(
+                "~/Views/Shared/ApiKeys/KeyCreated.cshtml",
+                new ApiKeyCreatedViewModel
+                {
+                    Title = "API key created",
+                    Message =
+                        "Copy this API key now. It will never be shown again.",
+                    RawApiKey = material.RawKey,
+                    ClientName = client.Name,
+                    ExpiresAt = client.ExpiresAt,
+                    ReturnUrl =
+                        Url.Action(nameof(Index)) ?? "/ApiKeys"
+                });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Rotate(
             int id,
-            int expirationDays = 365)
+            int expirationDays = 365,
+            CancellationToken cancellationToken = default)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = GetCurrentUserId();
 
-            if (string.IsNullOrWhiteSpace(userId))
+            if (userId is null)
             {
                 return Challenge();
             }
 
-            if (!AllowedExpirationDays.Contains(expirationDays))
-            {
-                expirationDays = 365;
-            }
+            expirationDays = NormalizeExpirationDays(expirationDays);
 
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x =>
-                    x.Id == id &&
-                    x.UserId == userId);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id && x.UserId == userId,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
 
             var utcNow = DateTime.UtcNow;
-            var newApiKey = _apiKeyService.GenerateApiKey();
+            var material = _apiKeyService.GenerateApiKeyMaterial();
 
-            /*
-             * Replacing ApiKey immediately invalidates the old credential.
-             */
-            client.ApiKey = newApiKey;
+            client.ApiKeyHash = material.Hash;
+            client.ApiKeyPrefix = material.Prefix;
             client.IsActive = true;
             client.RevokedAt = null;
             client.LastRotatedAt = utcNow;
             client.LastUsedAt = null;
             client.ExpiresAt = utcNow.AddDays(expirationDays);
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
 
-            TempData["Success"] =
-                "API key rotated successfully. The previous key is no longer valid.";
-
-            TempData["NewApiKey"] = newApiKey;
-
-            return RedirectToAction(nameof(Index));
+            return View(
+                "~/Views/Shared/ApiKeys/KeyCreated.cshtml",
+                new ApiKeyCreatedViewModel
+                {
+                    Title = "API key rotated",
+                    Message =
+                        "Copy the new API key now. The previous key is no longer valid.",
+                    RawApiKey = material.RawKey,
+                    ClientName = client.Name,
+                    ExpiresAt = client.ExpiresAt,
+                    ReturnUrl =
+                        Url.Action(nameof(Index)) ?? "/ApiKeys"
+                });
         }
 
-        /*
-         * Temporary disabling.
-         * This does not mark the credential as permanently revoked.
-         */
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Disable(int id)
+        public async Task<IActionResult> Disable(
+            int id,
+            CancellationToken cancellationToken)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = GetCurrentUserId();
+
+            if (userId is null)
+            {
+                return Challenge();
+            }
 
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x =>
-                    x.Id == id &&
-                    x.UserId == userId);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id && x.UserId == userId,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
@@ -234,31 +229,31 @@ namespace AsMart.Web.Controllers
             }
 
             client.IsActive = false;
+            await _db.SaveChangesAsync(cancellationToken);
 
-            await _db.SaveChangesAsync();
-
-            TempData["Success"] =
-                "API key disabled successfully.";
-
+            TempData["Success"] = "API key disabled successfully.";
             return RedirectToAction(nameof(Index));
         }
 
-        /*
-         * Permanent revocation.
-         * A revoked key cannot be activated again.
-         */
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Revoke(int id)
+        public async Task<IActionResult> Revoke(
+            int id,
+            CancellationToken cancellationToken)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = GetCurrentUserId();
+
+            if (userId is null)
+            {
+                return Challenge();
+            }
 
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x =>
-                    x.Id == id &&
-                    x.UserId == userId);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id && x.UserId == userId,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
@@ -267,8 +262,7 @@ namespace AsMart.Web.Controllers
             {
                 client.IsActive = false;
                 client.RevokedAt = DateTime.UtcNow;
-
-                await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync(cancellationToken);
             }
 
             TempData["Success"] =
@@ -279,16 +273,23 @@ namespace AsMart.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Activate(int id)
+        public async Task<IActionResult> Activate(
+            int id,
+            CancellationToken cancellationToken)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = GetCurrentUserId();
+
+            if (userId is null)
+            {
+                return Challenge();
+            }
 
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x =>
-                    x.Id == id &&
-                    x.UserId == userId);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id && x.UserId == userId,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
@@ -311,32 +312,31 @@ namespace AsMart.Web.Controllers
             }
 
             client.IsActive = true;
+            await _db.SaveChangesAsync(cancellationToken);
 
-            await _db.SaveChangesAsync();
-
-            TempData["Success"] =
-                "API key activated successfully.";
-
+            TempData["Success"] = "API key activated successfully.";
             return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
-        public async Task<IActionResult> Usage(int id)
+        public async Task<IActionResult> Usage(
+            int id,
+            CancellationToken cancellationToken)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = GetCurrentUserId();
 
-            if (string.IsNullOrWhiteSpace(userId))
+            if (userId is null)
             {
                 return Challenge();
             }
 
             var client = await _db.ApiClients
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x =>
-                    x.Id == id &&
-                    x.UserId == userId);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id && x.UserId == userId,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
@@ -363,73 +363,46 @@ namespace AsMart.Web.Controllers
                     x.CreatedAt < nextMonth);
 
             var requestsThisMonth =
-                await monthlyLogs.CountAsync();
+                await monthlyLogs.CountAsync(cancellationToken);
 
             var failedRequests =
-                await monthlyLogs.CountAsync(x =>
-                    x.StatusCode >= 400);
+                await monthlyLogs.CountAsync(
+                    x => x.StatusCode >= 400,
+                    cancellationToken);
 
             var successfulRequests =
-                await monthlyLogs.CountAsync(x =>
-                    x.StatusCode >= 200 &&
-                    x.StatusCode < 400);
+                await monthlyLogs.CountAsync(
+                    x => x.StatusCode >= 200 && x.StatusCode < 400,
+                    cancellationToken);
 
             var averageResponseTime =
-                await monthlyLogs.AnyAsync()
+                requestsThisMonth > 0
                     ? await monthlyLogs.AverageAsync(
-                        x => x.ResponseTimeMs)
+                        x => x.ResponseTimeMs,
+                        cancellationToken)
                     : 0;
 
-            var model = new MyApiUsageViewModel
-            {
-                ApiClientId = client.Id,
-                ClientName = client.Name,
-                MaskedApiKey =
-                    _apiKeyService.MaskApiKey(client.ApiKey),
-                Website = client.Website,
-                IsActive = client.IsUsable,
-                RateLimitPerMinute =
-                    client.RateLimitPerMinute,
-                MonthlyQuota = client.MonthlyQuota,
-                RequestsThisMonth = requestsThisMonth,
-
-                RemainingQuota = client.MonthlyQuota <= 0
-                    ? int.MaxValue
-                    : Math.Max(
-                        client.MonthlyQuota - requestsThisMonth,
-                        0),
-
-                RequestsToday = await _db.ApiUsageLogs
+            var requestsToday =
+                await _db.ApiUsageLogs
                     .AsNoTracking()
-                    .CountAsync(x =>
-                        x.ApiClientId == client.Id &&
-                        x.CreatedAt >= today),
+                    .CountAsync(
+                        x => x.ApiClientId == client.Id && x.CreatedAt >= today,
+                        cancellationToken);
 
-                FailedRequestsThisMonth = failedRequests,
-
-                SuccessRate = requestsThisMonth > 0
-                    ? successfulRequests * 100d /
-                      requestsThisMonth
-                    : 0,
-
-                AverageResponseTimeMs = averageResponseTime,
-                CreatedAt = client.CreatedAt,
-                LastUsedAt = client.LastUsedAt,
-                QuotaResetAt = nextMonth,
-
-                TopEndpoints = await monthlyLogs
+            var topEndpoints =
+                await monthlyLogs
                     .GroupBy(x => x.Endpoint)
-                    .Select(group =>
-                        new MyApiEndpointUsageVm
-                        {
-                            Endpoint = group.Key,
-                            RequestCount = group.Count()
-                        })
+                    .Select(group => new MyApiEndpointUsageVm
+                    {
+                        Endpoint = group.Key,
+                        RequestCount = group.Count()
+                    })
                     .OrderByDescending(x => x.RequestCount)
                     .Take(10)
-                    .ToListAsync(),
+                    .ToListAsync(cancellationToken);
 
-                RecentRequests = await _db.ApiUsageLogs
+            var recentRequests =
+                await _db.ApiUsageLogs
                     .AsNoTracking()
                     .Where(x => x.ApiClientId == client.Id)
                     .OrderByDescending(x => x.CreatedAt)
@@ -443,10 +416,79 @@ namespace AsMart.Web.Controllers
                         StatusCode = x.StatusCode,
                         ResponseTimeMs = x.ResponseTimeMs
                     })
-                    .ToListAsync()
+                    .ToListAsync(cancellationToken);
+
+            var model = new MyApiUsageViewModel
+            {
+                ApiClientId = client.Id,
+                ClientName = client.Name,
+                MaskedApiKey = client.MaskedApiKey,
+                Website = client.Website,
+                IsActive = client.IsUsable,
+                RateLimitPerMinute = client.RateLimitPerMinute,
+                MonthlyQuota = client.MonthlyQuota,
+                RequestsThisMonth = requestsThisMonth,
+                RemainingQuota = client.MonthlyQuota <= 0
+                    ? int.MaxValue
+                    : Math.Max(client.MonthlyQuota - requestsThisMonth, 0),
+                RequestsToday = requestsToday,
+                FailedRequestsThisMonth = failedRequests,
+                SuccessRate = requestsThisMonth > 0
+                    ? successfulRequests * 100d / requestsThisMonth
+                    : 0,
+                AverageResponseTimeMs = averageResponseTime,
+                CreatedAt = client.CreatedAt,
+                LastUsedAt = client.LastUsedAt,
+                QuotaResetAt = nextMonth,
+                TopEndpoints = topEndpoints,
+                RecentRequests = recentRequests
             };
 
             return View(model);
+        }
+
+        private string? GetCurrentUserId()
+        {
+            var userId = _userManager.GetUserId(User);
+
+            return string.IsNullOrWhiteSpace(userId)
+                ? null
+                : userId;
+        }
+
+        private static int NormalizeExpirationDays(int expirationDays)
+        {
+            return AllowedExpirationDays.Contains(expirationDays)
+                ? expirationDays
+                : 365;
+        }
+
+        private static string? ValidateInput(
+            string name,
+            string? website,
+            string? notes)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return "API key name is required.";
+            }
+
+            if (name.Length > 150)
+            {
+                return "API key name cannot exceed 150 characters.";
+            }
+
+            if (website?.Length > 300)
+            {
+                return "Website URL cannot exceed 300 characters.";
+            }
+
+            if (notes?.Length > 1000)
+            {
+                return "Notes cannot exceed 1,000 characters.";
+            }
+
+            return null;
         }
 
         private static string? NormalizeOptionalValue(string? value)

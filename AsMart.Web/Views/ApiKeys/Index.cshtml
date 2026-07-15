@@ -4,7 +4,6 @@
     ViewData["Title"] = "My API Keys";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    var mask = ViewBag.MaskApiKey as Func<string, string>;
     var usableKeyCount = Model.Count(x => x.IsUsable);
     var expiredKeyCount = Model.Count(x => x.IsExpired);
     var revokedKeyCount = Model.Count(x => x.IsRevoked);
@@ -67,36 +66,7 @@
             </div>
         }
 
-        @if (TempData["NewApiKey"] != null)
-        {
-            <div class="api-new-key mb-4">
-                <div>
-                    <span class="api-new-key__label">
-                        <i class="fa-solid fa-key"></i>
-                        New API key
-                    </span>
-
-                    <h5>Copy this key now</h5>
-
-                    <p>
-                        Store it securely. Rotating this credential will invalidate the previous key immediately.
-                    </p>
-                </div>
-
-                <div class="api-new-key__value">
-                    <code id="newApiKeyValue">@TempData["NewApiKey"]</code>
-
-                    <button id="copyApiKeyButton"
-                            type="button"
-                            class="btn btn-light btn-sm"
-                            onclick="copyApiKey()">
-                        <i class="fa-regular fa-copy"></i>
-                        Copy
-                    </button>
-                </div>
-            </div>
-        }
-
+        
         <section class="api-panel mb-4">
             <div class="api-panel__heading">
                 <div>
@@ -237,7 +207,7 @@
                                 <span>API Key</span>
 
                                 <code>
-                                    @(mask?.Invoke(key.ApiKey) ?? "********")
+                                    @key.MaskedApiKey
                                 </code>
                             </div>
 
@@ -1506,40 +1476,3 @@
     </style>
 }
 
-
-
-<script>
-    async function copyApiKey() {
-        const element = document.getElementById("newApiKeyValue");
-
-        if (!element) {
-            return;
-        }
-
-        const value = element.innerText.trim();
-
-        if (!value) {
-            return;
-        }
-
-        try {
-            await navigator.clipboard.writeText(value);
-
-            const button = document.getElementById("copyApiKeyButton");
-
-            if (button) {
-                const originalHtml = button.innerHTML;
-
-                button.innerHTML =
-                    '<i class="fa-solid fa-check"></i> Copied';
-
-                setTimeout(function () {
-                    button.innerHTML = originalHtml;
-                }, 1800);
-            }
-        }
-        catch {
-            window.prompt("Copy your API key:", value);
-        }
-    }
-</script>

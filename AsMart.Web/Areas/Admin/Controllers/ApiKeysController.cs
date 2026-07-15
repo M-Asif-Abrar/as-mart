@@ -1,4 +1,5 @@
 ﻿using AsMart.Web.Data;
+using AsMart.Web.Models.ViewModels;
 using AsMart.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,7 @@ namespace AsMart.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = "Admin")]
-    public class ApiKeysController : Controller
+    public sealed class ApiKeysController : Controller
     {
         private static readonly int[] AllowedExpirationDays =
         {
@@ -29,7 +30,10 @@ namespace AsMart.Web.Areas.Admin.Controllers
             _apiKeyService = apiKeyService;
         }
 
-        public async Task<IActionResult> Index(string? q)
+        [HttpGet]
+        public async Task<IActionResult> Index(
+            string? q,
+            CancellationToken cancellationToken)
         {
             var query = _db.ApiClients
                 .AsNoTracking()
@@ -42,7 +46,8 @@ namespace AsMart.Web.Areas.Admin.Controllers
 
                 query = query.Where(x =>
                     x.Name.Contains(q) ||
-                    x.ApiKey.Contains(q) ||
+                    (x.ApiKeyPrefix != null &&
+                     x.ApiKeyPrefix.Contains(q)) ||
                     (x.Website != null &&
                      x.Website.Contains(q)) ||
                     (x.Notes != null &&
@@ -54,12 +59,14 @@ namespace AsMart.Web.Areas.Admin.Controllers
 
             var model = await query
                 .OrderByDescending(x => x.CreatedAt)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             ViewBag.Search = q;
-            ViewBag.MaskApiKey =
-                new Func<string, string>(_apiKeyService.MaskApiKey);
 
+            /*
+             * Do not expose a raw-key masking delegate.
+             * The view must use client.MaskedApiKey.
+             */
             return View(model);
         }
 
@@ -67,22 +74,27 @@ namespace AsMart.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateRateLimit(
             int id,
-            int rateLimitPerMinute)
+            int rateLimitPerMinute,
+            CancellationToken cancellationToken)
         {
             rateLimitPerMinute =
                 Math.Clamp(rateLimitPerMinute, 1, 10_000);
 
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
 
-            client.RateLimitPerMinute = rateLimitPerMinute;
+            client.RateLimitPerMinute =
+                rateLimitPerMinute;
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(
+                cancellationToken);
 
             TempData["Success"] =
                 "Rate limit updated successfully.";
@@ -94,22 +106,26 @@ namespace AsMart.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateMonthlyQuota(
             int id,
-            int monthlyQuota)
+            int monthlyQuota,
+            CancellationToken cancellationToken)
         {
             monthlyQuota =
                 Math.Clamp(monthlyQuota, 0, 10_000_000);
 
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
 
             client.MonthlyQuota = monthlyQuota;
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(
+                cancellationToken);
 
             TempData["Success"] =
                 monthlyQuota == 0
@@ -124,12 +140,15 @@ namespace AsMart.Web.Areas.Admin.Controllers
         public async Task<IActionResult> UpdateLifecycle(
             int id,
             DateTime? expiresOn,
-            string? notes)
+            string? notes,
+            CancellationToken cancellationToken)
         {
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
@@ -155,8 +174,8 @@ namespace AsMart.Web.Areas.Admin.Controllers
             }
 
             /*
-             * The selected expiration date remains valid until the end
-             * of that UTC calendar day.
+             * The selected date remains valid until the end
+             * of the selected UTC calendar day.
              */
             var expirationUtc = DateTime.SpecifyKind(
                 expiresOn.Value.Date
@@ -167,16 +186,13 @@ namespace AsMart.Web.Areas.Admin.Controllers
             client.ExpiresAt = expirationUtc;
             client.Notes = notes;
 
-            /*
-             * If the administrator sets a past date, immediately make
-             * the key inactive.
-             */
             if (expirationUtc <= DateTime.UtcNow)
             {
                 client.IsActive = false;
             }
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(
+                cancellationToken);
 
             TempData["Success"] =
                 "API key lifecycle settings updated.";
@@ -186,12 +202,16 @@ namespace AsMart.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ToggleStatus(int id)
+        public async Task<IActionResult> ToggleStatus(
+            int id,
+            CancellationToken cancellationToken)
         {
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
@@ -218,7 +238,8 @@ namespace AsMart.Web.Areas.Admin.Controllers
 
             client.IsActive = !client.IsActive;
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(
+                cancellationToken);
 
             TempData["Success"] =
                 client.IsActive
@@ -230,12 +251,16 @@ namespace AsMart.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Revoke(int id)
+        public async Task<IActionResult> Revoke(
+            int id,
+            CancellationToken cancellationToken)
         {
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
@@ -245,7 +270,8 @@ namespace AsMart.Web.Areas.Admin.Controllers
                 client.IsActive = false;
                 client.RevokedAt = DateTime.UtcNow;
 
-                await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync(
+                    cancellationToken);
             }
 
             TempData["Success"] =
@@ -258,25 +284,36 @@ namespace AsMart.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Rotate(
             int id,
-            int expirationDays = 365)
+            int expirationDays = 365,
+            CancellationToken cancellationToken = default)
         {
-            if (!AllowedExpirationDays.Contains(expirationDays))
+            if (!AllowedExpirationDays.Contains(
+                    expirationDays))
             {
                 expirationDays = 365;
             }
 
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
 
             var utcNow = DateTime.UtcNow;
-            var newApiKey = _apiKeyService.GenerateApiKey();
+            var material =
+                _apiKeyService.GenerateApiKeyMaterial();
 
-            client.ApiKey = newApiKey;
+            /*
+             * Phase 2 security:
+             * only the hash and non-sensitive prefix are persisted.
+             */
+            client.ApiKeyHash = material.Hash;
+            client.ApiKeyPrefix = material.Prefix;
+
             client.IsActive = true;
             client.RevokedAt = null;
             client.LastRotatedAt = utcNow;
@@ -284,24 +321,45 @@ namespace AsMart.Web.Areas.Admin.Controllers
             client.ExpiresAt =
                 utcNow.AddDays(expirationDays);
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(
+                cancellationToken);
 
-            TempData["Success"] =
-                "API key rotated successfully. The previous key is no longer valid.";
-
-            TempData["NewApiKey"] = newApiKey;
-
-            return RedirectToAction(nameof(Index));
+            /*
+             * The full raw key is displayed once in this response.
+             * It is not stored in TempData, session, logs, or SQL Server.
+             */
+            return View(
+                "~/Views/Shared/ApiKeys/KeyCreated.cshtml",
+                new ApiKeyCreatedViewModel
+                {
+                    Title = "API key rotated",
+                    Message =
+                        "Copy the new API key now. The previous key is no longer valid.",
+                    RawApiKey = material.RawKey,
+                    ClientName = client.Name,
+                    ExpiresAt = client.ExpiresAt,
+                    ReturnUrl =
+                        Url.Action(
+                            nameof(Index),
+                            "ApiKeys",
+                            new { area = "Admin" })
+                        ?? "/Admin/ApiKeys"
+                });
         }
 
-        public async Task<IActionResult> Delete(int id)
+        [HttpGet]
+        public async Task<IActionResult> Delete(
+            int id,
+            CancellationToken cancellationToken)
         {
             var client = await _db.ApiClients
                 .AsNoTracking()
                 .Include(x => x.User)
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
@@ -311,19 +369,24 @@ namespace AsMart.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(
+            int id,
+            CancellationToken cancellationToken)
         {
             var client = await _db.ApiClients
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id,
+                    cancellationToken);
 
-            if (client == null)
+            if (client is null)
             {
                 return NotFound();
             }
 
             _db.ApiClients.Remove(client);
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(
+                cancellationToken);
 
             TempData["Success"] =
                 "API key deleted successfully.";

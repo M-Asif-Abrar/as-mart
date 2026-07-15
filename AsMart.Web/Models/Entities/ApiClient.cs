@@ -11,14 +11,13 @@ namespace AsMart.Web.Models.Entities
         [MaxLength(150)]
         public string Name { get; set; } = string.Empty;
 
-        /*
-         * Existing implementation stores the full API key.
-         * A future security hardening step should replace this with ApiKeyHash
-         * and ApiKeyPrefix, but we will preserve compatibility in this feature.
-         */
         [Required]
-        [MaxLength(200)]
-        public string ApiKey { get; set; } = string.Empty;
+        [MaxLength(64)]
+        public string ApiKeyHash { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(24)]
+        public string ApiKeyPrefix { get; set; } = string.Empty;
 
         [MaxLength(300)]
         public string? Website { get; set; }
@@ -27,10 +26,6 @@ namespace AsMart.Web.Models.Entities
 
         public ApplicationUser? User { get; set; }
 
-        /*
-         * Temporary enable/disable state.
-         * A disabled key can be enabled again when it is not revoked or expired.
-         */
         public bool IsActive { get; set; } = true;
 
         public int RateLimitPerMinute { get; set; } = 60;
@@ -41,9 +36,6 @@ namespace AsMart.Web.Models.Entities
 
         public DateTime? LastUsedAt { get; set; }
 
-        /*
-         * Key lifecycle fields.
-         */
         public DateTime? ExpiresAt { get; set; }
 
         public DateTime? RevokedAt { get; set; }
@@ -53,23 +45,26 @@ namespace AsMart.Web.Models.Entities
         [MaxLength(1000)]
         public string? Notes { get; set; }
 
-        /*
-         * UI-only lifecycle properties.
-         * These are not database columns.
-         */
         [NotMapped]
         public bool IsExpired =>
             ExpiresAt.HasValue &&
             ExpiresAt.Value <= DateTime.UtcNow;
 
         [NotMapped]
-        public bool IsRevoked => RevokedAt.HasValue;
+        public bool IsRevoked =>
+            RevokedAt.HasValue;
 
         [NotMapped]
         public bool IsUsable =>
             IsActive &&
             !IsRevoked &&
             !IsExpired;
+
+        [NotMapped]
+        public string MaskedApiKey =>
+            string.IsNullOrWhiteSpace(ApiKeyPrefix)
+            ? "Unavailable"
+            : $"{ApiKeyPrefix}••••••••••••••••••••••••";
 
         [NotMapped]
         public string LifecycleStatus
@@ -86,7 +81,9 @@ namespace AsMart.Web.Models.Entities
                     return "Expired";
                 }
 
-                return IsActive ? "Active" : "Disabled";
+                return IsActive
+                    ? "Active"
+                    : "Disabled";
             }
         }
     }
