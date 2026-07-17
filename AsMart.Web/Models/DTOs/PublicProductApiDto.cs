@@ -51,6 +51,7 @@
         public string Title { get; set; } = "";
         public string Slug { get; set; } = "";
         public string? MetaDescription { get; set; }
+        public string? FeaturedImageUrl { get; set; }
         public string? OgImageUrl { get; set; }
         public string BlogUrl { get; set; } = "";
     }
