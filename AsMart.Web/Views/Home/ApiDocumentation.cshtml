@@ -1,5 +1,6 @@
 ﻿@{
-    ViewData["Title"] = "As-Mart Product API Documentation";
+    ViewData["Title"] = "AS-Mart Public API Documentation";
+    ViewData["HidePageHeader"] = true;
     Layout = "_Layout";
 }
 
@@ -431,14 +432,17 @@
 
         .api-code-card {
             position: relative;
-            border-radius: 16px;
-            padding: 1.2rem;
-            background: radial-gradient(circle at 82% 35%,rgba(244,114,182,.14),transparent 20%),radial-gradient(circle at 95% 85%,rgba(34,197,94,.14),transparent 18%),linear-gradient(135deg,#fff9dd,#fff5f8 55%,#eefcff);
-            border: 1px solid #f5e7b8;
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 1px solid #dbeafe;
+            border-radius: 17px;
+            background: radial-gradient(circle at 90% 10%,rgba(139,92,246,.11),transparent 26%),linear-gradient(135deg,#f8fbff 0%,#fbf7ff 52%,#f0fdfa 100%);
             box-shadow: 0 14px 34px rgba(45,80,160,.08);
             overflow-x: auto;
-            max-width: 100%;
-            margin-bottom: 1rem
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
         }
 
             .api-code-card.green {
@@ -452,14 +456,18 @@
             }
 
         pre.api-code {
+            display: block;
+            width: max-content;
+            min-width: 100%;
             margin: 0;
-            color: #243047;
-            font-family: Consolas,monospace;
-            font-size: clamp(.82rem,1.4vw,.95rem);
-            line-height: 1.55;
+            padding: 2.4rem .15rem .15rem;
+            color: #1e293b;
+            font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+            font-size: clamp(.8rem,1.1vw,.92rem);
+            line-height: 1.65;
+            tab-size: 4;
             white-space: pre;
-            min-width: 720px;
-            padding-top: 2.2rem
+            text-align: left;
         }
 
         .api-copy-btn {
@@ -633,12 +641,9 @@
         }
 
         @@media (max-width: 768px) {
-            .api-rate-grid
-
-        {
-            grid-template-columns: 1fr;
-        }
-
+            .api-rate-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @@media(max-width:1199px) {
@@ -767,8 +772,7 @@
             }
 
             pre.api-code {
-                min-width: 620px;
-                font-size: .82rem
+                font-size: .8rem;
             }
 
             .api-grid-3 {
@@ -794,7 +798,211 @@
             }
 
             pre.api-code {
-                min-width: 560px
+                font-size: .76rem;
+            }
+        }
+
+        /* Modern documentation enhancements */
+        .api-sidebar {
+            padding: .7rem;
+            border: 1px solid rgba(148,163,184,.18);
+            border-radius: 20px;
+            background: rgba(255,255,255,.72);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 18px 45px rgba(30,41,59,.08)
+        }
+
+        .api-side-heading {
+            margin: .35rem .65rem .6rem;
+            color: #64748b;
+            font-size: .68rem;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase
+        }
+
+        .api-side-link {
+            box-shadow: none
+        }
+
+            .api-side-link.api-swagger-link {
+                color: #6d28d9;
+                background: linear-gradient(135deg,#f5f3ff,#eef2ff);
+                border-color: #ddd6fe
+            }
+
+                .api-side-link.api-swagger-link i {
+                    color: #7c3aed
+                }
+
+        .api-hero {
+            min-height: 350px
+        }
+
+        .api-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            margin-bottom: .9rem;
+            padding: .48rem .72rem;
+            border: 1px solid rgba(99,102,241,.16);
+            border-radius: 999px;
+            color: #4f46e5;
+            background: rgba(255,255,255,.78);
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .07em;
+            text-transform: uppercase
+        }
+
+        .api-hero h1 span {
+            color: transparent;
+            background: linear-gradient(135deg,#2563eb,#7c3aed,#db2777);
+            -webkit-background-clip: text;
+            background-clip: text
+        }
+
+        .api-endpoint-table thead th {
+            padding: .75rem .8rem;
+            border: 1px solid #e7edf8;
+            color: #334155;
+            background: linear-gradient(90deg,#eff6ff,#f5f3ff,#fdf2f8);
+            font-size: .76rem;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            text-align: left
+        }
+
+        .api-endpoint-table tbody tr {
+            transition: background-color .18s ease
+        }
+
+            .api-endpoint-table tbody tr:hover {
+                background: #f8fafc
+            }
+
+        .api-status-grid {
+            display: grid;
+            grid-template-columns: repeat(3,minmax(0,1fr));
+            gap: .8rem
+        }
+
+        .api-status-card {
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            background: linear-gradient(145deg,#fff,#f8fafc)
+        }
+
+        .api-status-code {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 54px;
+            padding: .3rem .55rem;
+            border-radius: 9px;
+            color: #fff;
+            background: linear-gradient(135deg,#2563eb,#4f46e5);
+            font-size: .76rem;
+            font-weight: 900
+        }
+
+            .api-status-code.success {
+                background: linear-gradient(135deg,#059669,#10b981)
+            }
+
+            .api-status-code.warning {
+                background: linear-gradient(135deg,#d97706,#f59e0b)
+            }
+
+            .api-status-code.danger {
+                background: linear-gradient(135deg,#dc2626,#f43f5e)
+            }
+
+        .api-status-card h4 {
+            margin: .7rem 0 .35rem;
+            color: #0f172a;
+            font-size: .9rem;
+            font-weight: 900
+        }
+
+        .api-status-card p {
+            margin: 0;
+            color: #64748b;
+            font-size: .78rem;
+            line-height: 1.5
+        }
+
+        .api-auth-grid {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 1rem
+        }
+
+        .api-auth-card {
+            padding: 1rem;
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            background: linear-gradient(135deg,#eff6ff,#f5f3ff)
+        }
+
+            .api-auth-card h3 {
+                margin: 0 0 .5rem;
+                color: #1e3a8a;
+                font-size: 1rem;
+                font-weight: 900
+            }
+
+        .api-inline-code {
+            display: inline-block;
+            max-width: 100%;
+            padding: .2rem .45rem;
+            border-radius: 7px;
+            color: #4338ca;
+            background: #eef2ff;
+            font-family: "Cascadia Code",Consolas,monospace;
+            font-weight: 800;
+            overflow-wrap: anywhere
+        }
+
+        .api-section-anchor {
+            scroll-margin-top: 100px
+        }
+
+        @@media(max-width:991px) {
+            .api-status-grid, .api-auth-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @@media(max-width:767px) {
+            .api-sidebar {
+                display: flex;
+                gap: .55rem;
+                padding: .65rem;
+                overflow-x: auto;
+                border-radius: 16px;
+                scrollbar-width: thin
+            }
+
+            .api-side-heading, .api-info-card {
+                display: none
+            }
+
+            .api-side-link {
+                flex: 0 0 auto;
+                margin: 0;
+                padding: .7rem .8rem;
+                white-space: nowrap
+            }
+
+                .api-side-link span {
+                    overflow-wrap: normal
+                }
+
+            .api-hero {
+                min-height: auto
             }
         }
     </style>
@@ -804,40 +1012,35 @@
     <div class="api-shell">
         <div class="api-layout">
 
-            <aside class="api-sidebar">
+            <aside class="api-sidebar" aria-label="API documentation navigation">
+                <div class="api-side-heading">Getting started</div>
                 <a href="#overview" class="api-side-link active"><i class="fa-solid fa-house"></i><span>Overview</span></a>
-                <a href="#base-url" class="api-side-link"><i class="fa-solid fa-globe"></i><span>Base URL</span></a>
-                <a href="#products" class="api-side-link"><i class="fa-solid fa-box"></i><span>Product APIs</span></a>
-                <a href="#rate-limits" class="api-side-link"><i class="fa-solid fa-gauge-high"></i><span>Rate Limits</span></a>
+                <a href="#base-url" class="api-side-link"><i class="fa-solid fa-globe"></i><span>Base URLs</span></a>
+                <a href="#authentication" class="api-side-link"><i class="fa-solid fa-key"></i><span>Authentication</span></a>
+                <a href="https://as-mart.com/swagger" target="_blank" rel="noopener" class="api-side-link api-swagger-link"><i class="fa-solid fa-code"></i><span>Swagger UI</span></a>
+                <div class="api-side-heading">API resources</div>
+                <a href="#products" class="api-side-link"><i class="fa-solid fa-box"></i><span>Products</span></a>
                 <a href="#categories" class="api-side-link"><i class="fa-solid fa-layer-group"></i><span>Categories</span></a>
                 <a href="#collections" class="api-side-link"><i class="fa-solid fa-grip"></i><span>Collections</span></a>
                 <a href="#blogs" class="api-side-link"><i class="fa-solid fa-newspaper"></i><span>Blogs</span></a>
+                <a href="#widgets" class="api-side-link"><i class="fa-solid fa-table-cells-large"></i><span>Widgets</span></a>
                 <a href="#seopages" class="api-side-link"><i class="fa-solid fa-sitemap"></i><span>SEO Pages</span></a>
+                <div class="api-side-heading">Reference</div>
                 <a href="#response" class="api-side-link"><i class="fa-solid fa-database"></i><span>Models</span></a>
+                <a href="#errors" class="api-side-link"><i class="fa-solid fa-triangle-exclamation"></i><span>Errors</span></a>
+                <a href="#rate-limits" class="api-side-link"><i class="fa-solid fa-gauge-high"></i><span>Rate Limits</span></a>
                 <a href="#examples" class="api-side-link"><i class="fa-solid fa-terminal"></i><span>Examples</span></a>
                 <a href="#notes" class="api-side-link"><i class="fa-regular fa-circle-info"></i><span>Notes</span></a>
-
-                <div class="api-info-card">
-                    <div class="api-info-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                    <h5 class="fw-bold">Quick Info</h5>
-                    <ul class="small mb-0 ps-3">
-                        <li>Public JSON API</li>
-                        <li>HTTPS only</li>
-                        <li>Max count: 50</li>
-                        <li>CORS for approved domains</li>
-                    </ul>
-                </div>
+                <div class="api-info-card"><div class="api-info-icon"><i class="fa-solid fa-shield-halved"></i></div><h5 class="fw-bold">Quick Info</h5><ul class="small mb-0 ps-3"><li>HTTPS JSON API</li><li>Optional API key</li><li>Maximum count: 50</li><li>Swagger available</li></ul></div>
             </aside>
 
             <main class="api-main">
 
                 <section class="api-hero">
                     <div>
-                        <h1>As-Mart Product API Documentation</h1>
-                        <p>
-                            Use the As-Mart Public API to display products, categories, collections, and latest blog content
-                            on external websites, affiliate blogs, partner platforms, and ASP.NET Core applications.
-                        </p>
+                        <span class="api-hero-badge"><i class="fa-solid fa-code-branch"></i>Public REST API</span>
+                        <h1>Build with the <span>AS-Mart API</span></h1>
+                        <p>Integrate products, categories, collections, blogs, combined widgets, and more than 2,000 public buying guides into ASP.NET Core applications, affiliate websites, dashboards, and partner platforms.</p>
                         <div class="api-hero-actions">
                             <a href="#products" class="api-btn-primary">
                                 Get Started <i class="fa-solid fa-rocket"></i>
@@ -850,10 +1053,8 @@
                                 Get API Key
                             </a>
 
-                            <a href="/api/products/home-widget?count=6" target="_blank" class="api-btn-light">
-                                <i class="fa-solid fa-flask"></i>
-                                Test Home Widget
-                            </a>
+                            <a href="https://as-mart.com/swagger" target="_blank" rel="noopener" class="api-btn-light"><i class="fa-solid fa-code"></i>Open Swagger</a>
+                            <a href="/api/products/home-widget?count=6" target="_blank" rel="noopener" class="api-btn-light"><i class="fa-solid fa-flask"></i>Test API</a>
                         </div>
                     </div>
                     <div class="api-hero-art">
@@ -864,16 +1065,16 @@
                     </div>
                 </section>
 
-                <section class="api-card has-soft-icon" id="overview">
+                <section class="api-card has-soft-icon api-section-anchor" id="overview">
                     <h2><i class="fa-solid fa-circle-info"></i> Overview</h2>
                     <p>
-                        The As-Mart API provides public product and content data from As-Mart. Other websites can use it to show
+                        The AS-Mart API provides public product and content data from AS-Mart. Other websites can use it to show
                         featured products, latest products, popular items, deals, top-rated products, category products,
                         collections, related products, and blog posts.
                     </p>
                     <p>
                         Only active products are returned. Use <strong>buyUrl</strong> for tracked outbound clicks and
-                        <strong>productUrl</strong> for the As-Mart product detail page.
+                        <strong>productUrl</strong> for the AS-Mart product detail page.
                     </p>
                     <div class="api-soft-icon"><i class="fa-solid fa-chart-line"></i></div>
                 </section>
@@ -896,23 +1097,40 @@
                     </div>
                 </section>
 
-                <section class="api-card has-soft-icon" id="base-url">
+                <section class="api-card has-soft-icon api-section-anchor" id="base-url">
                     <h2><i class="fa-solid fa-globe"></i> Base URLs</h2>
                     <p>Product endpoints start with:</p>
                     <div class="api-base-box"><i class="fa-solid fa-globe"></i><span>https://as-mart.com/api/products</span></div>
                     <p class="mt-3">Other public resources:</p>
                     <div class="api-base-box mb-2"><i class="fa-solid fa-layer-group"></i><span>https://as-mart.com/api/categories</span></div>
                     <div class="api-base-box mb-2"><i class="fa-solid fa-grip"></i><span>https://as-mart.com/api/collections</span></div>
-                    <div class="api-base-box"><i class="fa-solid fa-newspaper"></i><span>https://as-mart.com/api/blogs</span></div>
+                    <div class="api-base-box mb-2"><i class="fa-solid fa-newspaper"></i><span>https://as-mart.com/api/blogs</span></div>
+                    <div class="api-base-box mb-2"><i class="fa-solid fa-table-cells-large"></i><span>https://as-mart.com/api/widgets</span></div>
+                    <div class="api-base-box"><i class="fa-solid fa-sitemap"></i><span>https://as-mart.com/api/seopages</span></div>
                     <div class="api-soft-icon"><i class="fa-solid fa-lock"></i></div>
                 </section>
 
-                <section class="api-card" id="products">
+                <section class="api-card api-section-anchor" id="authentication">
+                    <h2><i class="fa-solid fa-key"></i> Authentication</h2>
+                    <p>Public requests can be sent without credentials. Production integrations should include an API key in the <span class="api-inline-code">X-API-Key</span> request header for higher, account-specific limits and lifecycle management.</p>
+                    <div class="api-auth-grid"><article class="api-auth-card"><h3><i class="fa-solid fa-globe me-1"></i> Public request</h3><p class="mb-0">No header is required. Public traffic uses the shared public rate-limit policy.</p></article><article class="api-auth-card"><h3><i class="fa-solid fa-shield-halved me-1"></i> API-key request</h3><p class="mb-0">Send <span class="api-inline-code">X-API-Key: YOUR_API_KEY</span> with every request.</p></article></div>
+                    <h3 class="api-code-title"><i class="fa-solid fa-terminal"></i> cURL with API key</h3>
+                    <div class="api-code-card blue">
+                        <button type="button" class="api-copy-btn">Copy</button><pre class="api-code">curl --request GET \
+  --url "https://as-mart.com/api/products/featured?count=6" \
+  --header "Accept: application/json" \
+  --header "X-API-Key: YOUR_API_KEY"</pre>
+                    </div>
+                    <div class="api-note">Keep API keys on the server. Do not expose production keys in public JavaScript, Git repositories, screenshots, or client-side configuration.</div>
+                </section>
+
+                <section class="api-card api-section-anchor" id="products">
                     <h2><i class="fa-solid fa-box"></i> Product API Endpoints</h2>
-                    <p>Use these endpoints to show As-Mart products on external websites.</p>
+                    <p>Use these endpoints to show AS-Mart products on external websites.</p>
 
                     <div class="api-table-wrap">
                         <table class="api-endpoint-table">
+                            <thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead>
                             <tbody>
                                 <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/products/featured?count=12</td><td><span class="api-tag">Products</span></td><td>Featured products selected by admin.</td></tr>
                                 <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/latest?count=12</td><td><span class="api-tag">Products</span></td><td>Latest active products.</td></tr>
@@ -939,51 +1157,62 @@
                     </div>
                 </section>
 
-                <section class="api-card" id="categories">
+                <section class="api-card api-section-anchor" id="categories">
                     <h2><i class="fa-solid fa-layer-group"></i> Category API</h2>
                     <div class="api-table-wrap">
                         <table class="api-endpoint-table">
+                            <thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead>
                             <tbody>
-                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/categories</td><td>Returns all public categories with product counts.</td></tr>
-                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/category/{categorySlug}?count=12</td><td>Returns products for a specific category.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/categories</td><td><span class="api-tag">Categories</span></td><td>Returns all public categories with product counts.</td></tr>
+                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/category/{categorySlug}?count=12</td><td><span class="api-tag">Products</span></td><td>Returns products for a specific category.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <section class="api-card" id="collections">
+                <section class="api-card api-section-anchor" id="collections">
                     <h2><i class="fa-solid fa-grip"></i> Collection API</h2>
                     <div class="api-table-wrap">
                         <table class="api-endpoint-table">
+                            <thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead>
                             <tbody>
-                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/collections</td><td>Returns all public collections with product counts.</td></tr>
-                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/products/collection/{collectionSlug}?count=12</td><td>Returns products from a selected collection.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/collections</td><td><span class="api-tag">Collections</span></td><td>Returns all public collections with product counts.</td></tr>
+                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/products/collection/{collectionSlug}?count=12</td><td><span class="api-tag">Products</span></td><td>Returns products from a selected collection.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <section class="api-card" id="blogs">
+                <section class="api-card api-section-anchor" id="blogs">
                     <h2><i class="fa-solid fa-newspaper"></i> Blog API</h2>
                     <div class="api-table-wrap">
                         <table class="api-endpoint-table">
+                            <thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead>
                             <tbody>
-                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/blogs/latest?count=6</td><td>Returns latest As-Mart blog posts for external websites.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/blogs/latest?count=6</td><td><span class="api-tag">Blogs</span></td><td>Returns latest AS-Mart blog posts for external websites.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <section class="api-card" id="seopages">
+                <section class="api-card api-section-anchor" id="widgets">
+                    <h2><i class="fa-solid fa-table-cells-large"></i> Combined Widget API</h2>
+                    <p>Use the combined endpoint when a page needs several AS-Mart resources at once. It reduces HTTP round trips and is recommended for dashboards, landing pages, and external home-page integrations.</p>
+                    <div class="api-table-wrap"><table class="api-endpoint-table"><thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead><tbody><tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/widgets/home?productCount=8&amp;blogCount=6&amp;categoryCount=12&amp;collectionCount=8&amp;guideCount=8</td><td><span class="api-tag">Combined</span></td><td>Returns product groups, latest blogs, categories, collections, latest SEO guides, and generation time in one response.</td></tr></tbody></table></div>
+                    <div class="api-note">Use this endpoint when the consumer needs several sections on one page. For a single resource, use the dedicated endpoint.</div>
+                </section>
+
+                <section class="api-card api-section-anchor" id="seopages">
                     <h2><i class="fa-solid fa-sitemap"></i> SEO Pages API</h2>
 
                     <p>
-                        Use these endpoints to consume public As-Mart SEO guide pages. These are useful for guide widgets,
+                        Use these endpoints to consume public AS-Mart SEO guide pages. These are useful for guide widgets,
                         AI search, sitemap tools, category pages, search tools, and external content integrations.
                     </p>
 
                     <div class="api-table-wrap">
                         <table class="api-endpoint-table">
+                            <thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead>
                             <tbody>
                                 <tr>
                                     <td><span class="api-method">GET</span></td>
@@ -1113,7 +1342,7 @@
                     </div>
                 </section>
 
-                <section class="api-card" id="response">
+                <section class="api-card api-section-anchor" id="response">
                     <h2><i class="fa-solid fa-database"></i> Response Models</h2>
 
                     <h3 class="api-section-title"><i class="fa-solid fa-box"></i> Product Response</h3>
@@ -1140,7 +1369,7 @@
                                     <tr><td><span class="api-field">rating</span></td><td>decimal</td><td>Product rating.</td></tr>
                                     <tr><td><span class="api-field">ratingCount</span></td><td>int</td><td>Total ratings.</td></tr>
                                     <tr><td><span class="api-field">mainImageUrl</span></td><td>string</td><td>Main image URL.</td></tr>
-                                    <tr><td><span class="api-field">productUrl</span></td><td>string</td><td>As-Mart product page.</td></tr>
+                                    <tr><td><span class="api-field">productUrl</span></td><td>string</td><td>AS-Mart product page.</td></tr>
                                     <tr><td><span class="api-field">buyUrl</span></td><td>string</td><td>Tracked buy redirect.</td></tr>
                                     <tr><td><span class="api-field">isFeatured</span></td><td>bool</td><td>Featured flag.</td></tr>
                                     <tr><td><span class="api-field">isDealOfTheDay</span></td><td>bool</td><td>Deal flag.</td></tr>
@@ -1151,7 +1380,31 @@
                     </div>
                 </section>
 
-                <section class="api-doc-section api-rate-limit-section" id="rate-limits">
+                <section class="api-card api-section-anchor" id="errors">
+                    <h2><i class="fa-solid fa-triangle-exclamation"></i> HTTP Status and Error Responses</h2>
+                    <p>API errors use standard HTTP status codes. JSON error responses may include <span class="api-inline-code">success</span>, <span class="api-inline-code">error</span>, <span class="api-inline-code">message</span>, <span class="api-inline-code">traceId</span>, and validation <span class="api-inline-code">errors</span>.</p>
+                    <div class="api-status-grid">
+                        <article class="api-status-card"><span class="api-status-code success">200</span><h4>OK</h4><p>The request succeeded.</p></article>
+                        <article class="api-status-card"><span class="api-status-code warning">400</span><h4>Bad Request</h4><p>A parameter failed validation.</p></article>
+                        <article class="api-status-card"><span class="api-status-code danger">401</span><h4>Unauthorized</h4><p>The API key is invalid, disabled, expired, or revoked.</p></article>
+                        <article class="api-status-card"><span class="api-status-code warning">404</span><h4>Not Found</h4><p>The requested route or resource does not exist.</p></article>
+                        <article class="api-status-card"><span class="api-status-code warning">429</span><h4>Too Many Requests</h4><p>The rate limit or monthly quota was exceeded.</p></article>
+                        <article class="api-status-card"><span class="api-status-code danger">500</span><h4>Server Error</h4><p>An unexpected server-side failure occurred.</p></article>
+                    </div>
+                    <h3 class="api-code-title"><i class="fa-solid fa-code"></i> Standard error example</h3>
+                    <div class="api-code-card">
+                        <button type="button" class="api-copy-btn">Copy</button><pre class="api-code">{
+  "success": false,
+  "error": "invalid_api_key",
+  "message": "The supplied API key is invalid, expired, disabled, or revoked.",
+  "traceId": "00-0123456789abcdef-0123456789abcdef-00",
+  "errors": null,
+  "data": null
+}</pre>
+                    </div>
+                </section>
+
+                <section class="api-doc-section api-rate-limit-section api-section-anchor" id="rate-limits">
                     <div class="api-doc-card">
                         <h2 class="api-code-title">
                             <i class="fa-solid fa-gauge-high"></i>
@@ -1159,7 +1412,7 @@
                         </h2>
 
                         <p>
-                            As-Mart public APIs are rate limited to keep the service fast, stable, and protected from abuse.
+                            AS-Mart public APIs are rate limited to keep the service fast, stable, and protected from abuse.
                             You can use public endpoints without an API key, but API key access is recommended for websites,
                             apps, dashboards, partner platforms, and production integrations.
                         </p>
@@ -1183,7 +1436,7 @@
 
                         <div class="api-request-note">
                             <i class="fa-solid fa-circle-info me-1"></i>
-                            Need more than 60 requests per minute? Create an API key first, then contact the As-Mart admin
+                            Need more than 60 requests per minute? Create an API key first, then contact the AS-Mart admin
                             with your website URL and expected usage. Approved integrations can receive higher limits such as
                             <strong>300, 500, 1000+</strong> requests per minute.
                         </div>
@@ -1211,7 +1464,7 @@
                     </div>
                 </section>
 
-                <section id="examples">
+                <section id="examples" class="api-section-anchor">
                     <h3 class="api-code-title"><i class="fa-solid fa-terminal"></i> Product JSON Response</h3>
                     <div class="api-code-card">
                         <button type="button" class="api-copy-btn">Copy</button>
@@ -1268,7 +1521,7 @@
                     <h3 class="api-code-title"><i class="fa-solid fa-laptop-code"></i> ASP.NET Core HttpClient Example</h3>
                     <div class="api-code-card green">
                         <button type="button" class="api-copy-btn">Copy</button>
-                    <pre class="api-code">public class AsMartApiService
+                        <pre class="api-code">public class AsMartApiService
 {
     private readonly HttpClient _httpClient;
 
@@ -1288,18 +1541,50 @@
                     </div>
                 </section>
 
-                <aside class="api-dev-card" id="notes">
+                <h3 class="api-code-title"><i class="fa-solid fa-key"></i> ASP.NET Core with API Key</h3>
+                <div class="api-code-card blue">
+                    <button type="button" class="api-copy-btn">Copy</button><pre class="api-code">builder.Services.AddHttpClient&lt;AsMartApiService&gt;(client =&gt;
+{
+    client.BaseAddress = new Uri("https://as-mart.com/");
+    client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+    client.DefaultRequestHeaders.Add("X-API-Key", configuration["AsMartApi:ApiKey"]);
+});</pre>
+                </div>
+
+                <h3 class="api-code-title"><i class="fa-solid fa-sitemap"></i> SEO Guide Filter Example</h3>
+                <div class="api-code-card green">
+                    <button type="button" class="api-copy-btn">Copy</button><pre class="api-code">const url = new URL("https://as-mart.com/api/seopages/filter");
+url.searchParams.set("category", "laptops");
+url.searchParams.set("brand", "Apple");
+url.searchParams.set("template", "best_of");
+url.searchParams.set("page", "1");
+url.searchParams.set("pageSize", "20");
+
+const response = await fetch(url, {
+  headers: {
+    "Accept": "application/json",
+    "X-API-Key": "YOUR_API_KEY"
+  }
+});
+
+const result = await response.json();</pre>
+                </div>
+
+                <aside class="api-dev-card api-section-anchor" id="notes">
                     <div class="api-dev-icon"><i class="fa-solid fa-terminal"></i></div>
                     <h3>Developer Notes</h3>
                     <ul>
                         <li>Only active products are returned.</li>
                         <li>Maximum <strong>count</strong> value is <strong>50</strong>.</li>
                         <li>Use <strong>buyUrl</strong> instead of direct Amazon links for tracking.</li>
-                        <li>Use <strong>productUrl</strong> when linking to As-Mart product detail page.</li>
+                        <li>Use <strong>productUrl</strong> when linking to AS-Mart product detail page.</li>
                         <li>Use <strong>/api/products/promote/{slug}</strong> for one selected advertising product.</li>
                         <li>Use <strong>/api/products/home-widget</strong> when you need multiple sections in one request.</li>
                         <li>CORS is enabled for approved websites such as asifabrar.net.</li>
                         <li>All endpoints return JSON and should be called using HTTPS.</li>
+                        <li>Use <strong>/api/widgets/home</strong> to retrieve several home-page resources in one request.</li>
+                        <li>Use the <strong>Swagger UI</strong> to inspect schemas and test endpoints interactively.</li>
+                        <li>Never expose a production API key in browser JavaScript or a public repository.</li>
                     </ul>
                 </aside>
 
@@ -1310,21 +1595,32 @@
 
 <script>
     document.querySelectorAll(".api-copy-btn").forEach(button => {
-        button.addEventListener("click", function () {
+        button.addEventListener("click", async function () {
             const code = this.parentElement.querySelector("pre")?.innerText ?? "";
-            navigator.clipboard.writeText(code).then(() => {
+            try {
+                await navigator.clipboard.writeText(code);
                 const oldText = this.innerText;
                 this.innerText = "Copied";
-                setTimeout(() => this.innerText = oldText, 1200);
-            });
+                setTimeout(() => this.innerText = oldText, 1400);
+            } catch {
+                this.innerText = "Copy failed";
+            }
         });
     });
 
-    const links = document.querySelectorAll(".api-side-link");
-    links.forEach(link => {
-        link.addEventListener("click", function () {
-            links.forEach(x => x.classList.remove("active"));
-            this.classList.add("active");
-        });
-    });
+    const internalLinks = Array.from(document.querySelectorAll('.api-side-link[href^="#"]'));
+    internalLinks.forEach(link => link.addEventListener("click", function () {
+        internalLinks.forEach(item => item.classList.remove("active"));
+        this.classList.add("active");
+    }));
+
+    if ("IntersectionObserver" in window) {
+        const sections = internalLinks.map(link => document.querySelector(link.getAttribute("href"))).filter(Boolean);
+        const observer = new IntersectionObserver(entries => {
+            const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
+            if (!visible) return;
+            internalLinks.forEach(link => link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`));
+        }, { rootMargin: "-20% 0px -65% 0px", threshold: [0.05,0.25,0.5] });
+        sections.forEach(section => observer.observe(section));
+    }
 </script>

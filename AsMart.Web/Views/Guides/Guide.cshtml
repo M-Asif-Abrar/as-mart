@@ -944,6 +944,619 @@
                 height: 96px;
             }
         }
+
+        /* =========================================================
+                   MODERN GUIDE PAGE OVERRIDES
+                   ========================================================= */
+
+        .guide-page {
+            --guide-primary: #4f46e5;
+            --guide-primary-dark: #3730a3;
+            --guide-purple: #7c3aed;
+            --guide-pink: #db2777;
+            --guide-blue: #2563eb;
+            --guide-cyan: #0891b2;
+            --guide-green: #059669;
+            --guide-orange: #ea580c;
+            --guide-yellow: #f59e0b;
+            --guide-text: #0f172a;
+            --guide-muted: #64748b;
+            --guide-border: rgba(148, 163, 184, .22);
+            background: radial-gradient(circle at 4% 4%, rgba(79, 70, 229, .14), transparent 27%), radial-gradient(circle at 96% 7%, rgba(219, 39, 119, .11), transparent 25%), radial-gradient(circle at 50% 100%, rgba(8, 145, 178, .09), transparent 30%), linear-gradient(180deg, #f8fafc 0%, #eef2ff 44%, #f8fafc 100%);
+        }
+
+        .guide-shell {
+            padding-inline: clamp(.75rem, 2vw, 1.5rem);
+        }
+
+        .guide-hero {
+            border-color: rgba(79, 70, 229, .14);
+            background: radial-gradient(circle at 94% 8%, rgba(219, 39, 119, .18), transparent 30%), radial-gradient(circle at 78% 100%, rgba(37, 99, 235, .16), transparent 36%), linear-gradient(135deg, #ffffff 0%, #f8f5ff 52%, #eef4ff 100%);
+            box-shadow: 0 28px 75px rgba(15, 23, 42, .11);
+        }
+
+        .guide-kicker,
+        .guide-section-chip {
+            color: var(--guide-primary);
+            border-color: rgba(79, 70, 229, .16);
+            background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+        }
+
+        .guide-title {
+            max-width: 980px;
+            color: var(--guide-text);
+        }
+
+        .guide-action-card {
+            border-color: rgba(255, 255, 255, .85);
+            background: radial-gradient(circle at top right, rgba(124, 58, 237, .15), transparent 35%), rgba(255, 255, 255, .88);
+            box-shadow: 0 22px 52px rgba(15, 23, 42, .11);
+        }
+
+        .guide-card,
+        .guide-side-card {
+            border-color: var(--guide-border);
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 18px 52px rgba(15, 23, 42, .075);
+        }
+
+        .guide-card-header,
+        .guide-side-header {
+            padding: 20px 22px;
+            background: radial-gradient(circle at 92% 15%, rgba(124, 58, 237, .10), transparent 30%), linear-gradient(135deg, #f8fafc 0%, #f5f3ff 52%, #eff6ff 100%);
+        }
+
+            .guide-card-header h2,
+            .guide-side-header h3 {
+                color: var(--guide-text);
+            }
+
+                .guide-card-header h2 i,
+                .guide-side-header h3 i {
+                    display: grid;
+                    place-items: center;
+                    flex: 0 0 auto;
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 12px;
+                    color: #fff !important;
+                    background: linear-gradient(135deg, var(--guide-primary), var(--guide-purple));
+                    box-shadow: 0 9px 22px rgba(79, 70, 229, .22);
+                    font-size: .95rem;
+                }
+
+        .guide-section-description {
+            margin: .45rem 0 0 47px;
+            color: var(--guide-muted);
+            font-size: .78rem;
+            font-weight: 700;
+            line-height: 1.55;
+        }
+
+        /* =========================================================
+                   TOP PICKS — ONE PRODUCT PER ROW
+                   ========================================================= */
+
+        .guide-top-picks-card {
+            border-color: rgba(79, 70, 229, .18);
+            background: radial-gradient(circle at top left, rgba(37, 99, 235, .08), transparent 30%), rgba(255, 255, 255, .97);
+        }
+
+            .guide-top-picks-card > .guide-card-header {
+                background: radial-gradient(circle at 94% 10%, rgba(219, 39, 119, .12), transparent 28%), linear-gradient(135deg, #eff6ff 0%, #f5f3ff 52%, #fdf2f8 100%);
+            }
+
+                .guide-top-picks-card > .guide-card-header h2 i {
+                    background: linear-gradient(135deg, #f59e0b, #f97316);
+                    box-shadow: 0 9px 22px rgba(245, 158, 11, .24);
+                }
+
+        .guide-products-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .guide-product-card {
+            display: grid;
+            grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+            min-height: 265px;
+            border: 1px solid rgba(79, 70, 229, .13);
+            border-radius: 22px;
+            background: radial-gradient(circle at top right, rgba(124, 58, 237, .08), transparent 34%), linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+            box-shadow: 0 14px 36px rgba(15, 23, 42, .07);
+        }
+
+            .guide-product-card:hover {
+                border-color: rgba(79, 70, 229, .28);
+                box-shadow: 0 24px 58px rgba(15, 23, 42, .13);
+            }
+
+        .guide-product-media {
+            height: 100%;
+            min-height: 265px;
+            padding: 1.35rem;
+            border-right: 1px solid rgba(148, 163, 184, .16);
+            border-bottom: 0;
+            background: radial-gradient(circle at 50% 35%, rgba(99, 102, 241, .10), transparent 45%), linear-gradient(145deg, #f8fafc, #ffffff);
+        }
+
+        .guide-product-img {
+            max-width: 100%;
+            max-height: 230px;
+            object-fit: contain;
+            transition: transform .25s ease;
+        }
+
+        .guide-product-card:hover .guide-product-img {
+            transform: scale(1.035);
+        }
+
+        .guide-product-body {
+            justify-content: center;
+            padding: clamp(1.1rem, 2vw, 1.55rem);
+            gap: .8rem;
+        }
+
+        .guide-asin {
+            display: inline-flex;
+            align-items: center;
+            align-self: flex-start;
+            padding: .35rem .55rem;
+            border-radius: 999px;
+            color: #475569;
+            background: #f1f5f9;
+            font-size: .68rem;
+            letter-spacing: .025em;
+        }
+
+        .guide-product-title {
+            max-width: 950px;
+            font-size: clamp(1rem, 1.5vw, 1.18rem);
+            line-height: 1.42;
+            -webkit-line-clamp: 3;
+        }
+
+        .guide-product-meta {
+            padding: .75rem 0;
+            border-top: 1px solid rgba(148, 163, 184, .15);
+            border-bottom: 1px solid rgba(148, 163, 184, .15);
+        }
+
+        .guide-price {
+            padding: .38rem .65rem;
+            border-radius: 11px;
+            color: #047857;
+            background: rgba(5, 150, 105, .09);
+            font-size: 1.1rem;
+        }
+
+        .guide-product-actions {
+            grid-template-columns: minmax(130px, .7fr) minmax(190px, 1.3fr);
+            max-width: 520px;
+            margin-top: .15rem;
+        }
+
+        .guide-product-btn {
+            min-height: 46px;
+            border-radius: 13px;
+        }
+
+        .guide-product-actions .btn-outline-primary {
+            color: var(--guide-primary);
+            border-color: rgba(79, 70, 229, .36);
+            background: #fff;
+        }
+
+            .guide-product-actions .btn-outline-primary:hover {
+                color: #fff;
+                border-color: var(--guide-primary);
+                background: var(--guide-primary);
+            }
+
+        .guide-product-actions .btn-primary {
+            border: 0;
+            color: #fff;
+            background: linear-gradient(135deg, var(--guide-primary), var(--guide-purple));
+            box-shadow: 0 11px 25px rgba(79, 70, 229, .22);
+        }
+
+        /* =========================================================
+                   BUYING NOTES
+                   ========================================================= */
+
+        .guide-buying-notes-card {
+            border-color: rgba(8, 145, 178, .20);
+            background: radial-gradient(circle at 0 0, rgba(8, 145, 178, .10), transparent 32%), radial-gradient(circle at 100% 100%, rgba(79, 70, 229, .09), transparent 35%), linear-gradient(145deg, #ffffff, #f6fbff);
+        }
+
+            .guide-buying-notes-card > .guide-card-header {
+                border-bottom-color: rgba(8, 145, 178, .15);
+                background: radial-gradient(circle at 92% 10%, rgba(79, 70, 229, .12), transparent 30%), linear-gradient(135deg, #ecfeff 0%, #eff6ff 48%, #f5f3ff 100%);
+            }
+
+                .guide-buying-notes-card > .guide-card-header h2 i {
+                    background: linear-gradient(135deg, var(--guide-cyan), var(--guide-blue));
+                    box-shadow: 0 9px 22px rgba(8, 145, 178, .24);
+                }
+
+            .guide-buying-notes-card .guide-card-body {
+                padding: clamp(1.25rem, 3vw, 2.2rem);
+            }
+
+            .guide-buying-notes-card .guide-rich-content {
+                padding: clamp(1rem, 2vw, 1.45rem);
+                border: 1px solid rgba(8, 145, 178, .12);
+                border-radius: 20px;
+                background: radial-gradient(circle at top right, rgba(124, 58, 237, .07), transparent 30%), rgba(255, 255, 255, .78);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8);
+            }
+
+                .guide-buying-notes-card .guide-rich-content h1,
+                .guide-buying-notes-card .guide-rich-content h2,
+                .guide-buying-notes-card .guide-rich-content h3,
+                .guide-buying-notes-card .guide-rich-content h4 {
+                    color: #172554;
+                }
+
+                .guide-buying-notes-card .guide-rich-content h2,
+                .guide-buying-notes-card .guide-rich-content h3 {
+                    position: relative;
+                    padding-left: 1rem;
+                }
+
+                    .guide-buying-notes-card .guide-rich-content h2::before,
+                    .guide-buying-notes-card .guide-rich-content h3::before {
+                        content: "";
+                        position: absolute;
+                        top: .12em;
+                        bottom: .12em;
+                        left: 0;
+                        width: 5px;
+                        border-radius: 999px;
+                        background: linear-gradient(180deg, var(--guide-cyan), var(--guide-purple));
+                    }
+
+                .guide-buying-notes-card .guide-rich-content ul,
+                .guide-buying-notes-card .guide-rich-content ol {
+                    padding-left: 1.35rem;
+                }
+
+                .guide-buying-notes-card .guide-rich-content li {
+                    margin-bottom: .35rem;
+                }
+
+                    .guide-buying-notes-card .guide-rich-content li::marker {
+                        color: var(--guide-primary);
+                    }
+
+        /* =========================================================
+           RELATED GUIDES
+           ========================================================= */
+
+        .guide-related-card {
+            border-color: rgba(79, 70, 229, .17);
+            background: radial-gradient( circle at top right, rgba(219, 39, 119, .08), transparent 35%), linear-gradient( 145deg, #ffffff, #faf8ff);
+        }
+
+            .guide-related-card .guide-side-header {
+                border-bottom-color: rgba(79, 70, 229, .13);
+                background: radial-gradient( circle at 92% 10%, rgba(219, 39, 119, .12), transparent 30%), linear-gradient( 135deg, #eef2ff 0%, #f5f3ff 52%, #fdf2f8 100%);
+            }
+
+                .guide-related-card .guide-side-header h3 i {
+                    color: #fff !important;
+                    background: linear-gradient( 135deg, #7c3aed, #db2777);
+                    box-shadow: 0 9px 22px rgba(219, 39, 119, .22);
+                }
+
+        .guide-related-list {
+            display: grid;
+            gap: .7rem;
+        }
+
+        .guide-related-item {
+            position: relative;
+            display: block;
+            min-width: 0;
+            padding: .8rem;
+            border: 1px solid rgba(124, 58, 237, .13);
+            border-radius: 14px;
+            color: inherit;
+            background: radial-gradient( circle at 95% 10%, rgba(124, 58, 237, .08), transparent 30%), #fff;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, .05);
+            text-decoration: none;
+            overflow: hidden;
+            transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+        }
+
+            .guide-related-item:hover,
+            .guide-related-item:focus {
+                color: inherit;
+                border-color: rgba(79, 70, 229, .3);
+                box-shadow: 0 14px 30px rgba(15, 23, 42, .09);
+                text-decoration: none;
+                transform: translateY(-3px);
+            }
+
+        .guide-related-item__type {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            margin-bottom: .45rem;
+            padding: .28rem .45rem;
+            border-radius: 999px;
+            color: #6d28d9;
+            background: rgba(124, 58, 237, .09);
+            font-size: .61rem;
+            font-weight: 900;
+            line-height: 1;
+            text-transform: capitalize;
+        }
+
+        .guide-related-item__title {
+            display: -webkit-box;
+            margin: 0;
+            color: #0f172a;
+            font-size: .8rem;
+            font-weight: 900;
+            line-height: 1.42;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            overflow: hidden;
+        }
+
+        .guide-related-item:hover
+        .guide-related-item__title {
+            color: #4f46e5;
+        }
+
+        .guide-related-item__description {
+            display: -webkit-box;
+            margin: .42rem 0 0;
+            color: #64748b;
+            font-size: .68rem;
+            font-weight: 650;
+            line-height: 1.5;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            overflow: hidden;
+        }
+
+        .guide-related-item__footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            margin-top: .6rem;
+            padding-top: .55rem;
+            border-top: 1px solid rgba(124, 58, 237, .09);
+            color: #64748b;
+            font-size: .63rem;
+            font-weight: 800;
+        }
+
+            .guide-related-item__footer span {
+                display: inline-flex;
+                align-items: center;
+                gap: .28rem;
+            }
+
+        .guide-related-item__read {
+            color: #4f46e5;
+            font-weight: 900;
+        }
+
+        @@media (max-width: 575.98px) {
+            .guide-related-item
+
+        {
+            padding: .72rem;
+            border-radius: 12px;
+        }
+
+        .guide-related-item__title {
+            font-size: .76rem;
+        }
+
+        }
+
+
+        /* =========================================================
+                   FAQ
+                   ========================================================= */
+
+        .guide-faq-card {
+            border-color: rgba(124, 58, 237, .18);
+            background: radial-gradient(circle at top left, rgba(219, 39, 119, .08), transparent 31%), linear-gradient(145deg, #ffffff, #fbf7ff);
+        }
+
+            .guide-faq-card > .guide-card-header {
+                background: radial-gradient(circle at 94% 10%, rgba(219, 39, 119, .13), transparent 30%), linear-gradient(135deg, #f5f3ff 0%, #fdf2f8 52%, #eff6ff 100%);
+            }
+
+                .guide-faq-card > .guide-card-header h2 i {
+                    background: linear-gradient(135deg, var(--guide-purple), var(--guide-pink));
+                    box-shadow: 0 9px 22px rgba(219, 39, 119, .22);
+                }
+
+        .guide-faq-accordion {
+            display: grid;
+            gap: .75rem;
+            overflow: visible;
+            border: 0;
+            border-radius: 0;
+        }
+
+        .guide-faq-item {
+            overflow: hidden;
+            border: 1px solid rgba(124, 58, 237, .14) !important;
+            border-radius: 16px !important;
+            background: #fff;
+            box-shadow: 0 9px 24px rgba(15, 23, 42, .055);
+        }
+
+        .guide-faq-btn {
+            position: relative;
+            padding: 1rem 3.25rem 1rem 1.1rem;
+            color: var(--guide-text);
+            background: radial-gradient(circle at 95% 20%, rgba(124, 58, 237, .09), transparent 26%), linear-gradient(135deg, #ffffff, #faf7ff);
+        }
+
+            .guide-faq-btn:not(.collapsed) {
+                color: #5b21b6;
+                background: radial-gradient(circle at 95% 20%, rgba(219, 39, 119, .11), transparent 28%), linear-gradient(135deg, #f5f3ff, #fdf2f8);
+            }
+
+            .guide-faq-btn::after {
+                position: absolute;
+                right: 1rem;
+                width: 28px;
+                height: 28px;
+                padding: .4rem;
+                border-radius: 9px;
+                background-color: rgba(124, 58, 237, .10);
+                background-size: 13px;
+                background-position: center;
+            }
+
+        .guide-faq-body {
+            padding: 1rem 1.1rem 1.15rem;
+            border-top: 1px solid rgba(124, 58, 237, .10);
+            color: #334155;
+            background: radial-gradient(circle at bottom right, rgba(37, 99, 235, .07), transparent 34%), #fff;
+        }
+
+        /* Sidebar polish */
+        .guide-side-card {
+            border-color: rgba(79, 70, 229, .14);
+        }
+
+        .guide-quick-media {
+            background: radial-gradient(circle at center, rgba(99, 102, 241, .08), transparent 55%), #fff;
+        }
+
+        .guide-disclosure-label {
+            color: #3730a3;
+        }
+
+        /* =========================================================
+                   RESPONSIVE LAYOUT
+                   ========================================================= */
+
+        @@media (max-width: 1199.98px) {
+            .guide-product-card {
+                grid-template-columns: minmax(210px, 285px) minmax(0, 1fr);
+            }
+
+            .guide-product-media {
+                min-height: 245px;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .guide-section-description {
+                margin-left: 0;
+            }
+
+            .guide-card-header,
+            .guide-side-header {
+                padding: 17px;
+            }
+
+            .guide-product-card {
+                grid-template-columns: 1fr;
+            }
+
+            .guide-product-media {
+                min-height: 250px;
+                height: 250px;
+                border-right: 0;
+                border-bottom: 1px solid rgba(148, 163, 184, .16);
+            }
+
+            .guide-product-img {
+                max-height: 215px;
+            }
+
+            .guide-product-body {
+                padding: 1rem;
+            }
+
+            .guide-product-actions {
+                grid-template-columns: 1fr;
+                max-width: none;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .guide-shell {
+                padding-inline: .55rem;
+            }
+
+            .guide-card-header h2,
+            .guide-side-header h3 {
+                align-items: flex-start;
+                font-size: 1.05rem;
+            }
+
+                .guide-card-header h2 i,
+                .guide-side-header h3 i {
+                    width: 34px;
+                    height: 34px;
+                    border-radius: 10px;
+                }
+
+            .guide-section-description {
+                font-size: .72rem;
+            }
+
+            .guide-product-media {
+                min-height: 220px;
+                height: 220px;
+                padding: 1rem;
+            }
+
+            .guide-product-img {
+                max-height: 188px;
+            }
+
+            .guide-product-meta {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .guide-price {
+                align-self: flex-start;
+            }
+
+            .guide-buying-notes-card .guide-card-body,
+            .guide-faq-card .guide-card-body {
+                padding: .85rem;
+            }
+
+            .guide-buying-notes-card .guide-rich-content {
+                padding: .9rem;
+                border-radius: 15px;
+                font-size: .92rem;
+            }
+
+            .guide-faq-btn {
+                padding: .9rem 3rem .9rem .9rem;
+                font-size: .86rem;
+            }
+
+            .guide-faq-body {
+                padding: .9rem;
+                font-size: .9rem;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .guide-product-card,
+            .guide-product-img {
+                transition: none;
+            }
+        }
     </style>
 }
 
@@ -1065,12 +1678,17 @@
                     </div>
                 </section>
 
-                <section id="top-picks" class="guide-card mb-4">
+                <section id="top-picks" class="guide-card guide-top-picks-card mb-4">
                     <div class="guide-card-header">
-                        <h2>
-                            <i class="fa-solid fa-star text-warning"></i>
-                            Top Picks
-                        </h2>
+                        <div>
+                            <h2>
+                                <i class="fa-solid fa-star"></i>
+                                Top Picks
+                            </h2>
+                            <p class="guide-section-description">
+                                Compare each recommended product in a clear, full-width layout.
+                            </p>
+                        </div>
                     </div>
 
                     <div class="guide-card-body">
@@ -1170,12 +1788,17 @@
 
                 @if (!string.IsNullOrWhiteSpace(seoPage.BodyHtml))
                 {
-                    <section class="guide-card mb-4">
+                    <section class="guide-card guide-buying-notes-card mb-4">
                         <div class="guide-card-header">
-                            <h2>
-                                <i class="fa-solid fa-clipboard-list text-primary"></i>
-                                Buying Notes
-                            </h2>
+                            <div>
+                                <h2>
+                                    <i class="fa-solid fa-clipboard-list"></i>
+                                    Buying Notes
+                                </h2>
+                                <p class="guide-section-description">
+                                    Practical advice, key features, and important points to consider before buying.
+                                </p>
+                            </div>
                         </div>
 
                         <div class="guide-card-body">
@@ -1190,10 +1813,15 @@
                 {
                     <section id="faq" class="guide-card guide-faq-card mb-4">
                         <div class="guide-card-header">
-                            <h2>
-                                <i class="fa-solid fa-circle-question text-success"></i>
-                                FAQs
-                            </h2>
+                            <div>
+                                <h2>
+                                    <i class="fa-solid fa-circle-question"></i>
+                                    Frequently Asked Questions
+                                </h2>
+                                <p class="guide-section-description">
+                                    Quick answers to common questions about this product category.
+                                </p>
+                            </div>
                         </div>
 
                         <div class="guide-card-body">
@@ -1316,6 +1944,74 @@
                         </div>
                     </section>
 
+                    @if (Model.RelatedGuides != null &&
+                                        Model.RelatedGuides.Count > 0)
+                    {
+                        <section class="guide-side-card guide-related-card mb-4">
+                            <div class="guide-side-header">
+                                <h3>
+                                    <i class="fa-solid fa-book-open"></i>
+                                    Related Guides
+                                </h3>
+                            </div>
+
+                            <div class="guide-side-body">
+                                <div class="guide-related-list">
+                                    @foreach (var relatedGuide
+                                                                    in Model.RelatedGuides)
+                                    {
+                                        var relatedUrl =
+                                        "/guides/" +
+                                        Uri.EscapeDataString(
+                                        relatedGuide.Slug.Trim());
+
+                                        var guideType =
+                                        string.IsNullOrWhiteSpace(
+                                        relatedGuide.TemplateKey)
+                                        ? "Buying Guide"
+                                        : relatedGuide.TemplateKey
+                                        .Replace("-", " ")
+                                        .Replace("_", " ");
+
+                                        <a href="@relatedUrl"
+                                           class="guide-related-item"
+                                           title="@relatedGuide.Title">
+
+                                            <span class="guide-related-item__type">
+                                                <i class="fa-solid fa-folder-open"></i>
+                                                @guideType
+                                            </span>
+
+                                            <span class="guide-related-item__title">
+                                                @relatedGuide.Title
+                                            </span>
+
+                                            @if (!string.IsNullOrWhiteSpace(
+                                                                                relatedGuide.MetaDescription))
+                                            {
+                                                <span class="guide-related-item__description">
+                                                    @relatedGuide.MetaDescription
+                                                </span>
+                                            }
+
+                                            <span class="guide-related-item__footer">
+                                            <span>
+                                                <i class="far fa-calendar-alt"></i>
+                                                @(relatedGuide.UpdatedAt.ToLocalTime().ToString("dd MMM yyyy"))
+                                            </span>
+
+                                                <span class="guide-related-item__read">
+                                                    Read
+                                                    <i class="fa-solid fa-arrow-right"></i>
+                                                </span>
+                                            </span>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </section>
+                    }
+
                     <section class="guide-side-card">
                         <div class="guide-side-body">
                             <div class="guide-disclosure-label">
@@ -1424,7 +2120,8 @@
                                     else
                                     {
                                         <span class="guide-muted">—</span>
-                                    }<br/>
+                                    }
+    <br />
                                     @if (p.ListPrice.HasValue && p.ListPrice.Value > 0)
                                     {
                                         <span class="guide-cmp-list">$@p.ListPrice.Value.ToString("0.##")</span>
@@ -1435,7 +2132,7 @@
                                     }
                                 </td>
 
-                                
+
 
                                 <td>
                                     @if (offPercent.HasValue && offPercent.Value > 0)
