@@ -593,6 +593,11 @@ namespace AsMart.Web.Data
                     .IsRequired()
                     .HasMaxLength(20);
 
+                b.Property(x => x.ApiVersion)
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasDefaultValue("legacy");
+
                 b.Property(x => x.Endpoint)
                     .IsRequired()
                     .HasMaxLength(500);
@@ -608,6 +613,7 @@ namespace AsMart.Web.Data
 
                 b.HasIndex(x => x.ApiClientId);
                 b.HasIndex(x => x.UserId);
+                b.HasIndex(x => x.ApiVersion);
                 b.HasIndex(x => x.Endpoint);
                 b.HasIndex(x => x.StatusCode);
                 b.HasIndex(x => x.CreatedAt);

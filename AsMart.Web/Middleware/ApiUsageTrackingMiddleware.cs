@@ -1,11 +1,18 @@
 ﻿using AsMart.Web.Data;
 using AsMart.Web.Models;
+using AsMart.Web.Middleware;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace AsMart.Web.Middleware
 {
-    public class ApiUsageTrackingMiddleware
+    public sealed class ApiUsageTrackingMiddleware
     {
+        private const int MaximumQueryStringLength = 500;
+        private const int MaximumUserAgentLength = 500;
+        private const int MaximumIpAddressLength = 100;
+
         private readonly RequestDelegate _next;
         private readonly ILogger<ApiUsageTrackingMiddleware> _logger;
 
@@ -37,62 +44,132 @@ namespace AsMart.Web.Middleware
             {
                 stopwatch.Stop();
 
-                try
+                await SaveUsageLogAsync(
+                    context,
+                    scopeFactory,
+                    stopwatch.ElapsedMilliseconds);
+            }
+        }
+
+        private async Task SaveUsageLogAsync(
+            HttpContext context,
+            IServiceScopeFactory scopeFactory,
+            long responseTimeMs)
+        {
+            try
+            {
+                await using var scope = scopeFactory.CreateAsyncScope();
+
+                var db = scope.ServiceProvider
+                    .GetRequiredService<ApplicationDbContext>();
+
+                var apiClientId = GetIntItem(
+                    context,
+                    ApiKeyMiddleware.ApiClientIdItem);
+
+                var userId = ResolveUserId(context);
+
+                var apiVersion = ResolveApiVersion(
+                    context.Request.Path);
+
+                var usageLog = new ApiUsageLog
                 {
-                    using var scope = scopeFactory.CreateScope();
+                    ApiClientId = apiClientId,
+                    UserId = Truncate(
+                        userId,
+                        128),
 
-                    var db = scope.ServiceProvider
-                        .GetRequiredService<ApplicationDbContext>();
+                    HttpMethod = Truncate(
+                            context.Request.Method,
+                            20)
+                        ?? string.Empty,
 
-                    var apiClientId = GetIntItem(
-                        context,
-                        ApiKeyMiddleware.ApiClientIdItem);
+                    ApiVersion = apiVersion,
 
-                    var userId = GetStringItem(
-                        context,
-                        ApiKeyMiddleware.ApiUserIdItem);
+                    Endpoint = Truncate(
+                            context.Request.Path.Value,
+                            500)
+                        ?? string.Empty,
 
-                    var log = new ApiUsageLog
-                    {
-                        ApiClientId = apiClientId,
-                        UserId = userId,
-                        HttpMethod = context.Request.Method,
-                        Endpoint = context.Request.Path.Value
-                            ?? string.Empty,
-                        QueryString = context.Request.QueryString.HasValue
-                            ? context.Request.QueryString.Value
+                    QueryString = context.Request
+                        .QueryString
+                        .HasValue
+                            ? Truncate(
+                                context.Request.QueryString.Value,
+                                MaximumQueryStringLength)
                             : null,
-                        StatusCode = context.Response.StatusCode,
-                        ResponseTimeMs = stopwatch.ElapsedMilliseconds,
-                        IpAddress = context.Connection
+
+                    StatusCode = context.Response.StatusCode,
+
+                    ResponseTimeMs = responseTimeMs,
+
+                    IpAddress = Truncate(
+                        context.Connection
                             .RemoteIpAddress?
                             .ToString(),
-                        UserAgent = context.Request
+                        MaximumIpAddressLength),
+
+                    UserAgent = Truncate(
+                        context.Request
                             .Headers
                             .UserAgent
                             .ToString(),
-                        CreatedAt = DateTime.UtcNow
-                    };
+                        MaximumUserAgentLength),
 
-                    db.ApiUsageLogs.Add(log);
-                    await db.SaveChangesAsync();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(
-                        ex,
-                        "Failed to save API usage log for {Method} {Path}.",
-                        context.Request.Method,
-                        context.Request.Path);
-                }
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                db.ApiUsageLogs.Add(usageLog);
+
+                await db.SaveChangesAsync(
+                    CancellationToken.None);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to save API usage log for {Method} {Path}. TraceId: {TraceId}",
+                    context.Request.Method,
+                    context.Request.Path,
+                    context.TraceIdentifier);
+            }
+        }
+
+        private static string ResolveApiVersion(
+            PathString requestPath)
+        {
+            return requestPath.StartsWithSegments("/api/v1")
+                ? "v1"
+                : "legacy";
+        }
+
+        private static string? ResolveUserId(
+            HttpContext context)
+        {
+            var apiKeyUserId = GetStringItem(
+                context,
+                ApiKeyMiddleware.ApiUserIdItem);
+
+            if (!string.IsNullOrWhiteSpace(apiKeyUserId))
+            {
+                return apiKeyUserId;
+            }
+
+            /*
+             * This fallback supports future JWT-authenticated
+             * or cookie-authenticated API requests.
+             */
+            return context.User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
         }
 
         private static int? GetIntItem(
             HttpContext context,
             string key)
         {
-            if (!context.Items.TryGetValue(key, out var value))
+            if (!context.Items.TryGetValue(
+                    key,
+                    out var value))
             {
                 return null;
             }
@@ -102,18 +179,38 @@ namespace AsMart.Web.Middleware
                 return intValue;
             }
 
-            return int.TryParse(value?.ToString(), out var parsedValue)
-                ? parsedValue
-                : null;
+            return int.TryParse(
+                value?.ToString(),
+                out var parsedValue)
+                    ? parsedValue
+                    : null;
         }
 
         private static string? GetStringItem(
             HttpContext context,
             string key)
         {
-            return context.Items.TryGetValue(key, out var value)
+            return context.Items.TryGetValue(
+                    key,
+                    out var value)
                 ? value?.ToString()
                 : null;
+        }
+
+        private static string? Truncate(
+            string? value,
+            int maximumLength)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            value = value.Trim();
+
+            return value.Length <= maximumLength
+                ? value
+                : value[..maximumLength];
         }
     }
 }

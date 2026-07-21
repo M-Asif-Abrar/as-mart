@@ -8,6 +8,7 @@ namespace AsMart.Web.Controllers.Api
 {
     [ApiController]
     [Route("api/blogs")]
+    [Route("api/v1/blogs")]
     [Produces("application/json")]
     [EnableRateLimiting("public-api")]
     public sealed class BlogsApiController : ControllerBase

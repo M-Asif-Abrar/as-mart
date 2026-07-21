@@ -11,6 +11,7 @@ namespace AsMart.Web.Controllers.Api
 {
     [ApiController]
     [Route("api/products")]
+    [Route("api/v1/products")]
     [Produces("application/json")]
     [EnableRateLimiting("public-api")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]

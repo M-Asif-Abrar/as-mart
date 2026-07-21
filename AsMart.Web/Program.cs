@@ -105,8 +105,8 @@ builder.Services
     .ValidateOnStart();
 
 builder.Services.AddScoped<IApiKeyService,ApiKeyService>();
-
 builder.Services.AddHostedService<ApiKeyLegacyBackfillHostedService>();
+
 
 builder.Services.AddCors(options =>
 {
@@ -258,7 +258,6 @@ builder.Services.AddSwaggerGen(options =>
         type.FullName?.Replace("+", ".") ?? type.Name);
 });
 
-builder.Services.AddHostedService<ApiKeyLegacyBackfillHostedService>();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -396,41 +395,20 @@ app.UseRouting();
 app.UseCors("AsMartPublicApi");
 app.UseAuthentication();
 
-/*
- * Standardize unexpected /api exceptions as JSON.
- */
+app.UseMiddleware<LegacyApiVersionMiddleware>();
+
 app.UseMiddleware<ApiExceptionMiddleware>();
 
-/*
- * Log final API outcomes, including 2xx, 4xx and 5xx responses.
- */
 app.UseMiddleware<ApiUsageTrackingMiddleware>();
 
-/*
- * Resolve and validate an optional X-API-Key.
- */
 app.UseMiddleware<ApiKeyMiddleware>();
 
-/*
- * Enforce monthly quotas for identified API clients.
- */
 app.UseMiddleware<ApiQuotaMiddleware>();
 
-/*
- * Enforce anonymous-IP and API-client per-minute limits.
- */
 app.UseRateLimiter();
 
-/*
- * Apply authorization after usage tracking so generated 401/403
- * responses are recorded in the API usage log.
- */
 app.UseAuthorization();
 
-/*
- * Convert unmatched /api routes into standardized JSON 404 responses.
- * This must be before endpoint execution and before route mappings.
- */
 app.UseMiddleware<ApiNotFoundMiddleware>();
 
 app.Use(async (context, next) =>

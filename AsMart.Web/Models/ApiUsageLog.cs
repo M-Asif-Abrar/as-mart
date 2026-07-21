@@ -16,6 +16,9 @@ namespace AsMart.Web.Models
         [MaxLength(20)]
         public string HttpMethod { get; set; } = string.Empty;
 
+        [MaxLength(20)]
+        public string ApiVersion { get; set; } = "legacy";
+
         [MaxLength(500)]
         public string Endpoint { get; set; } = string.Empty;
 

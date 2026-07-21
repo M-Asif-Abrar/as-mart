@@ -9,6 +9,7 @@ namespace AsMart.Web.Controllers.Api
 {
     [ApiController]
     [Route("api/seopages")]
+    [Route("api/v1/seopages")]
     [Produces("application/json")]
     [EnableRateLimiting("public-api")]
     public class SeoPagesApiController : ControllerBase
