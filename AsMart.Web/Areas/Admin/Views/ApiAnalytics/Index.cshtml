@@ -1,0 +1,1389 @@
+﻿@model AsMart.Web.Models.ViewModels.AdminApiAnalyticsViewModel
+
+@using System.Text.Json
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "API Analytics";
+
+    var displayToDate = Model.ToUtc.AddDays(-1);
+
+    var dailyLabels = Model.DailyUsage
+        .Select(x => x.DateUtc.ToString("dd MMM"))
+        .ToArray();
+
+    var dailyRequests = Model.DailyUsage
+        .Select(x => x.RequestCount)
+        .ToArray();
+
+    var dailySuccess = Model.DailyUsage
+        .Select(x => x.SuccessCount)
+        .ToArray();
+
+    var dailyErrors = Model.DailyUsage
+        .Select(x => x.ErrorCount)
+        .ToArray();
+
+    var dailyResponseTimes = Model.DailyUsage
+        .Select(x => Math.Round(x.AverageResponseTimeMs, 2))
+        .ToArray();
+
+    var versionLabels = new[] { "Legacy", "v1" };
+    var versionValues = new[]
+    {
+        Model.LegacyRequests,
+        Model.V1Requests
+    };
+
+    var statusCodeLabels = Model.StatusCodes
+        .Select(x => x.StatusCode.ToString())
+        .ToArray();
+
+    var statusCodeValues = Model.StatusCodes
+        .Select(x => x.RequestCount)
+        .ToArray();
+
+    var topEndpointLabels = Model.TopEndpoints
+        .Take(10)
+        .Select(x => x.Endpoint)
+        .ToArray();
+
+    var topEndpointValues = Model.TopEndpoints
+        .Take(10)
+        .Select(x => x.RequestCount)
+        .ToArray();
+}
+
+<section class="api-analytics-page">
+
+    <div class="api-analytics-hero">
+        <div>
+            <div class="api-analytics-kicker">
+                <i class="fa-solid fa-chart-line"></i>
+                API Monitoring
+            </div>
+
+            <h1>API Analytics Dashboard</h1>
+
+            <p>
+                Monitor API traffic, consumers, endpoint usage, response times,
+                errors, and migration from legacy routes to API v1.
+            </p>
+        </div>
+
+        <div class="api-analytics-hero-actions">
+            <a asp-area="Admin"
+               asp-controller="ApiKeys"
+               asp-action="Index"
+               class="btn api-btn api-btn-light">
+                <i class="fa-solid fa-key"></i>
+                API Keys
+            </a>
+
+            <a asp-area=""
+               asp-controller="Home"
+               asp-action="ApiDocumentation"
+               class="btn api-btn api-btn-primary">
+                <i class="fa-solid fa-book-open"></i>
+                Documentation
+            </a>
+        </div>
+    </div>
+
+    <form method="get"
+          asp-area="Admin"
+          asp-controller="ApiAnalytics"
+          asp-action="Index"
+          class="api-filter-card">
+
+        <div class="api-filter-heading">
+            <div>
+                <h2>
+                    <i class="fa-solid fa-calendar-days"></i>
+                    Reporting Period
+                </h2>
+
+                <p>
+                    Select a UTC date range of up to 365 days.
+                </p>
+            </div>
+
+            <span class="api-date-summary">
+                @Model.FromUtc.ToString("dd MMM yyyy")
+                —
+                @displayToDate.ToString("dd MMM yyyy")
+            </span>
+        </div>
+
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label for="from" class="form-label api-label">
+                    From date
+                </label>
+
+                <input id="from"
+                       name="from"
+                       type="date"
+                       value="@Model.FromUtc.ToString("yyyy-MM-dd")"
+                       class="form-control api-input" />
+            </div>
+
+            <div class="col-12 col-md-4">
+                <label for="to" class="form-label api-label">
+                    To date
+                </label>
+
+                <input id="to"
+                       name="to"
+                       type="date"
+                       value="@displayToDate.ToString("yyyy-MM-dd")"
+                       class="form-control api-input" />
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="d-grid d-sm-flex gap-2">
+                    <button type="submit"
+                            class="btn api-btn api-btn-primary flex-fill">
+                        <i class="fa-solid fa-filter"></i>
+                        Apply Filter
+                    </button>
+
+                    <a asp-area="Admin"
+                       asp-controller="ApiAnalytics"
+                       asp-action="Index"
+                       class="btn api-btn api-btn-light flex-fill">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        Reset
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="api-stat-grid">
+
+        <article class="api-stat-card">
+            <div class="api-stat-icon api-stat-blue">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            </div>
+
+            <div>
+                <span>Total Requests</span>
+                <strong>@Model.TotalRequests.ToString("N0")</strong>
+                <small>Selected reporting period</small>
+            </div>
+        </article>
+
+        <article class="api-stat-card">
+            <div class="api-stat-icon api-stat-cyan">
+                <i class="fa-solid fa-calendar-day"></i>
+            </div>
+
+            <div>
+                <span>Requests Today</span>
+                <strong>@Model.RequestsToday.ToString("N0")</strong>
+                <small>Current UTC day</small>
+            </div>
+        </article>
+
+        <article class="api-stat-card">
+            <div class="api-stat-icon api-stat-indigo">
+                <i class="fa-solid fa-calendar"></i>
+            </div>
+
+            <div>
+                <span>This Month</span>
+                <strong>@Model.RequestsThisMonth.ToString("N0")</strong>
+                <small>Current UTC month</small>
+            </div>
+        </article>
+
+        <article class="api-stat-card">
+            <div class="api-stat-icon api-stat-green">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <div>
+                <span>Success Rate</span>
+                <strong>@Model.SuccessRate.ToString("N2")%</strong>
+                <small>@Model.SuccessfulRequests.ToString("N0") successful</small>
+            </div>
+        </article>
+
+        <article class="api-stat-card">
+            <div class="api-stat-icon api-stat-red">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+            <div>
+                <span>Failed Requests</span>
+                <strong>@Model.FailedRequests.ToString("N0")</strong>
+                <small>HTTP status 400 or above</small>
+            </div>
+        </article>
+
+        <article class="api-stat-card">
+            <div class="api-stat-icon api-stat-orange">
+                <i class="fa-solid fa-stopwatch"></i>
+            </div>
+
+            <div>
+                <span>Average Response</span>
+                <strong>@Model.AverageResponseTimeMs.ToString("N2") ms</strong>
+                <small>All selected API requests</small>
+            </div>
+        </article>
+
+        <article class="api-stat-card">
+            <div class="api-stat-icon api-stat-purple">
+                <i class="fa-solid fa-users-gear"></i>
+            </div>
+
+            <div>
+                <span>Active Clients</span>
+                <strong>@Model.ActiveApiClients.ToString("N0")</strong>
+                <small>@Model.TotalApiClients.ToString("N0") total clients</small>
+            </div>
+        </article>
+
+        <article class="api-stat-card">
+            <div class="api-stat-icon api-stat-slate">
+                <i class="fa-solid fa-code-branch"></i>
+            </div>
+
+            <div>
+                <span>API v1 Requests</span>
+                <strong>@Model.V1Requests.ToString("N0")</strong>
+                <small>@Model.LegacyRequests.ToString("N0") legacy requests</small>
+            </div>
+        </article>
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-xl-8">
+            <article class="api-panel">
+                <div class="api-panel-heading">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-chart-area"></i>
+                            Daily Request Trend
+                        </h2>
+
+                        <p>
+                            Successful and failed requests by UTC date.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="api-chart-wrap api-chart-large">
+                    <canvas id="dailyRequestsChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-4">
+            <article class="api-panel h-100">
+                <div class="api-panel-heading">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-code-branch"></i>
+                            Version Adoption
+                        </h2>
+
+                        <p>
+                            Legacy routes compared with API v1.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="api-chart-wrap">
+                    <canvas id="versionChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-4">
+            <article class="api-panel h-100">
+                <div class="api-panel-heading">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-signal"></i>
+                            Status Codes
+                        </h2>
+
+                        <p>
+                            Distribution of final HTTP outcomes.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="api-chart-wrap">
+                    <canvas id="statusCodeChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-xl-8">
+            <article class="api-panel">
+                <div class="api-panel-heading">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-ranking-star"></i>
+                            Most-Used Endpoints
+                        </h2>
+
+                        <p>
+                            Top endpoints by request volume.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="api-chart-wrap api-chart-medium">
+                    <canvas id="endpointChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12">
+            <article class="api-panel">
+                <div class="api-panel-heading">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-stopwatch"></i>
+                            Response-Time Trend
+                        </h2>
+
+                        <p>
+                            Average API response time by UTC date.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="api-chart-wrap api-chart-medium">
+                    <canvas id="responseTimeChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+    </div>
+
+    <div class="row g-4 mt-1">
+
+        <div class="col-12 col-xl-6">
+            <article class="api-panel">
+                <div class="api-panel-heading">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-users"></i>
+                            Top API Consumers
+                        </h2>
+
+                        <p>
+                            Registered clients and anonymous API traffic.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="table-responsive api-table-wrap">
+                    <table class="table api-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Requests</th>
+                                <th>Errors</th>
+                                <th>Average</th>
+                                <th>Last Request</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.TopConsumers.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5"
+                                        class="api-empty-cell">
+                                        No API-consumer data exists for this period.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var consumer in Model.TopConsumers)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="api-client-cell">
+                                                <div class="api-client-icon">
+                                                    <i class="fa-solid fa-cube"></i>
+                                                </div>
+
+                                                <div>
+                                                    <strong>@consumer.ClientName</strong>
+
+                                                    @if (!string.IsNullOrWhiteSpace(consumer.Website))
+                                                    {
+                                                        <small>@consumer.Website</small>
+                                                    }
+                                                    else
+                                                    {
+                                                        <small>
+                                                            @(consumer.ApiClientId.HasValue
+                                                                                                            ? "Registered integration"
+                                                                                                            : "Public anonymous traffic")
+                                            </small>
+                                                                                        }
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td>@consumer.RequestCount.ToString("N0")</td>
+
+                                    <td>
+                                        <span class="api-status-pill @(consumer.ErrorCount > 0 ? "api-status-error" : "api-status-success")">
+                                            @consumer.ErrorCount.ToString("N0")
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @consumer.AverageResponseTimeMs.ToString("N2") ms
+                                    </td>
+
+                                    <td>
+                                        @(consumer.LastRequestAtUtc?.ToString("dd MMM yyyy HH:mm")
+                                                                            ?? "Never")
+                                </td>
+                            </tr>
+                                                        }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <article class="api-panel">
+                <div class="api-panel-heading">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-route"></i>
+                            Top Endpoints
+                        </h2>
+
+                        <p>
+                            Usage volume, errors, and performance.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="table-responsive api-table-wrap">
+                    <table class="table api-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Calls</th>
+                                <th>Errors</th>
+                                <th>Average</th>
+                                <th>Maximum</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.TopEndpoints.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5"
+                                        class="api-empty-cell">
+                                        No endpoint usage exists for this period.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var endpoint in Model.TopEndpoints)
+                                {
+                                    <tr>
+                                        <td>
+                                            <code class="api-endpoint-code">
+                                                @endpoint.Endpoint
+                                            </code>
+                                        </td>
+
+                                        <td>@endpoint.RequestCount.ToString("N0")</td>
+
+                                        <td>
+                                            <span class="api-status-pill @(endpoint.ErrorCount > 0 ? "api-status-error" : "api-status-success")">
+                                                @endpoint.ErrorCount.ToString("N0")
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            @endpoint.AverageResponseTimeMs.ToString("N2") ms
+                                        </td>
+
+                                        <td>
+                                            @endpoint.MaximumResponseTimeMs.ToString("N0") ms
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12">
+            <article class="api-panel">
+                <div class="api-panel-heading">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-bug"></i>
+                            Recent API Errors
+                        </h2>
+
+                        <p>
+                            Latest requests returning HTTP 400 or above.
+                        </p>
+                    </div>
+
+                    <span class="api-panel-count">
+                        @Model.RecentErrors.Count records
+                    </span>
+                </div>
+
+                <div class="table-responsive api-table-wrap">
+                    <table class="table api-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Client</th>
+                                <th>Method</th>
+                                <th>Endpoint</th>
+                                <th>Version</th>
+                                <th>Status</th>
+                                <th>Response</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.RecentErrors.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="8"
+                                        class="api-empty-cell">
+                                        No API errors were recorded during this period.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var error in Model.RecentErrors)
+                                {
+                                    <tr>
+                                        <td>
+                                            @error.CreatedAtUtc.ToString("dd MMM yyyy HH:mm:ss")
+                                        </td>
+
+                                        <td>@error.ClientName</td>
+
+                                        <td>
+                                            <span class="api-method api-method-@error.HttpMethod.ToLowerInvariant()">
+                                                @error.HttpMethod
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <code class="api-endpoint-code">
+                                                @error.Endpoint
+                                            </code>
+                                        </td>
+
+                                        <td>
+                                            <span class="api-version-pill">
+                                                @error.ApiVersion
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <span class="api-http-status">
+                                                @error.StatusCode
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            @error.ResponseTimeMs.ToString("N0") ms
+                                        </td>
+
+                                        <td>
+                                            @(string.IsNullOrWhiteSpace(error.IpAddress)
+                                                                                ? "Unknown"
+                                                                                : error.IpAddress)
+                                </td>
+                            </tr>
+                                                        }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </div>
+
+    </div>
+
+</section>
+
+@section Styles {
+    <style>
+        .api-analytics-page {
+            padding: 1rem 0 3rem;
+        }
+
+        .api-analytics-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 1.4rem;
+            padding: clamp(1.4rem, 3vw, 2.2rem);
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 30px;
+            background: radial-gradient( 680px 300px at 0% 0%, rgba(37, 99, 235, .18), transparent 62% ), radial-gradient( 520px 260px at 100% 10%, rgba(168, 85, 247, .13), transparent 60% ), linear-gradient( 135deg, rgba(255,255,255,.97), rgba(248,250,252,.90) );
+            box-shadow: 0 24px 62px rgba(15, 23, 42, .10);
+            overflow: hidden;
+        }
+
+        .api-analytics-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: .7rem;
+            padding: .48rem .8rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, .10);
+            color: #1d4ed8;
+            font-size: .76rem;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .api-analytics-hero h1 {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 950;
+            letter-spacing: -.055em;
+            line-height: 1.05;
+        }
+
+        .api-analytics-hero p {
+            max-width: 760px;
+            margin: .8rem 0 0;
+            color: #64748b;
+            font-size: .96rem;
+            font-weight: 650;
+            line-height: 1.75;
+        }
+
+        .api-analytics-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .7rem;
+            justify-content: flex-end;
+        }
+
+        .api-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            min-height: 44px;
+            padding: .68rem 1rem;
+            border-radius: 15px;
+            font-size: .88rem;
+            font-weight: 900;
+        }
+
+        .api-btn-primary {
+            border: 0;
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+            color: #fff;
+            box-shadow: 0 15px 28px rgba(37, 99, 235, .22);
+        }
+
+            .api-btn-primary:hover,
+            .api-btn-primary:focus {
+                color: #fff;
+                transform: translateY(-1px);
+            }
+
+        .api-btn-light {
+            border: 1px solid rgba(15, 23, 42, .11);
+            background: rgba(255, 255, 255, .88);
+            color: #0f172a;
+        }
+
+            .api-btn-light:hover {
+                color: #0f172a;
+                background: #fff;
+            }
+
+        .api-filter-card,
+        .api-panel {
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 25px;
+            background: rgba(255, 255, 255, .88);
+            box-shadow: 0 18px 46px rgba(15, 23, 42, .07);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .api-filter-card {
+            margin-bottom: 1.4rem;
+            padding: 1.25rem;
+        }
+
+        .api-filter-heading,
+        .api-panel-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .api-filter-heading {
+            margin-bottom: 1rem;
+        }
+
+            .api-filter-heading h2,
+            .api-panel-heading h2 {
+                margin: 0;
+                color: #0f172a;
+                font-size: 1rem;
+                font-weight: 950;
+                letter-spacing: -.025em;
+            }
+
+                .api-filter-heading h2 i,
+                .api-panel-heading h2 i {
+                    margin-right: .4rem;
+                    color: #2563eb;
+                }
+
+            .api-filter-heading p,
+            .api-panel-heading p {
+                margin: .38rem 0 0;
+                color: #64748b;
+                font-size: .82rem;
+                font-weight: 650;
+            }
+
+        .api-date-summary,
+        .api-panel-count {
+            padding: .48rem .75rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, .08);
+            color: #1d4ed8;
+            font-size: .74rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .api-label {
+            color: #334155;
+            font-size: .8rem;
+            font-weight: 850;
+        }
+
+        .api-input {
+            min-height: 45px;
+            border: 1px solid rgba(15, 23, 42, .13);
+            border-radius: 14px;
+            color: #0f172a;
+            font-size: .88rem;
+            font-weight: 750;
+            box-shadow: none;
+        }
+
+            .api-input:focus {
+                border-color: rgba(37, 99, 235, .60);
+                box-shadow: 0 0 0 .22rem rgba(37, 99, 235, .10);
+            }
+
+        .api-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .api-stat-card {
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            min-width: 0;
+            padding: 1rem;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, .89);
+            box-shadow: 0 16px 38px rgba(15, 23, 42, .065);
+        }
+
+        .api-stat-icon {
+            display: grid;
+            flex: 0 0 auto;
+            width: 48px;
+            height: 48px;
+            place-items: center;
+            border-radius: 16px;
+            font-size: 1rem;
+        }
+
+        .api-stat-blue {
+            background: rgba(37, 99, 235, .11);
+            color: #2563eb;
+        }
+
+        .api-stat-cyan {
+            background: rgba(14, 165, 233, .11);
+            color: #0284c7;
+        }
+
+        .api-stat-indigo {
+            background: rgba(99, 102, 241, .11);
+            color: #4f46e5;
+        }
+
+        .api-stat-green {
+            background: rgba(16, 185, 129, .11);
+            color: #059669;
+        }
+
+        .api-stat-red {
+            background: rgba(239, 68, 68, .11);
+            color: #dc2626;
+        }
+
+        .api-stat-orange {
+            background: rgba(249, 115, 22, .11);
+            color: #ea580c;
+        }
+
+        .api-stat-purple {
+            background: rgba(168, 85, 247, .11);
+            color: #9333ea;
+        }
+
+        .api-stat-slate {
+            background: rgba(71, 85, 105, .11);
+            color: #475569;
+        }
+
+        .api-stat-card span {
+            display: block;
+            color: #64748b;
+            font-size: .72rem;
+            font-weight: 850;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .api-stat-card strong {
+            display: block;
+            margin-top: .18rem;
+            color: #0f172a;
+            font-size: 1.35rem;
+            font-weight: 950;
+            letter-spacing: -.035em;
+            overflow-wrap: anywhere;
+        }
+
+        .api-stat-card small {
+            display: block;
+            margin-top: .18rem;
+            color: #94a3b8;
+            font-size: .72rem;
+            font-weight: 700;
+        }
+
+        .api-panel {
+            overflow: hidden;
+        }
+
+        .api-panel-heading {
+            padding: 1.15rem 1.2rem;
+            border-bottom: 1px solid rgba(15, 23, 42, .07);
+        }
+
+        .api-chart-wrap {
+            position: relative;
+            min-height: 310px;
+            padding: 1rem;
+        }
+
+        .api-chart-large {
+            min-height: 390px;
+        }
+
+        .api-chart-medium {
+            min-height: 340px;
+        }
+
+        .api-table-wrap {
+            max-height: 520px;
+        }
+
+        .api-table {
+            margin: 0;
+            font-size: .78rem;
+        }
+
+            .api-table thead th {
+                position: sticky;
+                top: 0;
+                z-index: 2;
+                padding: .78rem .9rem;
+                border-bottom: 1px solid rgba(15, 23, 42, .09);
+                background: #f8fafc;
+                color: #475569;
+                font-size: .69rem;
+                font-weight: 900;
+                letter-spacing: .05em;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+
+            .api-table tbody td {
+                padding: .78rem .9rem;
+                border-color: rgba(15, 23, 42, .065);
+                color: #334155;
+                font-weight: 700;
+                vertical-align: middle;
+            }
+
+            .api-table tbody tr:hover td {
+                background: rgba(37, 99, 235, .028);
+            }
+
+        .api-client-cell {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            min-width: 190px;
+        }
+
+        .api-client-icon {
+            display: grid;
+            width: 36px;
+            height: 36px;
+            place-items: center;
+            flex: 0 0 auto;
+            border-radius: 12px;
+            background: rgba(37, 99, 235, .09);
+            color: #2563eb;
+        }
+
+        .api-client-cell strong {
+            display: block;
+            color: #0f172a;
+            font-weight: 900;
+        }
+
+        .api-client-cell small {
+            display: block;
+            max-width: 220px;
+            margin-top: .12rem;
+            color: #94a3b8;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .api-status-pill,
+        .api-version-pill,
+        .api-http-status,
+        .api-method {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 25px;
+            padding: .25rem .48rem;
+            border-radius: 999px;
+            font-size: .68rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .api-status-success {
+            background: rgba(16, 185, 129, .10);
+            color: #047857;
+        }
+
+        .api-status-error,
+        .api-http-status {
+            background: rgba(239, 68, 68, .10);
+            color: #b91c1c;
+        }
+
+        .api-version-pill {
+            background: rgba(99, 102, 241, .10);
+            color: #4338ca;
+            text-transform: uppercase;
+        }
+
+        .api-method {
+            min-width: 45px;
+            background: rgba(71, 85, 105, .10);
+            color: #334155;
+        }
+
+        .api-method-get {
+            background: rgba(14, 165, 233, .10);
+            color: #0369a1;
+        }
+
+        .api-method-post {
+            background: rgba(16, 185, 129, .10);
+            color: #047857;
+        }
+
+        .api-method-put,
+        .api-method-patch {
+            background: rgba(249, 115, 22, .10);
+            color: #c2410c;
+        }
+
+        .api-method-delete {
+            background: rgba(239, 68, 68, .10);
+            color: #b91c1c;
+        }
+
+        .api-endpoint-code {
+            display: inline-block;
+            max-width: 340px;
+            padding: .32rem .48rem;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 9px;
+            background: #f8fafc;
+            color: #334155;
+            font-size: .72rem;
+            overflow-wrap: anywhere;
+        }
+
+        .api-empty-cell {
+            padding: 2rem !important;
+            text-align: center;
+            color: #94a3b8 !important;
+            font-weight: 800 !important;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .api-stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .api-analytics-hero {
+                align-items: flex-start;
+                flex-direction: column;
+                border-radius: 24px;
+            }
+
+            .api-analytics-hero-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+                .api-analytics-hero-actions .api-btn {
+                    flex: 1 1 auto;
+                }
+
+            .api-filter-heading,
+            .api-panel-heading {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .api-stat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .api-chart-wrap,
+            .api-chart-large,
+            .api-chart-medium {
+                min-height: 300px;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .api-analytics-page {
+                padding-top: .4rem;
+            }
+
+            .api-filter-card,
+            .api-panel {
+                border-radius: 20px;
+            }
+
+            .api-stat-card {
+                border-radius: 18px;
+            }
+
+            .api-chart-wrap {
+                padding: .75rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <script>
+        (() => {
+            const dailyLabels =
+                @Html.Raw(JsonSerializer.Serialize(dailyLabels));
+
+            const dailyRequests =
+                @Html.Raw(JsonSerializer.Serialize(dailyRequests));
+
+            const dailySuccess =
+                @Html.Raw(JsonSerializer.Serialize(dailySuccess));
+
+            const dailyErrors =
+                @Html.Raw(JsonSerializer.Serialize(dailyErrors));
+
+            const dailyResponseTimes =
+                @Html.Raw(JsonSerializer.Serialize(dailyResponseTimes));
+
+            const versionLabels =
+                @Html.Raw(JsonSerializer.Serialize(versionLabels));
+
+            const versionValues =
+                @Html.Raw(JsonSerializer.Serialize(versionValues));
+
+            const statusCodeLabels =
+                @Html.Raw(JsonSerializer.Serialize(statusCodeLabels));
+
+            const statusCodeValues =
+                @Html.Raw(JsonSerializer.Serialize(statusCodeValues));
+
+            const topEndpointLabels =
+                @Html.Raw(JsonSerializer.Serialize(topEndpointLabels));
+
+            const topEndpointValues =
+                @Html.Raw(JsonSerializer.Serialize(topEndpointValues));
+
+            const gridColor = "rgba(15, 23, 42, 0.07)";
+            const textColor = "#64748b";
+
+            Chart.defaults.color = textColor;
+            Chart.defaults.font.family =
+                "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+
+            const commonScales = {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxRotation: 0,
+                        autoSkip: true
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: gridColor
+                    }
+                }
+            };
+
+            const dailyCanvas =
+                document.getElementById("dailyRequestsChart");
+
+            if (dailyCanvas) {
+                new Chart(dailyCanvas, {
+                    type: "line",
+                    data: {
+                        labels: dailyLabels,
+                        datasets: [
+                            {
+                                label: "Total Requests",
+                                data: dailyRequests,
+                                borderColor: "#2563eb",
+                                backgroundColor: "rgba(37, 99, 235, .12)",
+                                fill: true,
+                                tension: .35,
+                                pointRadius: 3
+                            },
+                            {
+                                label: "Successful",
+                                data: dailySuccess,
+                                borderColor: "#10b981",
+                                backgroundColor: "rgba(16, 185, 129, .08)",
+                                tension: .35,
+                                pointRadius: 2
+                            },
+                            {
+                                label: "Errors",
+                                data: dailyErrors,
+                                borderColor: "#ef4444",
+                                backgroundColor: "rgba(239, 68, 68, .08)",
+                                tension: .35,
+                                pointRadius: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: "index"
+                        },
+                        scales: commonScales
+                    }
+                });
+            }
+
+            const versionCanvas =
+                document.getElementById("versionChart");
+
+            if (versionCanvas) {
+                new Chart(versionCanvas, {
+                    type: "doughnut",
+                    data: {
+                        labels: versionLabels,
+                        datasets: [{
+                            data: versionValues,
+                            backgroundColor: [
+                                "#94a3b8",
+                                "#4f46e5"
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: "68%",
+                        plugins: {
+                            legend: {
+                                position: "bottom"
+                            }
+                        }
+                    }
+                });
+            }
+
+            const statusCanvas =
+                document.getElementById("statusCodeChart");
+
+            if (statusCanvas) {
+                new Chart(statusCanvas, {
+                    type: "doughnut",
+                    data: {
+                        labels: statusCodeLabels,
+                        datasets: [{
+                            data: statusCodeValues,
+                            backgroundColor: [
+                                "#10b981",
+                                "#2563eb",
+                                "#f59e0b",
+                                "#ef4444",
+                                "#8b5cf6",
+                                "#64748b"
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: "66%",
+                        plugins: {
+                            legend: {
+                                position: "bottom"
+                            }
+                        }
+                    }
+                });
+            }
+
+            const endpointCanvas =
+                document.getElementById("endpointChart");
+
+            if (endpointCanvas) {
+                new Chart(endpointCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: topEndpointLabels,
+                        datasets: [{
+                            label: "Requests",
+                            data: topEndpointValues,
+                            backgroundColor: "rgba(37, 99, 235, .72)",
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: "y",
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: gridColor
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            const responseCanvas =
+                document.getElementById("responseTimeChart");
+
+            if (responseCanvas) {
+                new Chart(responseCanvas, {
+                    type: "line",
+                    data: {
+                        labels: dailyLabels,
+                        datasets: [{
+                            label: "Average Response Time (ms)",
+                            data: dailyResponseTimes,
+                            borderColor: "#f97316",
+                            backgroundColor: "rgba(249, 115, 22, .10)",
+                            fill: true,
+                            tension: .35,
+                            pointRadius: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: commonScales
+                    }
+                });
+            }
+        })();
+    </script>
+}

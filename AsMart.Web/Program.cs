@@ -164,15 +164,23 @@ builder.Services.AddSwaggerGen(options =>
             Version = "v1",
             Description =
                 """
-                Public JSON API for AS-Mart products, categories, collections,
-                blogs, and SEO guide pages.
+                Version 1 of the AS-Mart public JSON API for products,
+                categories, collections, blogs, combined widgets,
+                and SEO guide pages.
 
-                Requests can be made without an API key and will use the
-                public rate limit.
+                New integrations should use versioned routes beginning with:
 
-                Registered integrations can provide an API key using the
-                X-API-Key header to receive their assigned per-minute limit
-                and monthly quota.
+                /api/v1
+
+                Legacy routes beginning directly with /api remain temporarily
+                available for backward compatibility, but they are deprecated.
+
+                Requests can be made without an API key and will use the shared
+                public rate-limit policy.
+
+                Registered integrations should provide an API key through the
+                X-API-Key request header to receive their assigned per-minute
+                rate limit, monthly quota, lifecycle controls, and usage analytics.
                 """,
             Contact = new OpenApiContact
             {
@@ -198,14 +206,27 @@ builder.Services.AddSwaggerGen(options =>
         return new[] { tagName };
     });
 
-    // Show only actual JSON API routes in Swagger.
-    options.DocInclusionPredicate((_, apiDescription) =>
+    /*
+     * Show only version 1 JSON API routes in Swagger.
+     *
+     * Legacy /api routes remain functional but are intentionally hidden
+     * so Swagger does not display duplicate operations.
+     */
+    options.DocInclusionPredicate((documentName, apiDescription) =>
     {
+        if (!string.Equals(
+                documentName,
+                "v1",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
         var relativePath = apiDescription.RelativePath;
 
         return !string.IsNullOrWhiteSpace(relativePath) &&
                relativePath.StartsWith(
-                   "api/",
+                   "api/v1/",
                    StringComparison.OrdinalIgnoreCase);
     });
 
@@ -223,9 +244,14 @@ builder.Services.AddSwaggerGen(options =>
                 Enter only the complete raw API key value.
 
                 Example:
+
                 asmart_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-                Swagger will send it using the X-API-Key header.
+                Swagger sends the value in the X-API-Key request header.
+
+                Anonymous requests are allowed for public endpoints, but they
+                use the shared public rate limit and do not receive a registered
+                client's monthly quota or usage attribution.
                 """,
             In = ParameterLocation.Header,
             Type = SecuritySchemeType.ApiKey,
@@ -257,7 +283,6 @@ builder.Services.AddSwaggerGen(options =>
     options.CustomSchemaIds(type =>
         type.FullName?.Replace("+", ".") ?? type.Name);
 });
-
 
 builder.Services.AddRateLimiter(options =>
 {

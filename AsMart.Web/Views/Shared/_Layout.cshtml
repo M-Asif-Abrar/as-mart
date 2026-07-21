@@ -647,7 +647,7 @@
                                 <i class="fa-solid fa-layer-group"></i><span>Categories</span>
                             </a>
 
-                            @* @await Component.InvokeAsync("CategoriesMenu") *@
+                            @await Component.InvokeAsync("CategoriesMenu")
 
                         </li>
 
@@ -689,6 +689,16 @@
                                     <li>
                                         <a class="dropdown-item" asp-area="Admin" asp-controller="ApiUsage" asp-action="Index">
                                             <i class="fas fa-chart-line me-2"></i> API Usage
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-area="Admin"
+                                           asp-controller="ApiAnalytics"
+                                           asp-action="Index">
+                                            <i class="fa-solid fa-chart-pie"></i>
+                                            <span>API Analytics</span>
                                         </a>
                                     </li>
 

@@ -354,11 +354,29 @@
                 </li>
                 <li>
                     <a asp-area=""
+                       asp-controller="Developer"
+                       asp-action="Index"
+                       class="dropdown-item">
+                        <i class="fa-solid fa-code"></i>
+                        <span>Developer Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-area=""
                        asp-controller="ApiKeys"
                        asp-action="Index"
                        class="dropdown-item">
                         <i class="fa-solid fa-key"></i>
                         My API Keys
+                    </a>
+                </li>
+                <li>
+                    <a asp-area=""
+                       asp-controller="Home"
+                       asp-action="ApiDocumentation"
+                       class="dropdown-item">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>API Documentation</span>
                     </a>
                 </li>
 

@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "AS-Mart Public API Documentation";
+    ViewData["Title"] = "AS-Mart Public API v1 Documentation";
     ViewData["HidePageHeader"] = true;
     Layout = "_Layout";
 }
@@ -1016,6 +1016,7 @@
                 <div class="api-side-heading">Getting started</div>
                 <a href="#overview" class="api-side-link active"><i class="fa-solid fa-house"></i><span>Overview</span></a>
                 <a href="#base-url" class="api-side-link"><i class="fa-solid fa-globe"></i><span>Base URLs</span></a>
+                <a href="#versioning" class="api-side-link"><i class="fa-solid fa-code-branch"></i><span>Versioning</span></a>
                 <a href="#authentication" class="api-side-link"><i class="fa-solid fa-key"></i><span>Authentication</span></a>
                 <a href="https://as-mart.com/swagger" target="_blank" rel="noopener" class="api-side-link api-swagger-link"><i class="fa-solid fa-code"></i><span>Swagger UI</span></a>
                 <div class="api-side-heading">API resources</div>
@@ -1031,14 +1032,14 @@
                 <a href="#rate-limits" class="api-side-link"><i class="fa-solid fa-gauge-high"></i><span>Rate Limits</span></a>
                 <a href="#examples" class="api-side-link"><i class="fa-solid fa-terminal"></i><span>Examples</span></a>
                 <a href="#notes" class="api-side-link"><i class="fa-regular fa-circle-info"></i><span>Notes</span></a>
-                <div class="api-info-card"><div class="api-info-icon"><i class="fa-solid fa-shield-halved"></i></div><h5 class="fw-bold">Quick Info</h5><ul class="small mb-0 ps-3"><li>HTTPS JSON API</li><li>Optional API key</li><li>Maximum count: 50</li><li>Swagger available</li></ul></div>
+                <div class="api-info-card"><div class="api-info-icon"><i class="fa-solid fa-shield-halved"></i></div><h5 class="fw-bold">Quick Info</h5><ul class="small mb-0 ps-3"><li>HTTPS JSON API</li><li>Recommended version: v1</li><li>Optional API key</li><li>Maximum count: 50</li><li>Swagger available</li></ul></div>
             </aside>
 
             <main class="api-main">
 
                 <section class="api-hero">
                     <div>
-                        <span class="api-hero-badge"><i class="fa-solid fa-code-branch"></i>Public REST API</span>
+                        <span class="api-hero-badge"><i class="fa-solid fa-code-branch"></i>Public REST API • v1</span>
                         <h1>Build with the <span>AS-Mart API</span></h1>
                         <p>Integrate products, categories, collections, blogs, combined widgets, and more than 2,000 public buying guides into ASP.NET Core applications, affiliate websites, dashboards, and partner platforms.</p>
                         <div class="api-hero-actions">
@@ -1053,8 +1054,16 @@
                                 Get API Key
                             </a>
 
+
+                            <a asp-controller="Developer"
+                               asp-action="Index"
+                               class="api-btn-light">
+                                <i class="fa-solid fa-gauge-high"></i>
+                                Developer Portal
+                            </a>
+
                             <a href="https://as-mart.com/swagger" target="_blank" rel="noopener" class="api-btn-light"><i class="fa-solid fa-code"></i>Open Swagger</a>
-                            <a href="/api/products/home-widget?count=6" target="_blank" rel="noopener" class="api-btn-light"><i class="fa-solid fa-flask"></i>Test API</a>
+                            <a href="/api/v1/products/home-widget?count=6" target="_blank" rel="noopener" class="api-btn-light"><i class="fa-solid fa-flask"></i>Test API</a>
                         </div>
                     </div>
                     <div class="api-hero-art">
@@ -1097,27 +1106,48 @@
                     </div>
                 </section>
 
+                <section class="api-card has-soft-icon api-section-anchor" id="versioning">
+                    <h2><i class="fa-solid fa-code-branch"></i> API Versioning</h2>
+
+                    <p>
+                        New integrations should use version 1 endpoints beginning with
+                        <code>/api/v1/v1</code>.
+                    </p>
+
+                    <div class="alert alert-warning">
+                        Legacy routes beginning directly with <code>/api</code> remain
+                        available for compatibility but are deprecated.
+                    </div>
+
+                    <pre><code>GET https://as-mart.com/api/v1/products/featured?count=6</code></pre>
+                    <div class="api-note">
+                        Versioned responses include <span class="api-inline-code">X-API-Version: 1</span>.
+                        Legacy responses include deprecation headers. Existing clients can migrate one endpoint at a time
+                        without changing their API key.
+                    </div>
+                </section>
+
                 <section class="api-card has-soft-icon api-section-anchor" id="base-url">
                     <h2><i class="fa-solid fa-globe"></i> Base URLs</h2>
-                    <p>Product endpoints start with:</p>
-                    <div class="api-base-box"><i class="fa-solid fa-globe"></i><span>https://as-mart.com/api/products</span></div>
+                    <p>Use the following versioned base URLs for all new integrations:</p>
+                    <div class="api-base-box"><i class="fa-solid fa-globe"></i><span>https://as-mart.com/api/v1/products</span></div>
                     <p class="mt-3">Other public resources:</p>
-                    <div class="api-base-box mb-2"><i class="fa-solid fa-layer-group"></i><span>https://as-mart.com/api/categories</span></div>
-                    <div class="api-base-box mb-2"><i class="fa-solid fa-grip"></i><span>https://as-mart.com/api/collections</span></div>
-                    <div class="api-base-box mb-2"><i class="fa-solid fa-newspaper"></i><span>https://as-mart.com/api/blogs</span></div>
-                    <div class="api-base-box mb-2"><i class="fa-solid fa-table-cells-large"></i><span>https://as-mart.com/api/widgets</span></div>
-                    <div class="api-base-box"><i class="fa-solid fa-sitemap"></i><span>https://as-mart.com/api/seopages</span></div>
+                    <div class="api-base-box mb-2"><i class="fa-solid fa-layer-group"></i><span>https://as-mart.com/api/v1/categories</span></div>
+                    <div class="api-base-box mb-2"><i class="fa-solid fa-grip"></i><span>https://as-mart.com/api/v1/collections</span></div>
+                    <div class="api-base-box mb-2"><i class="fa-solid fa-newspaper"></i><span>https://as-mart.com/api/v1/blogs</span></div>
+                    <div class="api-base-box mb-2"><i class="fa-solid fa-table-cells-large"></i><span>https://as-mart.com/api/v1/widgets</span></div>
+                    <div class="api-base-box"><i class="fa-solid fa-sitemap"></i><span>https://as-mart.com/api/v1/seopages</span></div>
                     <div class="api-soft-icon"><i class="fa-solid fa-lock"></i></div>
                 </section>
 
                 <section class="api-card api-section-anchor" id="authentication">
                     <h2><i class="fa-solid fa-key"></i> Authentication</h2>
-                    <p>Public requests can be sent without credentials. Production integrations should include an API key in the <span class="api-inline-code">X-API-Key</span> request header for higher, account-specific limits and lifecycle management.</p>
+                    <p>Anonymous public requests can be sent without credentials. Production integrations should include an API key in the <span class="api-inline-code">X-API-Key</span> request header for higher, account-specific limits and lifecycle management.</p>
                     <div class="api-auth-grid"><article class="api-auth-card"><h3><i class="fa-solid fa-globe me-1"></i> Public request</h3><p class="mb-0">No header is required. Public traffic uses the shared public rate-limit policy.</p></article><article class="api-auth-card"><h3><i class="fa-solid fa-shield-halved me-1"></i> API-key request</h3><p class="mb-0">Send <span class="api-inline-code">X-API-Key: YOUR_API_KEY</span> with every request.</p></article></div>
                     <h3 class="api-code-title"><i class="fa-solid fa-terminal"></i> cURL with API key</h3>
                     <div class="api-code-card blue">
                         <button type="button" class="api-copy-btn">Copy</button><pre class="api-code">curl --request GET \
-  --url "https://as-mart.com/api/products/featured?count=6" \
+  --url "https://as-mart.com/api/v1/products/featured?count=6" \
   --header "Accept: application/json" \
   --header "X-API-Key: YOUR_API_KEY"</pre>
                     </div>
@@ -1132,21 +1162,21 @@
                         <table class="api-endpoint-table">
                             <thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead>
                             <tbody>
-                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/products/featured?count=12</td><td><span class="api-tag">Products</span></td><td>Featured products selected by admin.</td></tr>
-                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/latest?count=12</td><td><span class="api-tag">Products</span></td><td>Latest active products.</td></tr>
-                                <tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/products/popular?count=12</td><td><span class="api-tag">Products</span></td><td>Popular products based on clicks and ratings.</td></tr>
-                                <tr><td><span class="api-method orange">GET</span></td><td class="api-path">/api/products/deals?count=12</td><td><span class="api-tag">Deals</span></td><td>Products marked as Deal of the Day.</td></tr>
-                                <tr><td><span class="api-method teal">GET</span></td><td class="api-path">/api/products/top-rated?count=12</td><td><span class="api-tag">Rating</span></td><td>Highest-rated products.</td></tr>
-                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/products/random?count=6</td><td><span class="api-tag">Widgets</span></td><td>Random active products for rotating widgets and ads.</td></tr>
-                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/products/search?q=watch&amp;count=12</td><td><span class="api-tag">Search</span></td><td>Search by title, brand, or short description.</td></tr>
-                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/category/{categorySlug}?count=12</td><td><span class="api-tag">Category</span></td><td>Products from a specific category slug.</td></tr>
-                                <tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/products/brand/{brand}?count=12</td><td><span class="api-tag">Brand</span></td><td>Products from a specific brand.</td></tr>
-                                <tr><td><span class="api-method orange">GET</span></td><td class="api-path">/api/products/price-range?min=10&amp;max=100&amp;count=12</td><td><span class="api-tag">Filter</span></td><td>Products within a price range.</td></tr>
-                                <tr><td><span class="api-method teal">GET</span></td><td class="api-path">/api/products/related/{slug}?count=12</td><td><span class="api-tag">Related</span></td><td>Related products using product categories.</td></tr>
-                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/products/collection/{collectionSlug}?count=12</td><td><span class="api-tag">Collection</span></td><td>Products from a public collection.</td></tr>
-                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/products/home-widget?count=8</td><td><span class="api-tag">Widget</span></td><td>Returns featured, deals, popular, and latest products in one response.</td></tr>
-                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/promote/{slug}</td><td><span class="api-tag">Ad</span></td><td>Single product for advertising/promotion.</td></tr>
-                                <tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/products/{slug}</td><td><span class="api-tag">Single</span></td><td>Single active product by SEO slug.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/v1/products/featured?count=12</td><td><span class="api-tag">Products</span></td><td>Featured products selected by admin.</td></tr>
+                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/v1/products/latest?count=12</td><td><span class="api-tag">Products</span></td><td>Latest active products.</td></tr>
+                                <tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/v1/products/popular?count=12</td><td><span class="api-tag">Products</span></td><td>Popular products based on clicks and ratings.</td></tr>
+                                <tr><td><span class="api-method orange">GET</span></td><td class="api-path">/api/v1/products/deals?count=12</td><td><span class="api-tag">Deals</span></td><td>Products marked as Deal of the Day.</td></tr>
+                                <tr><td><span class="api-method teal">GET</span></td><td class="api-path">/api/v1/products/top-rated?count=12</td><td><span class="api-tag">Rating</span></td><td>Highest-rated products.</td></tr>
+                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/v1/products/random?count=6</td><td><span class="api-tag">Widgets</span></td><td>Random active products for rotating widgets and ads.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/v1/products/search?q=watch&amp;count=12</td><td><span class="api-tag">Search</span></td><td>Search by title, brand, or short description.</td></tr>
+                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/v1/products/category/{categorySlug}?count=12</td><td><span class="api-tag">Category</span></td><td>Products from a specific category slug.</td></tr>
+                                <tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/v1/products/brand/{brand}?count=12</td><td><span class="api-tag">Brand</span></td><td>Products from a specific brand.</td></tr>
+                                <tr><td><span class="api-method orange">GET</span></td><td class="api-path">/api/v1/products/price-range?min=10&amp;max=100&amp;count=12</td><td><span class="api-tag">Filter</span></td><td>Products within a price range.</td></tr>
+                                <tr><td><span class="api-method teal">GET</span></td><td class="api-path">/api/v1/products/related/{slug}?count=12</td><td><span class="api-tag">Related</span></td><td>Related products using product categories.</td></tr>
+                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/v1/products/collection/{collectionSlug}?count=12</td><td><span class="api-tag">Collection</span></td><td>Products from a public collection.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/v1/products/home-widget?count=8</td><td><span class="api-tag">Widget</span></td><td>Returns featured, deals, popular, and latest products in one response.</td></tr>
+                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/v1/products/promote/{slug}</td><td><span class="api-tag">Ad</span></td><td>Single product for advertising/promotion.</td></tr>
+                                <tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/v1/products/{slug}</td><td><span class="api-tag">Single</span></td><td>Single active product by SEO slug.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1163,8 +1193,8 @@
                         <table class="api-endpoint-table">
                             <thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead>
                             <tbody>
-                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/categories</td><td><span class="api-tag">Categories</span></td><td>Returns all public categories with product counts.</td></tr>
-                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/products/category/{categorySlug}?count=12</td><td><span class="api-tag">Products</span></td><td>Returns products for a specific category.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/v1/categories</td><td><span class="api-tag">Categories</span></td><td>Returns all public categories with product counts.</td></tr>
+                                <tr><td><span class="api-method blue">GET</span></td><td class="api-path">/api/v1/products/category/{categorySlug}?count=12</td><td><span class="api-tag">Products</span></td><td>Returns products for a specific category.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1176,8 +1206,8 @@
                         <table class="api-endpoint-table">
                             <thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead>
                             <tbody>
-                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/collections</td><td><span class="api-tag">Collections</span></td><td>Returns all public collections with product counts.</td></tr>
-                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/products/collection/{collectionSlug}?count=12</td><td><span class="api-tag">Products</span></td><td>Returns products from a selected collection.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/v1/collections</td><td><span class="api-tag">Collections</span></td><td>Returns all public collections with product counts.</td></tr>
+                                <tr><td><span class="api-method pink">GET</span></td><td class="api-path">/api/v1/products/collection/{collectionSlug}?count=12</td><td><span class="api-tag">Products</span></td><td>Returns products from a selected collection.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1189,7 +1219,7 @@
                         <table class="api-endpoint-table">
                             <thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead>
                             <tbody>
-                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/blogs/latest?count=6</td><td><span class="api-tag">Blogs</span></td><td>Returns latest AS-Mart blog posts for external websites.</td></tr>
+                                <tr><td><span class="api-method">GET</span></td><td class="api-path">/api/v1/blogs/latest?count=6</td><td><span class="api-tag">Blogs</span></td><td>Returns latest AS-Mart blog posts for external websites.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1198,7 +1228,7 @@
                 <section class="api-card api-section-anchor" id="widgets">
                     <h2><i class="fa-solid fa-table-cells-large"></i> Combined Widget API</h2>
                     <p>Use the combined endpoint when a page needs several AS-Mart resources at once. It reduces HTTP round trips and is recommended for dashboards, landing pages, and external home-page integrations.</p>
-                    <div class="api-table-wrap"><table class="api-endpoint-table"><thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead><tbody><tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/widgets/home?productCount=8&amp;blogCount=6&amp;categoryCount=12&amp;collectionCount=8&amp;guideCount=8</td><td><span class="api-tag">Combined</span></td><td>Returns product groups, latest blogs, categories, collections, latest SEO guides, and generation time in one response.</td></tr></tbody></table></div>
+                    <div class="api-table-wrap"><table class="api-endpoint-table"><thead><tr><th>Method</th><th>Endpoint</th><th>Resource</th><th>Functionality</th></tr></thead><tbody><tr><td><span class="api-method purple">GET</span></td><td class="api-path">/api/v1/widgets/home?productCount=8&amp;blogCount=6&amp;categoryCount=12&amp;collectionCount=8&amp;guideCount=8</td><td><span class="api-tag">Combined</span></td><td>Returns product groups, latest blogs, categories, collections, latest SEO guides, and generation time in one response.</td></tr></tbody></table></div>
                     <div class="api-note">Use this endpoint when the consumer needs several sections on one page. For a single resource, use the dedicated endpoint.</div>
                 </section>
 
@@ -1216,119 +1246,119 @@
                             <tbody>
                                 <tr>
                                     <td><span class="api-method">GET</span></td>
-                                    <td class="api-path">/api/seopages?page=1&amp;pageSize=20</td>
+                                    <td class="api-path">/api/v1/seopages?page=1&amp;pageSize=20</td>
                                     <td><span class="api-tag">List</span></td>
                                     <td>Returns paginated published SEO pages.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method blue">GET</span></td>
-                                    <td class="api-path">/api/seopages/{slug}</td>
+                                    <td class="api-path">/api/v1/seopages/{slug}</td>
                                     <td><span class="api-tag">Single</span></td>
                                     <td>Returns one published SEO page with intro, body, and FAQ JSON.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method purple">GET</span></td>
-                                    <td class="api-path">/api/seopages/latest?count=20</td>
+                                    <td class="api-path">/api/v1/seopages/latest?count=20</td>
                                     <td><span class="api-tag">Latest</span></td>
                                     <td>Returns newest published SEO pages.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method pink">GET</span></td>
-                                    <td class="api-path">/api/seopages/random?count=10</td>
+                                    <td class="api-path">/api/v1/seopages/random?count=10</td>
                                     <td><span class="api-tag">Widget</span></td>
                                     <td>Returns random SEO pages for widgets or rotating links.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method orange">GET</span></td>
-                                    <td class="api-path">/api/seopages/search?q=laptop&amp;page=1&amp;pageSize=20</td>
+                                    <td class="api-path">/api/v1/seopages/search?q=laptop&amp;page=1&amp;pageSize=20</td>
                                     <td><span class="api-tag">Search</span></td>
                                     <td>Searches title, slug, H1, keyword, and meta description.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method teal">GET</span></td>
-                                    <td class="api-path">/api/seopages/filter?category=laptops&amp;brand=Apple&amp;template=best_of</td>
+                                    <td class="api-path">/api/v1/seopages/filter?category=laptops&amp;brand=Apple&amp;template=best_of</td>
                                     <td><span class="api-tag">Filter</span></td>
                                     <td>Filters SEO pages by category, brand, template, price range, sort mode, and keyword.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method blue">GET</span></td>
-                                    <td class="api-path">/api/seopages/category/{categorySlug}?count=20</td>
+                                    <td class="api-path">/api/v1/seopages/category/{categorySlug}?count=20</td>
                                     <td><span class="api-tag">Category</span></td>
                                     <td>Returns SEO pages from a selected category.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method">GET</span></td>
-                                    <td class="api-path">/api/seopages/categories</td>
+                                    <td class="api-path">/api/v1/seopages/categories</td>
                                     <td><span class="api-tag">Categories</span></td>
                                     <td>Returns SEO page categories with page counts.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method purple">GET</span></td>
-                                    <td class="api-path">/api/seopages/related/{slug}?count=10</td>
+                                    <td class="api-path">/api/v1/seopages/related/{slug}?count=10</td>
                                     <td><span class="api-tag">Related</span></td>
                                     <td>Returns related SEO pages from the same category.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method orange">GET</span></td>
-                                    <td class="api-path">/api/seopages/home-widget?count=8</td>
+                                    <td class="api-path">/api/v1/seopages/home-widget?count=8</td>
                                     <td><span class="api-tag">Widget</span></td>
                                     <td>Returns latest pages, random pages, and popular SEO categories.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method teal">GET</span></td>
-                                    <td class="api-path">/api/seopages/stats</td>
+                                    <td class="api-path">/api/v1/seopages/stats</td>
                                     <td><span class="api-tag">Stats</span></td>
                                     <td>Returns total SEO pages, published pages, category count, and last updated date.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method pink">GET</span></td>
-                                    <td class="api-path">/api/seopages/sitemap</td>
+                                    <td class="api-path">/api/v1/seopages/sitemap</td>
                                     <td><span class="api-tag">Sitemap</span></td>
                                     <td>Returns public SEO page URLs and update dates for crawlers and external sitemap tools.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method blue">GET</span></td>
-                                    <td class="api-path">/api/seopages/templates</td>
+                                    <td class="api-path">/api/v1/seopages/templates</td>
                                     <td><span class="api-tag">Templates</span></td>
                                     <td>Returns available SEO page template keys.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method purple">GET</span></td>
-                                    <td class="api-path">/api/seopages/template/{template}?count=20</td>
+                                    <td class="api-path">/api/v1/seopages/template/{template}?count=20</td>
                                     <td><span class="api-tag">Template</span></td>
                                     <td>Returns SEO pages from a selected template key.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method">GET</span></td>
-                                    <td class="api-path">/api/seopages/brands</td>
+                                    <td class="api-path">/api/v1/seopages/brands</td>
                                     <td><span class="api-tag">Brands</span></td>
                                     <td>Returns available SEO page brands.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method orange">GET</span></td>
-                                    <td class="api-path">/api/seopages/brand/{brand}?count=20</td>
+                                    <td class="api-path">/api/v1/seopages/brand/{brand}?count=20</td>
                                     <td><span class="api-tag">Brand</span></td>
                                     <td>Returns SEO pages for a selected brand.</td>
                                 </tr>
 
                                 <tr>
                                     <td><span class="api-method teal">GET</span></td>
-                                    <td class="api-path">/api/seopages/ai?q=best laptop&amp;count=10</td>
+                                    <td class="api-path">/api/v1/seopages/ai?q=best laptop&amp;count=10</td>
                                     <td><span class="api-tag">AI</span></td>
                                     <td>Returns AI-friendly SEO search results with title, summary, URL, category, and keyword.</td>
                                 </tr>
@@ -1505,7 +1535,7 @@
                     <h3 class="api-code-title"><i class="fa-solid fa-code"></i> JavaScript Fetch Example</h3>
                     <div class="api-code-card green">
                         <button type="button" class="api-copy-btn">Copy</button>
-                        <pre class="api-code">fetch("https://as-mart.com/api/products/home-widget?count=6")
+                        <pre class="api-code">fetch("https://as-mart.com/api/v1/products/home-widget?count=6")
   .then(response => response.json())
   .then(data => {
       console.log(data.featured);
@@ -1533,7 +1563,7 @@
     public async Task&lt;ProductHomeWidgetApiDto&gt; GetHomeWidgetAsync()
     {
         var result = await _httpClient.GetFromJsonAsync&lt;ProductHomeWidgetApiDto&gt;(
-            "https://as-mart.com/api/products/home-widget?count=8");
+            "https://as-mart.com/api/v1/products/home-widget?count=8");
 
         return result ?? new ProductHomeWidgetApiDto();
     }
@@ -1553,7 +1583,7 @@
 
                 <h3 class="api-code-title"><i class="fa-solid fa-sitemap"></i> SEO Guide Filter Example</h3>
                 <div class="api-code-card green">
-                    <button type="button" class="api-copy-btn">Copy</button><pre class="api-code">const url = new URL("https://as-mart.com/api/seopages/filter");
+                    <button type="button" class="api-copy-btn">Copy</button><pre class="api-code">const url = new URL("https://as-mart.com/api/v1/seopages/filter");
 url.searchParams.set("category", "laptops");
 url.searchParams.set("brand", "Apple");
 url.searchParams.set("template", "best_of");
@@ -1578,11 +1608,12 @@ const result = await response.json();</pre>
                         <li>Maximum <strong>count</strong> value is <strong>50</strong>.</li>
                         <li>Use <strong>buyUrl</strong> instead of direct Amazon links for tracking.</li>
                         <li>Use <strong>productUrl</strong> when linking to AS-Mart product detail page.</li>
-                        <li>Use <strong>/api/products/promote/{slug}</strong> for one selected advertising product.</li>
-                        <li>Use <strong>/api/products/home-widget</strong> when you need multiple sections in one request.</li>
+                        <li>Use <strong>/api/v1/products/promote/{slug}</strong> for one selected advertising product.</li>
+                        <li>Use <strong>/api/v1/products/home-widget</strong> when you need multiple sections in one request.</li>
                         <li>CORS is enabled for approved websites such as asifabrar.net.</li>
                         <li>All endpoints return JSON and should be called using HTTPS.</li>
-                        <li>Use <strong>/api/widgets/home</strong> to retrieve several home-page resources in one request.</li>
+                        <li>Use <strong>/api/v1</strong> routes for every new integration.</li>
+                        <li>Use <strong>/api/v1/widgets/home</strong> to retrieve several home-page resources in one request.</li>
                         <li>Use the <strong>Swagger UI</strong> to inspect schemas and test endpoints interactively.</li>
                         <li>Never expose a production API key in browser JavaScript or a public repository.</li>
                     </ul>
