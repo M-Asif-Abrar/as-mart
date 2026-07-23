@@ -35,8 +35,8 @@
                 <h1>@Model.Name</h1>
 
                 <span class="application-status @(Model.IsUsable
-                                          ? "status-active"
-                                          : "status-inactive")">
+                                                                                      ? "status-active"
+                                                                                      : "status-inactive")">
                     @Model.Status
                 </span>
             </div>
@@ -65,14 +65,90 @@
                 Applications
             </a>
 
-            <a asp-controller="ApiKeys"
-               asp-action="Usage"
+            <a asp-controller="Developer"
+               asp-action="ApplicationUsage"
                asp-route-id="@Model.Id"
                class="btn application-btn application-btn-primary">
                 <i class="fa-solid fa-chart-line"></i>
                 Detailed Usage
             </a>
         </div>
+    </div>
+
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success application-alert" role="alert">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>@successMessage</span>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="alert alert-danger application-alert" role="alert">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <div class="application-management-actions">
+
+        <a asp-controller="Developer"
+           asp-action="EditApplication"
+           asp-route-id="@Model.Id"
+           class="btn management-btn management-edit">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>Edit</span>
+        </a>
+
+        @if (!Model.IsRevoked && !Model.IsExpired)
+        {
+            <form asp-controller="Developer"
+                  asp-action="ToggleApplicationStatus"
+                  asp-route-id="@Model.Id"
+                  method="post"
+                  class="management-form">
+                @Html.AntiForgeryToken()
+
+                <button type="submit"
+                        class="btn management-btn management-toggle">
+                    <i class="fa-solid @(Model.IsActive
+                                                                      ? "fa-circle-pause"
+                                                                      : "fa-circle-play")"></i>
+
+                <span>@(Model.IsActive ? "Disable" : "Enable")</span>
+            </button>
+        </form>
+                }
+
+        <button type="button"
+                class="btn management-btn management-rotate"
+                data-bs-toggle="modal"
+                data-bs-target="#rotateKeyModal">
+            <i class="fa-solid fa-rotate"></i>
+            <span>Rotate Key</span>
+        </button>
+
+        @if (!Model.IsRevoked)
+        {
+            <button type="button"
+                    class="btn management-btn management-revoke"
+                    data-bs-toggle="modal"
+                    data-bs-target="#revokeApplicationModal">
+                <i class="fa-solid fa-ban"></i>
+                <span>Revoke</span>
+            </button>
+        }
+
+        <button type="button"
+                class="btn management-btn management-delete"
+                data-bs-toggle="modal"
+                data-bs-target="#deleteApplicationModal">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>Delete Permanently</span>
+        </button>
+
     </div>
 
     <div class="application-stat-grid">
@@ -361,8 +437,8 @@
 
                                         <td>
                                             <span class="error-pill @(endpoint.Errors > 0
-                                                                                                  ? "has-errors"
-                                                                                                  : "")">
+                                                                                                                                                                                                      ? "has-errors"
+                                                                                                                                                                                                      : "")">
                                         @endpoint.Errors.ToString("N0")
                                     </span>
                                 </td>
@@ -437,8 +513,8 @@
 
                                 <td>
                                     <span class="status-code @(request.StatusCode >= 400
-                                                                                          ? "status-error"
-                                                                                          : "status-success")">
+                                                                                                                                                                              ? "status-error"
+                                                                                                                                                                              : "status-success")">
                                         @request.StatusCode
                                     </span>
                                 </td>
@@ -456,10 +532,359 @@
         </div>
 
     </div>
+
+    <div class="modal fade"
+         id="rotateKeyModal"
+         tabindex="-1"
+         aria-labelledby="rotateKeyModalLabel"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content lifecycle-modal">
+
+                <div class="modal-header lifecycle-modal-header rotate-header">
+                    <div>
+                        <div class="lifecycle-modal-icon rotate-icon">
+                            <i class="fa-solid fa-rotate"></i>
+                        </div>
+
+                        <h2 class="modal-title"
+                            id="rotateKeyModalLabel">
+                            Rotate API key?
+                        </h2>
+                    </div>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                    </button>
+                </div>
+
+                <form asp-controller="Developer"
+                      asp-action="RotateApplicationKey"
+                      asp-route-id="@Model.Id"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <div class="modal-body">
+                        <div class="lifecycle-warning rotate-warning">
+                            <strong>
+                                The existing API key will stop working immediately.
+                            </strong>
+
+                            <p>
+                                A new API key will be generated and displayed only once.
+                                Update every integration currently using the old key.
+                            </p>
+                        </div>
+
+                        <ul class="lifecycle-impact-list">
+                            <li>The current API key becomes invalid immediately.</li>
+                            <li>The new raw key will be displayed only once.</li>
+                            <li>Existing usage logs and analytics remain available.</li>
+                            <li>The application becomes active after rotation.</li>
+                        </ul>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn lifecycle-cancel-btn"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit"
+                                class="btn lifecycle-confirm-btn rotate-confirm-btn">
+                            <i class="fa-solid fa-rotate"></i>
+                            Rotate API Key
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.IsRevoked)
+    {
+        <div class="modal fade"
+             id="revokeApplicationModal"
+             tabindex="-1"
+             aria-labelledby="revokeApplicationModalLabel"
+             aria-hidden="true">
+
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content lifecycle-modal">
+
+                    <div class="modal-header lifecycle-modal-header revoke-header">
+                        <div>
+                            <div class="lifecycle-modal-icon revoke-icon">
+                                <i class="fa-solid fa-ban"></i>
+                            </div>
+
+                            <h2 class="modal-title"
+                                id="revokeApplicationModalLabel">
+                                Revoke application?
+                            </h2>
+                        </div>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+                    </div>
+
+                    <form asp-controller="Developer"
+                          asp-action="RevokeApplication"
+                          asp-route-id="@Model.Id"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <div class="modal-body">
+                            <div class="lifecycle-warning revoke-warning">
+                                <strong>
+                                    This application will lose API access immediately.
+                                </strong>
+
+                                <p>
+                                    Its API key will no longer authenticate requests.
+                                    Existing usage history and analytics will remain available.
+                                </p>
+                            </div>
+
+                            <ul class="lifecycle-impact-list">
+                                <li>The current API key stops working immediately.</li>
+                                <li>The application status changes to Revoked.</li>
+                                <li>Usage logs and analytics are preserved.</li>
+                                <li>A revoked application cannot be enabled normally.</li>
+                            </ul>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button"
+                                    class="btn lifecycle-cancel-btn"
+                                    data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn lifecycle-confirm-btn revoke-confirm-btn">
+                                <i class="fa-solid fa-ban"></i>
+                                Revoke Application
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="modal fade"
+         id="deleteApplicationModal"
+         tabindex="-1"
+         aria-labelledby="deleteApplicationModalLabel"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content delete-application-modal">
+
+                <div class="modal-header">
+                    <div>
+                        <div class="delete-modal-icon">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+
+                        <h2 class="modal-title"
+                            id="deleteApplicationModalLabel">
+                            Permanently delete application?
+                        </h2>
+                    </div>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                    </button>
+                </div>
+
+                <form asp-controller="Developer"
+                      asp-action="DeleteApplication"
+                      asp-route-id="@Model.Id"
+                      method="post"
+                      id="deleteApplicationForm">
+
+                    @Html.AntiForgeryToken()
+
+                    <div class="modal-body">
+
+                        <div class="delete-warning">
+                            <strong>This action cannot be undone.</strong>
+
+                            <p>
+                                The application, API credential, and all associated
+                                API usage logs will be permanently removed.
+                            </p>
+                        </div>
+
+                        <ul class="delete-impact-list">
+                            <li>
+                                The current API key will stop working immediately.
+                            </li>
+
+                            <li>
+                                Historical requests and analytics will be deleted.
+                            </li>
+
+                            <li>
+                                The application cannot be restored afterward.
+                            </li>
+                        </ul>
+
+                        <div class="mb-3">
+                            <label for="confirmationName"
+                                   class="form-label delete-confirmation-label">
+                                To confirm, enter
+                                <strong>@Model.Name</strong>
+                            </label>
+
+                            <input id="confirmationName"
+                                   name="confirmationName"
+                                   type="text"
+                                   class="form-control delete-confirmation-input"
+                                   autocomplete="off"
+                                   data-expected-name="@Model.Name"
+                                   placeholder="@Model.Name" />
+
+                            <div class="form-text">
+                                The application name must match exactly.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn delete-cancel-btn"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit"
+                                id="confirmDeleteApplication"
+                                class="btn delete-confirm-btn"
+                                disabled>
+                            <i class="fa-solid fa-trash-can"></i>
+                            Delete Permanently
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </section>
 
 @section Styles {
     <style>
+
+        .application-alert {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: 1rem;
+            border: 0;
+            border-radius: 15px;
+            font-size: .82rem;
+            font-weight: 800;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
+        }
+
+        .application-management-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .7rem;
+            margin-bottom: 1.4rem;
+            padding: 1rem;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .90);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, .06);
+        }
+
+        .management-form {
+            margin: 0;
+        }
+
+        .management-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            min-height: 41px;
+            padding: .58rem .85rem;
+            border-radius: 12px;
+            font-size: .76rem;
+            font-weight: 900;
+            transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease, color .16s ease;
+        }
+
+            .management-btn:hover,
+            .management-btn:focus {
+                color: #fff;
+                transform: translateY(-1px);
+            }
+
+        .management-edit {
+            border: 1px solid rgba(37, 99, 235, .15);
+            background: rgba(37, 99, 235, .08);
+            color: #2563eb;
+        }
+
+            .management-edit:hover,
+            .management-edit:focus {
+                background: #2563eb;
+                box-shadow: 0 10px 22px rgba(37, 99, 235, .18);
+            }
+
+        .management-toggle {
+            border: 1px solid rgba(245, 158, 11, .16);
+            background: rgba(245, 158, 11, .09);
+            color: #b45309;
+        }
+
+            .management-toggle:hover,
+            .management-toggle:focus {
+                background: #d97706;
+                box-shadow: 0 10px 22px rgba(217, 119, 6, .18);
+            }
+
+        .management-rotate {
+            border: 1px solid rgba(124, 58, 237, .16);
+            background: rgba(124, 58, 237, .09);
+            color: #7c3aed;
+        }
+
+            .management-rotate:hover,
+            .management-rotate:focus {
+                background: #7c3aed;
+                box-shadow: 0 10px 22px rgba(124, 58, 237, .18);
+            }
+
+        .management-revoke {
+            border: 1px solid rgba(239, 68, 68, .16);
+            background: rgba(239, 68, 68, .09);
+            color: #dc2626;
+        }
+
+            .management-revoke:hover,
+            .management-revoke:focus {
+                background: #dc2626;
+                box-shadow: 0 10px 22px rgba(220, 38, 38, .18);
+            }
+
         .application-details-page {
             padding: 1rem 0 3rem;
         }
@@ -895,6 +1320,314 @@
             text-align: center;
         }
 
+        .lifecycle-modal {
+            overflow: hidden;
+            border: 0;
+            border-radius: 24px;
+            box-shadow: 0 28px 80px rgba(15, 23, 42, .22);
+        }
+
+        .lifecycle-modal-header {
+            align-items: flex-start;
+            padding: 1.2rem;
+            border-bottom: 1px solid rgba(15, 23, 42, .08);
+        }
+
+        .rotate-header {
+            background: radial-gradient( 420px 190px at 0 0, rgba(124, 58, 237, .15), transparent 68% ), #fff;
+        }
+
+        .revoke-header {
+            background: radial-gradient( 420px 190px at 0 0, rgba(239, 68, 68, .15), transparent 68% ), #fff;
+        }
+
+        .lifecycle-modal-icon {
+            display: grid;
+            width: 46px;
+            height: 46px;
+            margin-bottom: .75rem;
+            place-items: center;
+            border-radius: 15px;
+            font-size: 1.05rem;
+        }
+
+        .rotate-icon {
+            background: rgba(124, 58, 237, .12);
+            color: #7c3aed;
+        }
+
+        .revoke-icon {
+            background: rgba(239, 68, 68, .12);
+            color: #dc2626;
+        }
+
+        .lifecycle-modal .modal-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: 1.2rem;
+            font-weight: 950;
+        }
+
+        .lifecycle-modal .modal-body {
+            padding: 1.2rem;
+        }
+
+        .lifecycle-warning {
+            padding: .9rem;
+            border-radius: 15px;
+        }
+
+        .rotate-warning {
+            border: 1px solid rgba(124, 58, 237, .16);
+            background: rgba(124, 58, 237, .07);
+        }
+
+            .rotate-warning strong,
+            .rotate-warning p {
+                color: #5b21b6;
+            }
+
+        .revoke-warning {
+            border: 1px solid rgba(239, 68, 68, .16);
+            background: rgba(239, 68, 68, .07);
+        }
+
+            .revoke-warning strong,
+            .revoke-warning p {
+                color: #991b1b;
+            }
+
+        .lifecycle-warning strong {
+            font-size: .88rem;
+            font-weight: 950;
+        }
+
+        .lifecycle-warning p {
+            margin: .4rem 0 0;
+            font-size: .78rem;
+            line-height: 1.55;
+        }
+
+        .lifecycle-impact-list {
+            margin: 1rem 0 0;
+            padding-left: 1.2rem;
+            color: #475569;
+            font-size: .78rem;
+            font-weight: 700;
+            line-height: 1.75;
+        }
+
+        .lifecycle-modal .modal-footer {
+            gap: .6rem;
+            padding: 1rem 1.2rem;
+            border-top: 1px solid rgba(15, 23, 42, .08);
+        }
+
+        .lifecycle-cancel-btn,
+        .lifecycle-confirm-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            min-height: 42px;
+            padding: .6rem .9rem;
+            border-radius: 12px;
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+        .lifecycle-cancel-btn {
+            border: 1px solid rgba(15, 23, 42, .11);
+            background: #fff;
+            color: #334155;
+        }
+
+        .rotate-confirm-btn {
+            border: 0;
+            background: #7c3aed;
+            color: #fff;
+        }
+
+            .rotate-confirm-btn:hover,
+            .rotate-confirm-btn:focus {
+                background: #6d28d9;
+                color: #fff;
+            }
+
+        .revoke-confirm-btn {
+            border: 0;
+            background: #dc2626;
+            color: #fff;
+        }
+
+            .revoke-confirm-btn:hover,
+            .revoke-confirm-btn:focus {
+                background: #b91c1c;
+                color: #fff;
+            }
+
+        .management-delete {
+            border: 1px solid rgba(127, 29, 29, .18);
+            background: rgba(127, 29, 29, .08);
+            color: #991b1b;
+        }
+
+            .management-delete:hover,
+            .management-delete:focus {
+                background: #991b1b;
+                color: #fff;
+                box-shadow: 0 10px 22px rgba(153, 27, 27, .20);
+            }
+
+        .delete-application-modal {
+            overflow: hidden;
+            border: 0;
+            border-radius: 24px;
+            box-shadow: 0 28px 80px rgba(15, 23, 42, .22);
+        }
+
+            .delete-application-modal .modal-header {
+                align-items: flex-start;
+                padding: 1.2rem;
+                border-bottom: 1px solid rgba(15, 23, 42, .08);
+                background: radial-gradient( 400px 180px at 0 0, rgba(239, 68, 68, .14), transparent 68% ), #fff;
+            }
+
+        .delete-modal-icon {
+            display: grid;
+            width: 46px;
+            height: 46px;
+            margin-bottom: .75rem;
+            place-items: center;
+            border-radius: 15px;
+            background: rgba(239, 68, 68, .12);
+            color: #dc2626;
+            font-size: 1.05rem;
+        }
+
+        .delete-application-modal .modal-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: 1.2rem;
+            font-weight: 950;
+        }
+
+        .delete-application-modal .modal-body {
+            padding: 1.2rem;
+        }
+
+        .delete-warning {
+            padding: .9rem;
+            border: 1px solid rgba(239, 68, 68, .16);
+            border-radius: 15px;
+            background: rgba(239, 68, 68, .07);
+        }
+
+            .delete-warning strong {
+                color: #991b1b;
+                font-size: .88rem;
+                font-weight: 950;
+            }
+
+            .delete-warning p {
+                margin: .4rem 0 0;
+                color: #7f1d1d;
+                font-size: .78rem;
+                line-height: 1.55;
+            }
+
+        .delete-impact-list {
+            margin: 1rem 0;
+            padding-left: 1.2rem;
+            color: #475569;
+            font-size: .78rem;
+            font-weight: 700;
+            line-height: 1.7;
+        }
+
+        .delete-confirmation-label {
+            color: #334155;
+            font-size: .79rem;
+            font-weight: 800;
+        }
+
+            .delete-confirmation-label strong {
+                color: #dc2626;
+            }
+
+        .delete-confirmation-input {
+            min-height: 46px;
+            border: 1px solid rgba(239, 68, 68, .22);
+            border-radius: 14px;
+            font-size: .86rem;
+            font-weight: 750;
+            box-shadow: none;
+        }
+
+            .delete-confirmation-input:focus {
+                border-color: rgba(220, 38, 38, .60);
+                box-shadow: 0 0 0 .22rem rgba(220, 38, 38, .10);
+            }
+
+        .delete-application-modal .modal-footer {
+            gap: .6rem;
+            padding: 1rem 1.2rem;
+            border-top: 1px solid rgba(15, 23, 42, .08);
+        }
+
+        .delete-cancel-btn,
+        .delete-confirm-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            min-height: 42px;
+            padding: .6rem .9rem;
+            border-radius: 12px;
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+        .delete-cancel-btn {
+            border: 1px solid rgba(15, 23, 42, .11);
+            background: #fff;
+            color: #334155;
+        }
+
+        .delete-confirm-btn {
+            border: 0;
+            background: #dc2626;
+            color: #fff;
+        }
+
+            .delete-confirm-btn:hover,
+            .delete-confirm-btn:focus {
+                background: #b91c1c;
+                color: #fff;
+            }
+
+            .delete-confirm-btn:disabled {
+                background: #fecaca;
+                color: #991b1b;
+                cursor: not-allowed;
+                opacity: .72;
+            }
+
+        @@media (max-width: 575.98px) {
+            .lifecycle-modal .modal-footer,
+            .delete-application-modal .modal-footer {
+                align-items: stretch;
+                flex-direction: column-reverse;
+            }
+
+            .lifecycle-cancel-btn,
+            .lifecycle-confirm-btn,
+            .delete-cancel-btn,
+            .delete-confirm-btn {
+                width: 100%;
+            }
+        }
+
         @@media (max-width: 1199.98px) {
             .application-stat-grid {
                 grid-template-columns: repeat(3,minmax(0,1fr));
@@ -922,6 +1655,17 @@
         }
 
         @@media (max-width: 575.98px) {
+
+            .application-management-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .management-form,
+            .management-btn {
+                width: 100%;
+            }
+
             .application-stat-grid,
             .configuration-grid,
             .quota-heading {
@@ -933,4 +1677,58 @@
             }
         }
     </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const confirmationInput =
+                document.getElementById("confirmationName");
+
+            const deleteButton =
+                document.getElementById("confirmDeleteApplication");
+
+            const deleteForm =
+                document.getElementById("deleteApplicationForm");
+
+            if (!confirmationInput ||
+                !deleteButton ||
+                !deleteForm) {
+                return;
+            }
+
+            const expectedName =
+                confirmationInput.dataset.expectedName ?? "";
+
+            function updateDeleteButton() {
+                deleteButton.disabled =
+                    confirmationInput.value !== expectedName;
+            }
+
+            confirmationInput.addEventListener(
+                "input",
+                updateDeleteButton);
+
+            deleteForm.addEventListener(
+                "submit",
+                event => {
+                    if (confirmationInput.value !== expectedName) {
+                        event.preventDefault();
+                        deleteButton.disabled = true;
+                        confirmationInput.focus();
+                    }
+                });
+
+            document
+                .getElementById("deleteApplicationModal")
+                ?.addEventListener(
+                    "hidden.bs.modal",
+                    () => {
+                        confirmationInput.value = "";
+                        deleteButton.disabled = true;
+                    });
+
+            updateDeleteButton();
+        })();
+    </script>
 }

@@ -1,0 +1,239 @@
+﻿@model AsMart.Web.Models.ViewModels.ApiKeyCreatedViewModel
+
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="key-created-page">
+    <div class="key-created-card">
+
+        <div class="key-created-icon">
+            <i class="fa-solid fa-key"></i>
+        </div>
+
+        <h1>@Model.Title</h1>
+
+        <p>@Model.Message</p>
+
+        <div class="key-warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+
+            <span>
+                This key is displayed only once. Store it securely before
+                leaving this page.
+            </span>
+        </div>
+
+        <div class="raw-key-box">
+            <code id="rawApiKey">@Model.RawApiKey</code>
+
+            <button type="button"
+                    id="copyApiKey"
+                    class="btn copy-key-btn">
+                <i class="fa-regular fa-copy"></i>
+                Copy
+            </button>
+        </div>
+
+        <div class="key-created-meta">
+            <div>
+                <span>Application</span>
+                <strong>@Model.ClientName</strong>
+            </div>
+
+            <div>
+                <span>Expires</span>
+                <strong>
+                    @(Model.ExpiresAt?.ToString("dd MMM yyyy HH:mm")
+                                        ?? "Never")
+                </strong>
+            </div>
+        </div>
+
+        <a href="@Model.ReturnUrl"
+           class="btn return-application-btn">
+            I have saved the key
+        </a>
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .key-created-page {
+            display: grid;
+            min-height: 70vh;
+            padding: 2rem 0 3rem;
+            place-items: center;
+        }
+
+        .key-created-card {
+            width: min(100%, 760px);
+            padding: clamp(1.3rem, 4vw, 2rem);
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 28px;
+            background: #fff;
+            box-shadow: 0 26px 65px rgba(15, 23, 42, .11);
+            text-align: center;
+        }
+
+        .key-created-icon {
+            display: grid;
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 1rem;
+            place-items: center;
+            border-radius: 24px;
+            background: rgba(16, 185, 129, .12);
+            color: #059669;
+            font-size: 1.7rem;
+        }
+
+        .key-created-card h1 {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(1.6rem, 4vw, 2.25rem);
+            font-weight: 950;
+        }
+
+        .key-created-card > p {
+            max-width: 620px;
+            margin: .75rem auto 0;
+            color: #64748b;
+            line-height: 1.65;
+        }
+
+        .key-warning {
+            display: flex;
+            align-items: flex-start;
+            gap: .65rem;
+            margin-top: 1.2rem;
+            padding: .9rem;
+            border: 1px solid rgba(245, 158, 11, .20);
+            border-radius: 15px;
+            background: rgba(245, 158, 11, .08);
+            color: #92400e;
+            text-align: left;
+            font-size: .8rem;
+            font-weight: 750;
+        }
+
+        .raw-key-box {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            margin-top: 1rem;
+            padding: .8rem;
+            border-radius: 15px;
+            background: #0f172a;
+        }
+
+            .raw-key-box code {
+                flex: 1;
+                min-width: 0;
+                color: #dbeafe;
+                font-size: .78rem;
+                text-align: left;
+                overflow-wrap: anywhere;
+            }
+
+        .copy-key-btn {
+            flex: 0 0 auto;
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 11px;
+            background: rgba(255,255,255,.10);
+            color: #fff;
+            font-size: .75rem;
+            font-weight: 900;
+        }
+
+            .copy-key-btn:hover {
+                background: rgba(255,255,255,.18);
+                color: #fff;
+            }
+
+        .key-created-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0,1fr));
+            gap: .8rem;
+            margin-top: 1rem;
+        }
+
+            .key-created-meta div {
+                padding: .8rem;
+                border-radius: 14px;
+                background: #f8fafc;
+                text-align: left;
+            }
+
+            .key-created-meta span {
+                display: block;
+                color: #64748b;
+                font-size: .68rem;
+                font-weight: 900;
+                text-transform: uppercase;
+            }
+
+            .key-created-meta strong {
+                display: block;
+                margin-top: .25rem;
+                color: #0f172a;
+                font-size: .82rem;
+                font-weight: 950;
+            }
+
+        .return-application-btn {
+            margin-top: 1.2rem;
+            padding: .7rem 1rem;
+            border: 0;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: #fff;
+            font-weight: 900;
+        }
+
+            .return-application-btn:hover {
+                color: #fff;
+            }
+
+        @@media (max-width: 575.98px) {
+            .raw-key-box {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .copy-key-btn {
+                width: 100%;
+            }
+
+            .key-created-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const button =
+                document.getElementById("copyApiKey");
+
+            const key =
+                document.getElementById("rawApiKey");
+
+            button?.addEventListener("click", async () => {
+                try {
+                    await navigator.clipboard.writeText(
+                        key?.textContent ?? "");
+
+                    button.innerHTML =
+                        '<i class="fa-solid fa-check"></i> Copied';
+                }
+                catch {
+                    button.textContent = "Copy failed";
+                }
+            });
+        })();
+    </script>
+}

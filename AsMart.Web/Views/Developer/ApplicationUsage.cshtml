@@ -1,0 +1,1502 @@
+﻿@using System.Text.Json
+@model AsMart.Web.Models.ViewModels.DeveloperApplicationUsageViewModel
+
+@{
+    ViewData["Title"] = $"{Model.ApplicationName} - API Usage";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var periodLabel = Model.SelectedDays switch
+    {
+        7 => "Last 7 days",
+        90 => "Last 90 days",
+        _ => "Last 30 days"
+    };
+
+    var remainingQuotaText = Model.HasUnlimitedQuota
+        ? "Unlimited"
+        : Model.RemainingQuota.ToString("N0");
+
+    var monthlyQuotaText = Model.HasUnlimitedQuota
+        ? "Unlimited"
+        : Model.MonthlyQuota.ToString("N0");
+
+    var quotaPercentage = Model.HasUnlimitedQuota || Model.MonthlyQuota <= 0
+        ? 0
+        : Math.Clamp(
+            Model.RequestsThisMonth * 100d / Model.MonthlyQuota,
+            0,
+            100);
+
+    var quotaPercentageCss = quotaPercentage.ToString(
+        "0.##",
+        System.Globalization.CultureInfo.InvariantCulture);
+
+    var chartOptions = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    var dailyLabelsJson = JsonSerializer.Serialize(
+        Model.DailyUsage.Select(item => item.DateUtc.ToString("dd MMM")),
+        chartOptions);
+
+    var dailyRequestsJson = JsonSerializer.Serialize(
+        Model.DailyUsage.Select(item => item.Requests),
+        chartOptions);
+
+    var dailySuccessJson = JsonSerializer.Serialize(
+        Model.DailyUsage.Select(item => item.SuccessfulRequests),
+        chartOptions);
+
+    var dailyFailedJson = JsonSerializer.Serialize(
+        Model.DailyUsage.Select(item => item.FailedRequests),
+        chartOptions);
+
+    var dailyResponseJson = JsonSerializer.Serialize(
+        Model.DailyUsage.Select(item => item.AverageResponseTimeMs),
+        chartOptions);
+
+    var statusLabelsJson = JsonSerializer.Serialize(
+        Model.StatusUsage.Select(item => item.StatusCode.ToString()),
+        chartOptions);
+
+    var statusValuesJson = JsonSerializer.Serialize(
+        Model.StatusUsage.Select(item => item.Requests),
+        chartOptions);
+}
+
+<section class="developer-usage-page">
+
+    <div class="usage-hero">
+        <div>
+            <div class="usage-kicker">
+                <i class="fa-solid fa-chart-line"></i>
+                Developer Analytics
+            </div>
+
+            <div class="usage-title-row">
+                <h1>@Model.ApplicationName</h1>
+
+                <span class="usage-status">
+                    @Model.Status
+                </span>
+            </div>
+
+            <p>
+                Monitor request volume, performance, endpoint usage,
+                status distribution, quota consumption, and recent API activity.
+            </p>
+
+            <div class="usage-key">
+                <i class="fa-solid fa-key"></i>
+                <code>@Model.MaskedApiKey</code>
+            </div>
+        </div>
+
+        <div class="usage-hero-actions">
+            <a asp-controller="Developer"
+               asp-action="ApplicationDetails"
+               asp-route-id="@Model.ApplicationId"
+               class="btn usage-btn usage-btn-light">
+                <i class="fa-solid fa-arrow-left"></i>
+                Application
+            </a>
+
+            <a asp-controller="DeveloperPlayground"
+               asp-action="Index"
+               class="btn usage-btn usage-btn-primary">
+                <i class="fa-solid fa-flask"></i>
+                API Playground
+            </a>
+        </div>
+    </div>
+
+    <div class="usage-toolbar">
+        <div>
+            <strong>Analytics period</strong>
+            <span>
+                @Model.PeriodStartUtc.ToString("dd MMM yyyy")
+                –
+                @Model.PeriodEndUtc.ToString("dd MMM yyyy")
+            </span>
+        </div>
+
+        <div class="usage-period-buttons">
+            <a asp-controller="Developer"
+               asp-action="ApplicationUsage"
+               asp-route-id="@Model.ApplicationId"
+               asp-route-days="7"
+               class="btn period-btn @(Model.SelectedDays == 7 ? "active" : "")">
+                7 days
+            </a>
+
+            <a asp-controller="Developer"
+               asp-action="ApplicationUsage"
+               asp-route-id="@Model.ApplicationId"
+               asp-route-days="30"
+               class="btn period-btn @(Model.SelectedDays == 30 ? "active" : "")">
+                30 days
+            </a>
+
+            <a asp-controller="Developer"
+               asp-action="ApplicationUsage"
+               asp-route-id="@Model.ApplicationId"
+               asp-route-days="90"
+               class="btn period-btn @(Model.SelectedDays == 90 ? "active" : "")">
+                90 days
+            </a>
+        </div>
+    </div>
+
+    <div class="usage-stat-grid">
+
+        <article class="usage-stat-card">
+            <div class="usage-stat-icon stat-blue">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            </div>
+
+            <div>
+                <span>Total Requests</span>
+                <strong>@Model.TotalRequests.ToString("N0")</strong>
+                <small>@periodLabel</small>
+            </div>
+        </article>
+
+        <article class="usage-stat-card">
+            <div class="usage-stat-icon stat-green">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <div>
+                <span>Successful</span>
+                <strong>@Model.SuccessfulRequests.ToString("N0")</strong>
+                <small>@Model.SuccessRate.ToString("N2")% success rate</small>
+            </div>
+        </article>
+
+        <article class="usage-stat-card">
+            <div class="usage-stat-icon stat-red">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+            <div>
+                <span>Failed</span>
+                <strong>@Model.FailedRequests.ToString("N0")</strong>
+                <small>HTTP 400 and above</small>
+            </div>
+        </article>
+
+        <article class="usage-stat-card">
+            <div class="usage-stat-icon stat-orange">
+                <i class="fa-solid fa-stopwatch"></i>
+            </div>
+
+            <div>
+                <span>Average Response</span>
+                <strong>@Model.AverageResponseTimeMs.ToString("N2") ms</strong>
+                <small>@periodLabel</small>
+            </div>
+        </article>
+
+        <article class="usage-stat-card">
+            <div class="usage-stat-icon stat-indigo">
+                <i class="fa-solid fa-calendar-day"></i>
+            </div>
+
+            <div>
+                <span>Requests Today</span>
+                <strong>@Model.RequestsToday.ToString("N0")</strong>
+                <small>Current UTC day</small>
+            </div>
+        </article>
+
+        <article class="usage-stat-card">
+            <div class="usage-stat-icon stat-purple">
+                <i class="fa-solid fa-gauge-high"></i>
+            </div>
+
+            <div>
+                <span>Quota Remaining</span>
+                <strong>@remainingQuotaText</strong>
+                <small>@monthlyQuotaText monthly quota</small>
+            </div>
+        </article>
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-xl-8">
+            <article class="usage-panel h-100">
+                <div class="usage-panel-header">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-chart-area"></i>
+                            Request Volume
+                        </h2>
+
+                        <p>
+                            Daily successful, failed, and total requests.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="chart-wrap">
+                    <canvas id="requestVolumeChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <article class="usage-panel h-100">
+                <div class="usage-panel-header">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-chart-pie"></i>
+                            Status Distribution
+                        </h2>
+
+                        <p>
+                            HTTP responses during @periodLabel.ToLowerInvariant().
+                        </p>
+                    </div>
+                </div>
+
+                <div class="chart-wrap chart-wrap-small">
+                    @if (Model.StatusUsage.Count == 0)
+                    {
+                        <div class="chart-empty">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            <strong>No status data</strong>
+                            <span>Send API requests to populate this chart.</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <canvas id="statusDistributionChart"></canvas>
+                    }
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-xl-8">
+            <article class="usage-panel h-100">
+                <div class="usage-panel-header">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-wave-square"></i>
+                            Response Performance
+                        </h2>
+
+                        <p>
+                            Daily average API response time in milliseconds.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="chart-wrap">
+                    <canvas id="responseTimeChart"></canvas>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <article class="usage-panel h-100">
+                <div class="usage-panel-header">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-gauge"></i>
+                            Monthly Quota
+                        </h2>
+
+                        <p>Current UTC month consumption.</p>
+                    </div>
+                </div>
+
+                <div class="quota-usage-body">
+                    @if (Model.HasUnlimitedQuota)
+                    {
+                        <div class="quota-unlimited">
+                            <i class="fa-solid fa-infinity"></i>
+                            <strong>Unlimited quota</strong>
+                            <span>
+                                This application has no monthly request limit.
+                            </span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="quota-numbers">
+                            <div>
+                                <span>Used</span>
+                                <strong>@Model.RequestsThisMonth.ToString("N0")</strong>
+                            </div>
+
+                            <div>
+                                <span>Remaining</span>
+                                <strong>@Model.RemainingQuota.ToString("N0")</strong>
+                            </div>
+
+                            <div>
+                                <span>Total</span>
+                                <strong>@Model.MonthlyQuota.ToString("N0")</strong>
+                            </div>
+                        </div>
+
+                        <div class="quota-progress">
+                            <span style="width:@quotaPercentageCss%"></span>
+                        </div>
+
+                        <div class="quota-caption">
+                            @quotaPercentage.ToString("N2")% used
+                        </div>
+                    }
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12">
+            <article class="usage-panel">
+                <div class="usage-panel-header">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-ranking-star"></i>
+                            Endpoint Usage
+                        </h2>
+
+                        <p>
+                            Top endpoints ranked by request volume during @periodLabel.ToLowerInvariant().
+                        </p>
+                    </div>
+                </div>
+
+                <div class="table-responsive usage-table-wrap">
+                    <table class="table usage-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Total</th>
+                                <th>Successful</th>
+                                <th>Failed</th>
+                                <th>Average Time</th>
+                                <th>Success Rate</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.EndpointUsage.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="6" class="usage-empty-cell">
+                                        No endpoint usage is available for this period.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var endpoint in Model.EndpointUsage)
+                                {
+                                    var endpointSuccessRate = endpoint.Requests == 0
+                                    ? 0
+                                    : endpoint.SuccessfulRequests * 100d /
+                                    endpoint.Requests;
+
+                                    <tr>
+                                        <td>
+                                            <code class="endpoint-code">
+                                                @endpoint.Endpoint
+                                            </code>
+                                        </td>
+
+                                        <td>@endpoint.Requests.ToString("N0")</td>
+
+                                        <td>
+                                            <span class="count-pill count-success">
+                                                @endpoint.SuccessfulRequests.ToString("N0")
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <span class="count-pill @(endpoint.FailedRequests > 0 ? "count-error" : "count-success")">
+                                                @endpoint.FailedRequests.ToString("N0")
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            @endpoint.AverageResponseTimeMs.ToString("N2") ms
+                                        </td>
+
+                                        <td>
+                                            <div class="success-rate-cell">
+                                                <strong>
+                                                    @endpointSuccessRate.ToString("N1")%
+                                                </strong>
+
+                                                <div>
+                                                    <span style="width:@endpointSuccessRate.ToString(
+                                                                                                                  "0.##",
+                                                                                                                  System.Globalization.CultureInfo.InvariantCulture)%">
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                                                        }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12">
+            <article class="usage-panel">
+                <div class="usage-panel-header usage-log-header">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            Recent Request Logs
+                        </h2>
+
+                        <p>
+                            Latest 100 requests for this application.
+                        </p>
+                    </div>
+
+                    <div class="usage-log-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        <input type="search"
+                               id="requestLogSearch"
+                               placeholder="Filter endpoint, status, IP..."
+                               autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="table-responsive usage-table-wrap request-log-wrap">
+                    <table class="table usage-table request-log-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>UTC Time</th>
+                                <th>Method</th>
+                                <th>Version</th>
+                                <th>Endpoint</th>
+                                <th>Status</th>
+                                <th>Response</th>
+                                <th>IP Address</th>
+                                <th>User Agent</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="requestLogBody">
+                            @if (Model.RecentRequests.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="8" class="usage-empty-cell">
+                                        No request logs are available.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var request in Model.RecentRequests)
+                                {
+                                    var searchableText = string.Join(
+                                    " ",
+                                    request.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm:ss"),
+                                    request.HttpMethod,
+                                    request.ApiVersion,
+                                    request.Endpoint,
+                                    request.QueryString,
+                                    request.StatusCode,
+                                    request.ResponseTimeMs,
+                                    request.IpAddress,
+                                    request.UserAgent)
+                                    .ToLowerInvariant();
+
+                                    <tr class="request-log-row"
+                                        data-search="@searchableText">
+
+                                        <td class="text-nowrap">
+                                            @request.CreatedAtUtc.ToString(
+                                            "dd MMM yyyy HH:mm:ss")
+                                </td>
+
+                                <td>
+                                    <span class="method-pill method-@request.HttpMethod.ToLowerInvariant()">
+                                        @request.HttpMethod
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="version-pill">
+                                        @request.ApiVersion
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="request-endpoint-cell">
+                                        <code>@request.Endpoint</code>
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                                                                request.QueryString))
+                                                {
+                                                    <small>
+                                                        @request.QueryString
+                                                    </small>
+                                                }
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <span class="status-pill @(request.StatusCode >= 400
+                                                                                                  ? "status-error"
+                                                                                                  : "status-success")">
+                                                                                                                   @request.StatusCode
+                                                                                                               </span>
+                                                                                                           </td>
+
+                                        <td class="text-nowrap">
+                                            @request.ResponseTimeMs.ToString("N0") ms
+                                        </td>
+
+                                        <td class="text-nowrap">
+                                            @(request.IpAddress ?? "Unknown")
+                                        </td>
+
+                                        <td>
+                                            <span class="user-agent-text"
+                                                  title="@request.UserAgent">
+                                                @(string.IsNullOrWhiteSpace(
+                                                                                        request.UserAgent)
+                                                                                        ? "Unknown"
+                                                                                        : request.UserAgent)
+                                    </span>
+                                </td>
+                            </tr>
+                                                        }
+
+                                <tr id="requestLogNoResults"
+                                    class="d-none">
+                                    <td colspan="8"
+                                        class="usage-empty-cell">
+                                        No request logs match the current filter.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </div>
+
+    </div>
+
+</section>
+
+@section Styles {
+    <style>
+        .developer-usage-page {
+            padding: 1rem 0 3rem;
+        }
+
+        .usage-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 1.2rem;
+            padding: clamp(1.4rem, 3vw, 2.3rem);
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 30px;
+            background: radial-gradient( 700px 310px at 0 0, rgba(37, 99, 235, .18), transparent 62% ), radial-gradient( 560px 280px at 100% 10%, rgba(168, 85, 247, .14), transparent 60% ), linear-gradient( 135deg, rgba(255, 255, 255, .98), rgba(248, 250, 252, .92) );
+            box-shadow: 0 24px 62px rgba(15, 23, 42, .10);
+        }
+
+        .usage-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: .75rem;
+            padding: .48rem .8rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, .10);
+            color: #1d4ed8;
+            font-size: .75rem;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .usage-title-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+
+            .usage-title-row h1 {
+                margin: 0;
+                color: #0f172a;
+                font-size: clamp(1.9rem, 4vw, 3.1rem);
+                font-weight: 950;
+                letter-spacing: -.055em;
+            }
+
+        .usage-status {
+            padding: .34rem .7rem;
+            border-radius: 999px;
+            background: rgba(16, 185, 129, .11);
+            color: #047857;
+            font-size: .7rem;
+            font-weight: 950;
+        }
+
+        .usage-hero p {
+            max-width: 760px;
+            margin: .8rem 0 0;
+            color: #64748b;
+            font-weight: 650;
+            line-height: 1.7;
+        }
+
+        .usage-key {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            max-width: 100%;
+            margin-top: .8rem;
+            padding: .45rem .65rem;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .78);
+            color: #64748b;
+        }
+
+            .usage-key code {
+                color: #334155;
+                font-size: .72rem;
+                overflow-wrap: anywhere;
+            }
+
+        .usage-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .7rem;
+        }
+
+        .usage-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            min-height: 44px;
+            padding: .68rem 1rem;
+            border-radius: 15px;
+            font-size: .85rem;
+            font-weight: 900;
+        }
+
+        .usage-btn-primary {
+            border: 0;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: #fff;
+        }
+
+            .usage-btn-primary:hover,
+            .usage-btn-primary:focus {
+                color: #fff;
+            }
+
+        .usage-btn-light {
+            border: 1px solid rgba(15, 23, 42, .11);
+            background: rgba(255, 255, 255, .88);
+            color: #0f172a;
+        }
+
+        .usage-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            padding: .9rem 1rem;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .90);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, .05);
+        }
+
+            .usage-toolbar strong {
+                display: block;
+                color: #0f172a;
+                font-size: .8rem;
+                font-weight: 950;
+            }
+
+            .usage-toolbar span {
+                display: block;
+                margin-top: .2rem;
+                color: #64748b;
+                font-size: .72rem;
+            }
+
+        .usage-period-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .45rem;
+        }
+
+        .period-btn {
+            min-height: 36px;
+            padding: .45rem .7rem;
+            border: 1px solid rgba(15, 23, 42, .10);
+            border-radius: 10px;
+            background: #f8fafc;
+            color: #475569;
+            font-size: .72rem;
+            font-weight: 900;
+        }
+
+            .period-btn.active,
+            .period-btn:hover {
+                border-color: transparent;
+                background: #2563eb;
+                color: #fff;
+            }
+
+        .usage-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .usage-stat-card {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            min-width: 0;
+            padding: 1rem;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .92);
+            box-shadow: 0 15px 36px rgba(15, 23, 42, .06);
+        }
+
+        .usage-stat-icon {
+            display: grid;
+            flex: 0 0 auto;
+            width: 43px;
+            height: 43px;
+            place-items: center;
+            border-radius: 14px;
+        }
+
+        .stat-blue {
+            background: rgba(37, 99, 235, .11);
+            color: #2563eb;
+        }
+
+        .stat-green {
+            background: rgba(16, 185, 129, .11);
+            color: #059669;
+        }
+
+        .stat-red {
+            background: rgba(239, 68, 68, .11);
+            color: #dc2626;
+        }
+
+        .stat-orange {
+            background: rgba(249, 115, 22, .11);
+            color: #ea580c;
+        }
+
+        .stat-indigo {
+            background: rgba(99, 102, 241, .11);
+            color: #4f46e5;
+        }
+
+        .stat-purple {
+            background: rgba(168, 85, 247, .11);
+            color: #9333ea;
+        }
+
+        .usage-stat-card span {
+            display: block;
+            color: #64748b;
+            font-size: .65rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .usage-stat-card strong {
+            display: block;
+            margin-top: .15rem;
+            color: #0f172a;
+            font-size: 1.08rem;
+            font-weight: 950;
+        }
+
+        .usage-stat-card small {
+            display: block;
+            margin-top: .12rem;
+            color: #94a3b8;
+            font-size: .65rem;
+        }
+
+        .usage-panel {
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .92);
+            box-shadow: 0 18px 46px rgba(15, 23, 42, .07);
+        }
+
+        .usage-panel-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.1rem 1.2rem;
+            border-bottom: 1px solid rgba(15, 23, 42, .07);
+        }
+
+            .usage-panel-header h2 {
+                margin: 0;
+                color: #0f172a;
+                font-size: 1rem;
+                font-weight: 950;
+            }
+
+                .usage-panel-header h2 i {
+                    margin-right: .4rem;
+                    color: #2563eb;
+                }
+
+            .usage-panel-header p {
+                margin: .35rem 0 0;
+                color: #64748b;
+                font-size: .77rem;
+            }
+
+        .chart-wrap {
+            position: relative;
+            min-height: 355px;
+            padding: 1rem;
+        }
+
+        .chart-wrap-small {
+            min-height: 355px;
+        }
+
+        .chart-wrap canvas {
+            width: 100% !important;
+            height: 320px !important;
+        }
+
+        .chart-empty {
+            display: grid;
+            min-height: 300px;
+            place-items: center;
+            align-content: center;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+            .chart-empty i {
+                margin-bottom: .7rem;
+                font-size: 2rem;
+            }
+
+            .chart-empty strong {
+                color: #475569;
+            }
+
+            .chart-empty span {
+                margin-top: .3rem;
+                font-size: .75rem;
+            }
+
+        .quota-usage-body {
+            padding: 1.2rem;
+        }
+
+        .quota-numbers {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .65rem;
+        }
+
+            .quota-numbers > div {
+                padding: .75rem;
+                border-radius: 13px;
+                background: #f8fafc;
+                text-align: center;
+            }
+
+            .quota-numbers span {
+                display: block;
+                color: #64748b;
+                font-size: .65rem;
+                font-weight: 900;
+                text-transform: uppercase;
+            }
+
+            .quota-numbers strong {
+                display: block;
+                margin-top: .22rem;
+                color: #0f172a;
+                font-size: .9rem;
+                font-weight: 950;
+            }
+
+        .quota-progress {
+            height: 11px;
+            margin-top: 1.1rem;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e2e8f0;
+        }
+
+            .quota-progress span {
+                display: block;
+                height: 100%;
+                border-radius: inherit;
+                background: linear-gradient(90deg, #2563eb, #7c3aed);
+            }
+
+        .quota-caption {
+            margin-top: .55rem;
+            color: #64748b;
+            font-size: .73rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .quota-unlimited {
+            display: grid;
+            min-height: 240px;
+            place-items: center;
+            align-content: center;
+            text-align: center;
+        }
+
+            .quota-unlimited i {
+                color: #2563eb;
+                font-size: 2rem;
+            }
+
+            .quota-unlimited strong {
+                margin-top: .7rem;
+                color: #0f172a;
+                font-weight: 950;
+            }
+
+            .quota-unlimited span {
+                max-width: 300px;
+                margin-top: .3rem;
+                color: #64748b;
+                font-size: .75rem;
+            }
+
+        .usage-table-wrap {
+            max-height: 620px;
+        }
+
+        .request-log-wrap {
+            max-height: 680px;
+        }
+
+        .usage-table {
+            min-width: 900px;
+            font-size: .74rem;
+        }
+
+        .request-log-table {
+            min-width: 1250px;
+        }
+
+        .usage-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: .75rem .85rem;
+            border-color: rgba(15, 23, 42, .07);
+            background: #f8fafc;
+            color: #475569;
+            font-size: .65rem;
+            font-weight: 950;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .usage-table tbody td {
+            padding: .75rem .85rem;
+            border-color: rgba(15, 23, 42, .06);
+            color: #334155;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+
+        .usage-empty-cell {
+            padding: 2.4rem !important;
+            color: #94a3b8 !important;
+            text-align: center;
+        }
+
+        .endpoint-code,
+        .request-endpoint-cell code {
+            color: #334155;
+            font-size: .68rem;
+            overflow-wrap: anywhere;
+        }
+
+        .request-endpoint-cell {
+            min-width: 260px;
+        }
+
+            .request-endpoint-cell code {
+                display: block;
+            }
+
+            .request-endpoint-cell small {
+                display: block;
+                max-width: 320px;
+                margin-top: .24rem;
+                color: #94a3b8;
+                font-size: .63rem;
+                overflow-wrap: anywhere;
+            }
+
+        .count-pill,
+        .method-pill,
+        .version-pill,
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .26rem .5rem;
+            border-radius: 999px;
+            font-size: .64rem;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .count-success,
+        .status-success {
+            background: rgba(16, 185, 129, .10);
+            color: #047857;
+        }
+
+        .count-error,
+        .status-error {
+            background: rgba(239, 68, 68, .10);
+            color: #b91c1c;
+        }
+
+        .method-get {
+            background: rgba(14, 165, 233, .10);
+            color: #0369a1;
+        }
+
+        .method-post {
+            background: rgba(16, 185, 129, .10);
+            color: #047857;
+        }
+
+        .method-put,
+        .method-patch {
+            background: rgba(245, 158, 11, .10);
+            color: #b45309;
+        }
+
+        .method-delete {
+            background: rgba(239, 68, 68, .10);
+            color: #b91c1c;
+        }
+
+        .version-pill {
+            background: rgba(99, 102, 241, .10);
+            color: #4338ca;
+        }
+
+        .success-rate-cell {
+            min-width: 120px;
+        }
+
+            .success-rate-cell strong {
+                color: #334155;
+                font-size: .7rem;
+            }
+
+            .success-rate-cell > div {
+                height: 6px;
+                margin-top: .35rem;
+                overflow: hidden;
+                border-radius: 999px;
+                background: #e2e8f0;
+            }
+
+                .success-rate-cell > div span {
+                    display: block;
+                    height: 100%;
+                    border-radius: inherit;
+                    background: #10b981;
+                }
+
+        .usage-log-header {
+            align-items: center;
+        }
+
+        .usage-log-search {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            width: min(100%, 320px);
+            min-height: 40px;
+            padding: 0 .75rem;
+            border: 1px solid rgba(15, 23, 42, .11);
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #94a3b8;
+        }
+
+            .usage-log-search input {
+                width: 100%;
+                border: 0;
+                outline: 0;
+                background: transparent;
+                color: #334155;
+                font-size: .75rem;
+                font-weight: 700;
+            }
+
+        .user-agent-text {
+            display: block;
+            max-width: 260px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .usage-stat-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .usage-hero {
+                align-items: flex-start;
+                flex-direction: column;
+                border-radius: 24px;
+            }
+
+            .usage-hero-actions {
+                width: 100%;
+            }
+
+                .usage-hero-actions .usage-btn {
+                    flex: 1 1 auto;
+                }
+
+            .usage-toolbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .usage-period-buttons {
+                width: 100%;
+            }
+
+                .usage-period-buttons .period-btn {
+                    flex: 1;
+                }
+
+            .usage-stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .usage-log-header {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .usage-log-search {
+                width: 100%;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .usage-stat-grid,
+            .quota-numbers {
+                grid-template-columns: 1fr;
+            }
+
+            .usage-panel {
+                border-radius: 20px;
+            }
+
+            .chart-wrap {
+                min-height: 300px;
+                padding: .75rem;
+            }
+
+                .chart-wrap canvas {
+                    height: 270px !important;
+                }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        (() => {
+            const dailyLabels = @Html.Raw(dailyLabelsJson);
+            const dailyRequests = @Html.Raw(dailyRequestsJson);
+            const dailySuccess = @Html.Raw(dailySuccessJson);
+            const dailyFailed = @Html.Raw(dailyFailedJson);
+            const dailyResponse = @Html.Raw(dailyResponseJson);
+            const statusLabels = @Html.Raw(statusLabelsJson);
+            const statusValues = @Html.Raw(statusValuesJson);
+
+            const gridColor = "rgba(148, 163, 184, .18)";
+            const labelColor = "#64748b";
+
+            const volumeCanvas =
+                document.getElementById("requestVolumeChart");
+
+            if (volumeCanvas && window.Chart) {
+                new Chart(volumeCanvas, {
+                    type: "line",
+                    data: {
+                        labels: dailyLabels,
+                        datasets: [
+                            {
+                                label: "Total",
+                                data: dailyRequests,
+                                borderColor: "#2563eb",
+                                backgroundColor: "rgba(37, 99, 235, .10)",
+                                borderWidth: 2,
+                                tension: .34,
+                                fill: true,
+                                pointRadius: 2,
+                                pointHoverRadius: 5
+                            },
+                            {
+                                label: "Successful",
+                                data: dailySuccess,
+                                borderColor: "#10b981",
+                                backgroundColor: "rgba(16, 185, 129, .06)",
+                                borderWidth: 2,
+                                tension: .34,
+                                fill: false,
+                                pointRadius: 2,
+                                pointHoverRadius: 5
+                            },
+                            {
+                                label: "Failed",
+                                data: dailyFailed,
+                                borderColor: "#ef4444",
+                                backgroundColor: "rgba(239, 68, 68, .06)",
+                                borderWidth: 2,
+                                tension: .34,
+                                fill: false,
+                                pointRadius: 2,
+                                pointHoverRadius: 5
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: "index",
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                position: "bottom",
+                                labels: {
+                                    color: labelColor,
+                                    usePointStyle: true,
+                                    boxWidth: 8,
+                                    padding: 18
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: labelColor,
+                                    maxRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 12
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: gridColor
+                                },
+                                ticks: {
+                                    color: labelColor,
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const responseCanvas =
+                document.getElementById("responseTimeChart");
+
+            if (responseCanvas && window.Chart) {
+                new Chart(responseCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: dailyLabels,
+                        datasets: [
+                            {
+                                label: "Average response time (ms)",
+                                data: dailyResponse,
+                                borderColor: "#7c3aed",
+                                backgroundColor: "rgba(124, 58, 237, .72)",
+                                borderWidth: 1,
+                                borderRadius: 7,
+                                maxBarThickness: 30
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: "bottom",
+                                labels: {
+                                    color: labelColor,
+                                    usePointStyle: true,
+                                    boxWidth: 8,
+                                    padding: 18
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: labelColor,
+                                    maxRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 12
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: gridColor
+                                },
+                                ticks: {
+                                    color: labelColor
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const statusCanvas =
+                document.getElementById("statusDistributionChart");
+
+            if (statusCanvas && window.Chart) {
+                new Chart(statusCanvas, {
+                    type: "doughnut",
+                    data: {
+                        labels: statusLabels,
+                        datasets: [
+                            {
+                                data: statusValues,
+                                backgroundColor: [
+                                    "#10b981",
+                                    "#2563eb",
+                                    "#f59e0b",
+                                    "#ef4444",
+                                    "#7c3aed",
+                                    "#0ea5e9",
+                                    "#64748b"
+                                ],
+                                borderWidth: 0,
+                                hoverOffset: 5
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: "68%",
+                        plugins: {
+                            legend: {
+                                position: "bottom",
+                                labels: {
+                                    color: labelColor,
+                                    usePointStyle: true,
+                                    boxWidth: 8,
+                                    padding: 14
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const searchInput =
+                document.getElementById("requestLogSearch");
+
+            const logRows =
+                Array.from(
+                    document.querySelectorAll(".request-log-row"));
+
+            const noResults =
+                document.getElementById("requestLogNoResults");
+
+            searchInput?.addEventListener("input", () => {
+                const query =
+                    searchInput.value.trim().toLowerCase();
+
+                let visibleCount = 0;
+
+                logRows.forEach(row => {
+                    const searchable =
+                        row.dataset.search ?? "";
+
+                    const matches =
+                        query.length === 0 ||
+                        searchable.includes(query);
+
+                    row.classList.toggle(
+                        "d-none",
+                        !matches);
+
+                    if (matches) {
+                        visibleCount++;
+                    }
+                });
+
+                noResults?.classList.toggle(
+                    "d-none",
+                    visibleCount > 0);
+            });
+        })();
+    </script>
+}

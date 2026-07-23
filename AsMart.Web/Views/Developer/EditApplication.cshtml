@@ -1,0 +1,243 @@
+﻿@model AsMart.Web.Models.ViewModels.DeveloperApplicationEditViewModel
+
+@{
+    ViewData["Title"] = "Edit Application";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="developer-edit-page">
+
+    <div class="edit-application-card">
+        <div class="edit-application-header">
+            <div class="edit-application-icon">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </div>
+
+            <div>
+                <h1>Edit Application</h1>
+
+                <p>
+                    Update the application name, website, and internal notes.
+                </p>
+            </div>
+        </div>
+
+        <form asp-controller="Developer"
+              asp-action="EditApplication"
+              asp-route-id="@Model.Id"
+              method="post"
+              class="edit-application-form">
+
+            @Html.AntiForgeryToken()
+
+            <input asp-for="Id" type="hidden" />
+
+            <div asp-validation-summary="ModelOnly"
+                 class="alert alert-danger">
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Name"
+                       class="form-label">
+                </label>
+
+                <input asp-for="Name"
+                       class="form-control developer-input"
+                       autocomplete="off" />
+
+                <span asp-validation-for="Name"
+                      class="text-danger small">
+                </span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Website"
+                       class="form-label">
+                </label>
+
+                <input asp-for="Website"
+                       type="url"
+                       class="form-control developer-input"
+                       placeholder="https://example.com" />
+
+                <span asp-validation-for="Website"
+                      class="text-danger small">
+                </span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Notes"
+                       class="form-label">
+                </label>
+
+                <textarea asp-for="Notes"
+                          rows="5"
+                          class="form-control developer-input"
+                          placeholder="Optional internal notes"></textarea>
+
+                <span asp-validation-for="Notes"
+                      class="text-danger small">
+                </span>
+            </div>
+
+            <div class="edit-application-actions">
+                <a asp-controller="Developer"
+                   asp-action="ApplicationDetails"
+                   asp-route-id="@Model.Id"
+                   class="btn developer-secondary-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Cancel
+                </a>
+
+                <button type="submit"
+                        class="btn developer-primary-btn">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+</section>
+
+@section Styles {
+    <style>
+        .developer-edit-page {
+            display: grid;
+            min-height: 65vh;
+            padding: 2rem 0 3rem;
+            place-items: center;
+        }
+
+        .edit-application-card {
+            width: min(100%, 760px);
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 26px;
+            background: rgba(255, 255, 255, .94);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, .10);
+        }
+
+        .edit-application-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.35rem;
+            border-bottom: 1px solid rgba(15, 23, 42, .07);
+            background: radial-gradient( 480px 190px at 0 0, rgba(37, 99, 235, .15), transparent 65% ), #fff;
+        }
+
+        .edit-application-icon {
+            display: grid;
+            flex: 0 0 auto;
+            width: 52px;
+            height: 52px;
+            place-items: center;
+            border-radius: 17px;
+            background: rgba(37, 99, 235, .11);
+            color: #2563eb;
+            font-size: 1.1rem;
+        }
+
+        .edit-application-header h1 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 1.35rem;
+            font-weight: 950;
+        }
+
+        .edit-application-header p {
+            margin: .35rem 0 0;
+            color: #64748b;
+            font-size: .82rem;
+        }
+
+        .edit-application-form {
+            padding: 1.35rem;
+        }
+
+            .edit-application-form .form-label {
+                color: #334155;
+                font-size: .79rem;
+                font-weight: 900;
+            }
+
+        .developer-input {
+            min-height: 47px;
+            border: 1px solid rgba(15, 23, 42, .13);
+            border-radius: 14px;
+            color: #0f172a;
+            font-size: .87rem;
+            font-weight: 700;
+            box-shadow: none;
+        }
+
+        textarea.developer-input {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        .developer-input:focus {
+            border-color: rgba(37, 99, 235, .60);
+            box-shadow: 0 0 0 .22rem rgba(37, 99, 235, .10);
+        }
+
+        .edit-application-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: .7rem;
+        }
+
+        .developer-primary-btn,
+        .developer-secondary-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            min-height: 44px;
+            padding: .65rem 1rem;
+            border-radius: 14px;
+            font-size: .83rem;
+            font-weight: 900;
+        }
+
+        .developer-primary-btn {
+            border: 0;
+            background: linear-gradient( 135deg, #2563eb, #7c3aed );
+            color: #fff;
+        }
+
+            .developer-primary-btn:hover {
+                color: #fff;
+            }
+
+        .developer-secondary-btn {
+            border: 1px solid rgba(15, 23, 42, .11);
+            background: #fff;
+            color: #334155;
+        }
+
+        @@media (max-width: 575.98px) {
+            .developer-edit-page {
+                padding-top: .75rem;
+            }
+
+            .edit-application-card {
+                border-radius: 20px;
+            }
+
+            .edit-application-actions {
+                flex-direction: column-reverse;
+            }
+
+            .developer-primary-btn,
+            .developer-secondary-btn {
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
