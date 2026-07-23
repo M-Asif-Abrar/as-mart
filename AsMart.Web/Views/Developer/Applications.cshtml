@@ -1,0 +1,805 @@
+﻿@model AsMart.Web.Models.ViewModels.DeveloperApplicationsViewModel
+
+@{
+    ViewData["Title"] = "Developer Applications";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="developer-applications-page">
+
+    <div class="applications-hero">
+        <div>
+            <div class="applications-kicker">
+                <i class="fa-solid fa-cubes"></i>
+                Developer Portal
+            </div>
+
+            <h1>Your Applications</h1>
+
+            <p>
+                Manage API credentials, lifecycle status, request limits,
+                monthly usage, and integration settings for your AS-Mart
+                applications.
+            </p>
+        </div>
+
+        <div class="applications-hero-actions">
+            <a asp-controller="Developer"
+               asp-action="Index"
+               class="btn applications-btn applications-btn-light">
+                <i class="fa-solid fa-gauge-high"></i>
+                Dashboard
+            </a>
+
+            <a asp-controller="ApiKeys"
+               asp-action="Index"
+               class="btn applications-btn applications-btn-primary">
+                <i class="fa-solid fa-plus"></i>
+                Create Application
+            </a>
+        </div>
+    </div>
+
+    <div class="applications-stat-grid">
+
+        <article class="applications-stat-card">
+            <div class="applications-stat-icon stat-blue">
+                <i class="fa-solid fa-cubes"></i>
+            </div>
+
+            <div>
+                <span>Total Applications</span>
+                <strong>@Model.TotalApplications.ToString("N0")</strong>
+                <small>All registered integrations</small>
+            </div>
+        </article>
+
+        <article class="applications-stat-card">
+            <div class="applications-stat-icon stat-green">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <div>
+                <span>Active</span>
+                <strong>@Model.ActiveApplications.ToString("N0")</strong>
+                <small>Usable API credentials</small>
+            </div>
+        </article>
+
+        <article class="applications-stat-card">
+            <div class="applications-stat-icon stat-orange">
+                <i class="fa-solid fa-circle-pause"></i>
+            </div>
+
+            <div>
+                <span>Disabled</span>
+                <strong>@Model.DisabledApplications.ToString("N0")</strong>
+                <small>Manually disabled applications</small>
+            </div>
+        </article>
+
+        <article class="applications-stat-card">
+            <div class="applications-stat-icon stat-red">
+                <i class="fa-solid fa-ban"></i>
+            </div>
+
+            <div>
+                <span>Expired or Revoked</span>
+
+                <strong>
+                    @((Model.ExpiredApplications +
+                                        Model.RevokedApplications).ToString("N0"))
+                </strong>
+
+                <small>
+                    @Model.ExpiredApplications expired,
+                    @Model.RevokedApplications revoked
+                </small>
+            </div>
+        </article>
+
+        <article class="applications-stat-card">
+            <div class="applications-stat-icon stat-purple">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            </div>
+
+            <div>
+                <span>Monthly Requests</span>
+                <strong>@Model.RequestsThisMonth.ToString("N0")</strong>
+                <small>Across all applications</small>
+            </div>
+        </article>
+
+    </div>
+
+    @if (Model.Applications.Count == 0)
+    {
+        <article class="applications-empty">
+            <div class="applications-empty-icon">
+                <i class="fa-solid fa-cube"></i>
+            </div>
+
+            <h2>Create your first application</h2>
+
+            <p>
+                Register an application to generate an API key and start
+                consuming the AS-Mart API v1.
+            </p>
+
+            <a asp-controller="ApiKeys"
+               asp-action="Index"
+               class="btn applications-btn applications-btn-primary">
+                <i class="fa-solid fa-plus"></i>
+                Create Application
+            </a>
+        </article>
+    }
+    else
+    {
+        <div class="applications-grid">
+
+            @foreach (var application in Model.Applications)
+            {
+                var unlimitedQuota =
+                application.MonthlyQuota <= 0;
+
+                var quotaWidth =
+                unlimitedQuota
+                ? 0
+                : Math.Clamp(
+                application.QuotaUsagePercentage,
+                0,
+                100);
+
+                var quotaWidthCss =
+                quotaWidth.ToString(
+                "0.##",
+                System.Globalization.CultureInfo.InvariantCulture);
+
+                <article class="application-card">
+
+                    <div class="application-card-header">
+                        <div class="application-identity">
+                            <div class="application-icon">
+                                <i class="fa-solid fa-cube"></i>
+                            </div>
+
+                            <div>
+                                <h2>@application.Name</h2>
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                                        application.Website))
+                                {
+                                    <a href="@application.Website"
+                                       target="_blank"
+                                       rel="noopener"
+                                       class="application-website">
+                                        @application.Website
+                                    </a>
+                                }
+                                else
+                                {
+                                    <p>No website configured</p>
+                                }
+                            </div>
+                        </div>
+
+                        <span class="application-status @(application.IsUsable
+                                                          ? "status-active"
+                                                          : "status-inactive")">
+                                                                            @application.Status
+                                                                        </span>
+                                                                    </div>
+
+                    <div class="application-key">
+                        <span>API key</span>
+
+                        <code>@application.MaskedApiKey</code>
+
+                        <small>
+                            The complete key cannot be recovered after creation.
+                        </small>
+                    </div>
+
+                    <div class="application-metrics">
+                        <div>
+                            <span>Rate limit</span>
+
+                            <strong>
+                                @application.RateLimitPerMinute.ToString("N0")/min
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>This month</span>
+
+                            <strong>
+                                @application.RequestsThisMonth.ToString("N0")
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Remaining</span>
+
+                            <strong>
+                                @(unlimitedQuota
+                                                        ? "Unlimited"
+                                                        : application.RemainingQuota.ToString("N0"))
+                                                                                                </strong>
+                                                                                            </div>
+                                                                                        </div>
+
+                    <div class="application-quota">
+                        <div class="application-quota-heading">
+                            <span>Monthly quota</span>
+
+                            <strong>
+                                @(unlimitedQuota
+                                                        ? "Unlimited"
+                                                        : $"{application.QuotaUsagePercentage:N1}%")
+                    </strong>
+                </div>
+
+                        <div class="application-progress">
+                            <span style="width:@quotaWidthCss%"></span>
+                        </div>
+
+                        <small>
+                    @if (unlimitedQuota)
+                            {
+                                <text>
+                                    No monthly request limit
+                                </text>
+                            }
+                            else
+                            {
+                                <text>
+                                    @application.RequestsThisMonth.ToString("N0")
+                                    of
+                                    @application.MonthlyQuota.ToString("N0")
+                                    requests used
+                                </text>
+                            }
+                        </small>
+                    </div>
+
+                    <div class="application-dates">
+                        <div>
+                            <span>Created</span>
+
+                            <strong>
+                                @application.CreatedAtUtc.ToString(
+                                "dd MMM yyyy")
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Last used</span>
+
+                    <strong>
+                        @(application.LastUsedAtUtc?.ToString(
+                                                "dd MMM yyyy HH:mm")
+                                                ?? "Never")
+                                                       </strong>
+                                                   </div>
+
+                <div>
+                    <span>Expires</span>
+
+                    <strong>
+                        @(application.ExpiresAtUtc?.ToString(
+                                                "dd MMM yyyy")
+                                                ?? "Never")
+                    </strong>
+                </div>
+            </div>
+
+                    <div class="application-actions">
+
+                        <a asp-controller="ApiKeys"
+                           asp-action="Usage"
+                           asp-route-id="@application.Id"
+                           class="btn application-action-btn">
+                            <i class="fa-solid fa-chart-line"></i>
+                            Usage
+                        </a>
+
+                        <a asp-controller="Developer"
+                           asp-action="ApplicationDetails"
+                           asp-route-id="@application.Id"
+                           class="btn application-action-btn application-manage-btn">
+                            <i class="fa-solid fa-gear"></i>
+                            Manage
+                        </a>
+
+                    </div>
+
+                </article>
+                }
+
+        </div>
+    }
+
+</section>
+
+@section Styles {
+    <style>
+        .developer-applications-page {
+            padding: 1rem 0 3rem;
+        }
+
+        .applications-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 1.4rem;
+            padding: clamp(1.4rem, 3vw, 2.3rem);
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 30px;
+            background: radial-gradient( 700px 310px at 0 0, rgba(37, 99, 235, .18), transparent 62% ), radial-gradient( 560px 280px at 100% 10%, rgba(168, 85, 247, .14), transparent 60% ), linear-gradient( 135deg, rgba(255, 255, 255, .98), rgba(248, 250, 252, .92) );
+            box-shadow: 0 24px 62px rgba(15, 23, 42, .10);
+        }
+
+        .applications-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: .75rem;
+            padding: .48rem .8rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, .10);
+            color: #1d4ed8;
+            font-size: .75rem;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .applications-hero h1 {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(1.9rem, 4vw, 3.15rem);
+            font-weight: 950;
+            letter-spacing: -.055em;
+        }
+
+        .applications-hero p {
+            max-width: 760px;
+            margin: .85rem 0 0;
+            color: #64748b;
+            font-weight: 650;
+            line-height: 1.75;
+        }
+
+        .applications-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .7rem;
+        }
+
+        .applications-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            min-height: 44px;
+            padding: .68rem 1rem;
+            border-radius: 15px;
+            font-size: .85rem;
+            font-weight: 900;
+        }
+
+        .applications-btn-primary {
+            border: 0;
+            background: linear-gradient( 135deg, #2563eb, #0ea5e9 );
+            color: #fff;
+            box-shadow: 0 15px 28px rgba(37, 99, 235, .22);
+        }
+
+            .applications-btn-primary:hover,
+            .applications-btn-primary:focus {
+                color: #fff;
+                transform: translateY(-1px);
+            }
+
+        .applications-btn-light {
+            border: 1px solid rgba(15, 23, 42, .11);
+            background: rgba(255, 255, 255, .88);
+            color: #0f172a;
+        }
+
+            .applications-btn-light:hover {
+                color: #0f172a;
+                background: #fff;
+            }
+
+        .applications-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .applications-stat-card {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            min-width: 0;
+            padding: 1rem;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .90);
+            box-shadow: 0 15px 36px rgba(15, 23, 42, .065);
+        }
+
+        .applications-stat-icon {
+            display: grid;
+            flex: 0 0 auto;
+            width: 44px;
+            height: 44px;
+            place-items: center;
+            border-radius: 14px;
+        }
+
+        .stat-blue {
+            background: rgba(37, 99, 235, .11);
+            color: #2563eb;
+        }
+
+        .stat-green {
+            background: rgba(16, 185, 129, .11);
+            color: #059669;
+        }
+
+        .stat-orange {
+            background: rgba(249, 115, 22, .11);
+            color: #ea580c;
+        }
+
+        .stat-red {
+            background: rgba(239, 68, 68, .11);
+            color: #dc2626;
+        }
+
+        .stat-purple {
+            background: rgba(168, 85, 247, .11);
+            color: #9333ea;
+        }
+
+        .applications-stat-card span {
+            display: block;
+            color: #64748b;
+            font-size: .67rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .applications-stat-card strong {
+            display: block;
+            margin-top: .15rem;
+            color: #0f172a;
+            font-size: 1.25rem;
+            font-weight: 950;
+        }
+
+        .applications-stat-card small {
+            display: block;
+            margin-top: .15rem;
+            color: #94a3b8;
+            font-size: .67rem;
+        }
+
+        .applications-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.2rem;
+        }
+
+        .application-card {
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .92);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .07);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+            .application-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 23px 52px rgba(15, 23, 42, .10);
+            }
+
+        .application-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.2rem;
+            border-bottom: 1px solid rgba(15, 23, 42, .07);
+        }
+
+        .application-identity {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            min-width: 0;
+        }
+
+        .application-icon {
+            display: grid;
+            flex: 0 0 auto;
+            width: 46px;
+            height: 46px;
+            place-items: center;
+            border-radius: 15px;
+            background: rgba(37, 99, 235, .10);
+            color: #2563eb;
+        }
+
+        .application-identity h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 1rem;
+            font-weight: 950;
+        }
+
+        .application-identity p,
+        .application-website {
+            display: block;
+            max-width: 300px;
+            margin: .25rem 0 0;
+            color: #64748b;
+            font-size: .73rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .application-website {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+            .application-website:hover {
+                text-decoration: underline;
+            }
+
+        .application-status {
+            padding: .3rem .6rem;
+            border-radius: 999px;
+            font-size: .67rem;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, .11);
+            color: #047857;
+        }
+
+        .status-inactive {
+            background: rgba(239, 68, 68, .11);
+            color: #b91c1c;
+        }
+
+        .application-key {
+            padding: 1rem 1.2rem;
+        }
+
+            .application-key span,
+            .application-metrics span,
+            .application-quota-heading span,
+            .application-dates span {
+                display: block;
+                color: #64748b;
+                font-size: .66rem;
+                font-weight: 900;
+                text-transform: uppercase;
+            }
+
+            .application-key code {
+                display: block;
+                margin-top: .35rem;
+                padding: .6rem .7rem;
+                border: 1px solid rgba(15, 23, 42, .08);
+                border-radius: 11px;
+                background: #f8fafc;
+                color: #334155;
+                font-size: .72rem;
+                overflow-wrap: anywhere;
+            }
+
+            .application-key small {
+                display: block;
+                margin-top: .35rem;
+                color: #94a3b8;
+                font-size: .67rem;
+            }
+
+        .application-metrics,
+        .application-dates {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .7rem;
+            padding: 0 1.2rem 1rem;
+        }
+
+            .application-metrics > div,
+            .application-dates > div {
+                padding: .7rem;
+                border-radius: 13px;
+                background: #f8fafc;
+            }
+
+            .application-metrics strong,
+            .application-dates strong {
+                display: block;
+                margin-top: .25rem;
+                color: #0f172a;
+                font-size: .78rem;
+                font-weight: 950;
+            }
+
+        .application-quota {
+            padding: 0 1.2rem 1rem;
+        }
+
+        .application-quota-heading {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+            .application-quota-heading strong {
+                color: #334155;
+                font-size: .72rem;
+                font-weight: 950;
+            }
+
+        .application-progress {
+            height: 8px;
+            margin-top: .55rem;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e2e8f0;
+        }
+
+            .application-progress span {
+                display: block;
+                height: 100%;
+                border-radius: inherit;
+                background: linear-gradient( 90deg, #2563eb, #7c3aed );
+            }
+
+        .application-quota small {
+            display: block;
+            margin-top: .45rem;
+            color: #64748b;
+            font-size: .68rem;
+        }
+
+        .application-actions {
+            display: flex;
+            gap: .7rem;
+            padding: 1rem 1.2rem;
+            border-top: 1px solid rgba(15, 23, 42, .07);
+        }
+
+        .application-action-btn {
+            display: inline-flex;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            min-height: 40px;
+            border: 1px solid rgba(37, 99, 235, .14);
+            border-radius: 12px;
+            background: rgba(37, 99, 235, .07);
+            color: #2563eb;
+            font-size: .76rem;
+            font-weight: 900;
+        }
+
+            .application-action-btn:hover {
+                background: #2563eb;
+                color: #fff;
+            }
+
+        .application-manage-btn {
+            border-color: rgba(124, 58, 237, .14);
+            background: rgba(124, 58, 237, .07);
+            color: #7c3aed;
+        }
+
+            .application-manage-btn:hover {
+                background: #7c3aed;
+                color: #fff;
+            }
+
+        .applications-empty {
+            display: grid;
+            justify-items: center;
+            padding: 3rem 1.5rem;
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 25px;
+            background: rgba(255, 255, 255, .90);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .07);
+            text-align: center;
+        }
+
+        .applications-empty-icon {
+            display: grid;
+            width: 80px;
+            height: 80px;
+            place-items: center;
+            margin-bottom: 1rem;
+            border-radius: 25px;
+            background: rgba(37, 99, 235, .10);
+            color: #2563eb;
+            font-size: 1.8rem;
+        }
+
+        .applications-empty h2 {
+            color: #0f172a;
+            font-size: 1.2rem;
+            font-weight: 950;
+        }
+
+        .applications-empty p {
+            max-width: 460px;
+            color: #64748b;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .applications-stat-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .applications-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .applications-hero {
+                align-items: flex-start;
+                flex-direction: column;
+                border-radius: 24px;
+            }
+
+            .applications-hero-actions {
+                width: 100%;
+            }
+
+                .applications-hero-actions .applications-btn {
+                    flex: 1 1 auto;
+                }
+
+            .applications-stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .applications-stat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .application-card-header {
+                flex-direction: column;
+            }
+
+            .application-metrics,
+            .application-dates {
+                grid-template-columns: 1fr;
+            }
+
+            .application-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+}

@@ -351,5 +351,383 @@ namespace AsMart.Web.Controllers
 
             return View(model);
         }
+
+        [HttpGet("/Developer/Applications/{id:int}")]
+        public async Task<IActionResult> ApplicationDetails(
+        int id,
+        CancellationToken cancellationToken)
+            {
+                var userId = User.FindFirstValue(
+                    ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return Challenge();
+                }
+
+                var client = await _db.ApiClients
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(
+                        item =>
+                            item.Id == id &&
+                            item.UserId == userId,
+                        cancellationToken);
+
+                if (client is null)
+                {
+                    return NotFound();
+                }
+
+                var utcNow = DateTime.UtcNow;
+                var utcToday = utcNow.Date;
+
+                var monthStartUtc = new DateTime(
+                    utcNow.Year,
+                    utcNow.Month,
+                    1,
+                    0,
+                    0,
+                    0,
+                    DateTimeKind.Utc);
+
+                var nextMonthUtc = monthStartUtc.AddMonths(1);
+
+                var monthlyLogs = _db.ApiUsageLogs
+                    .AsNoTracking()
+                    .Where(log =>
+                        log.ApiClientId == client.Id &&
+                        log.CreatedAt >= monthStartUtc &&
+                        log.CreatedAt < nextMonthUtc);
+
+                var requestsThisMonth =
+                    await monthlyLogs.LongCountAsync(
+                        cancellationToken);
+
+                var successfulRequestsThisMonth =
+                    await monthlyLogs.LongCountAsync(
+                        log =>
+                            log.StatusCode >= 200 &&
+                            log.StatusCode < 400,
+                        cancellationToken);
+
+                var failedRequestsThisMonth =
+                    await monthlyLogs.LongCountAsync(
+                        log => log.StatusCode >= 400,
+                        cancellationToken);
+
+                var requestsToday = await _db.ApiUsageLogs
+                    .AsNoTracking()
+                    .LongCountAsync(
+                        log =>
+                            log.ApiClientId == client.Id &&
+                            log.CreatedAt >= utcToday,
+                        cancellationToken);
+
+                var averageResponseTimeMs =
+                    requestsThisMonth > 0
+                        ? await monthlyLogs.AverageAsync(
+                            log => (double)log.ResponseTimeMs,
+                            cancellationToken)
+                        : 0;
+
+                var remainingQuota =
+                    client.MonthlyQuota <= 0
+                        ? long.MaxValue
+                        : Math.Max(
+                            client.MonthlyQuota - requestsThisMonth,
+                            0);
+
+                var quotaUsagePercentage =
+                    client.MonthlyQuota <= 0
+                        ? 0
+                        : Math.Min(
+                            requestsThisMonth * 100d /
+                            Math.Max(client.MonthlyQuota, 1),
+                            100);
+
+                var successRate =
+                    requestsThisMonth > 0
+                        ? successfulRequestsThisMonth * 100d /
+                          requestsThisMonth
+                        : 0;
+
+                var topEndpointsRaw = await monthlyLogs
+                    .GroupBy(log => log.Endpoint)
+                    .Select(group => new
+                    {
+                        Endpoint = group.Key,
+                        Requests = group.Count(),
+
+                        Errors = group.Count(
+                            log => log.StatusCode >= 400),
+
+                        AverageResponseTimeMs =
+                            group.Average(
+                                log => (double)log.ResponseTimeMs)
+                    })
+                    .OrderByDescending(item => item.Requests)
+                    .Take(10)
+                    .ToListAsync(cancellationToken);
+
+                var topEndpoints = topEndpointsRaw
+                    .Select(item => new DeveloperApplicationEndpointVm
+                    {
+                        Endpoint = item.Endpoint,
+                        Requests = item.Requests,
+                        Errors = item.Errors,
+
+                        AverageResponseTimeMs = Math.Round(
+                            item.AverageResponseTimeMs,
+                            2)
+                    })
+                    .ToList();
+
+                var recentRequests = await _db.ApiUsageLogs
+                    .AsNoTracking()
+                    .Where(log => log.ApiClientId == client.Id)
+                    .OrderByDescending(log => log.CreatedAt)
+                    .Take(25)
+                    .Select(log =>
+                        new DeveloperApplicationRecentRequestVm
+                        {
+                            CreatedAtUtc = log.CreatedAt,
+                            HttpMethod = log.HttpMethod,
+                            Endpoint = log.Endpoint,
+                            ApiVersion = log.ApiVersion,
+                            StatusCode = log.StatusCode,
+                            ResponseTimeMs = log.ResponseTimeMs,
+                            IpAddress = log.IpAddress
+                        })
+                    .ToListAsync(cancellationToken);
+
+                var model =
+                    new DeveloperApplicationDetailsViewModel
+                    {
+                        Id = client.Id,
+                        Name = client.Name,
+                        Website = client.Website,
+                        Notes = client.Notes,
+                        MaskedApiKey = client.MaskedApiKey,
+                        ApiKeyPrefix = client.ApiKeyPrefix,
+                        Status = client.LifecycleStatus,
+
+                        IsActive = client.IsActive,
+                        IsUsable = client.IsUsable,
+                        IsExpired = client.IsExpired,
+                        IsRevoked = client.IsRevoked,
+
+                        RateLimitPerMinute =
+                            client.RateLimitPerMinute,
+
+                        MonthlyQuota =
+                            client.MonthlyQuota,
+
+                        RequestsToday =
+                            requestsToday,
+
+                        RequestsThisMonth =
+                            requestsThisMonth,
+
+                        SuccessfulRequestsThisMonth =
+                            successfulRequestsThisMonth,
+
+                        FailedRequestsThisMonth =
+                            failedRequestsThisMonth,
+
+                        RemainingQuota =
+                            remainingQuota,
+
+                        QuotaUsagePercentage =
+                            Math.Round(
+                                quotaUsagePercentage,
+                                2),
+
+                        SuccessRate =
+                            Math.Round(
+                                successRate,
+                                2),
+
+                        AverageResponseTimeMs =
+                            Math.Round(
+                                averageResponseTimeMs,
+                                2),
+
+                        CreatedAtUtc =
+                            client.CreatedAt,
+
+                        LastUsedAtUtc =
+                            client.LastUsedAt,
+
+                        ExpiresAtUtc =
+                            client.ExpiresAt,
+
+                        RevokedAtUtc =
+                            client.RevokedAt,
+
+                        LastRotatedAtUtc =
+                            client.LastRotatedAt,
+
+                        TopEndpoints =
+                            topEndpoints,
+
+                        RecentRequests =
+                            recentRequests
+                    };
+
+                return View(model);
+            }
+
+        [HttpGet("/Developer/Applications")]
+        public async Task<IActionResult> Applications(
+        CancellationToken cancellationToken = default)
+            {
+                var userId = User.FindFirstValue(
+                    ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return Challenge();
+                }
+
+                var utcNow = DateTime.UtcNow;
+
+                var monthStartUtc = new DateTime(
+                    utcNow.Year,
+                    utcNow.Month,
+                    1,
+                    0,
+                    0,
+                    0,
+                    DateTimeKind.Utc);
+
+                var nextMonthUtc = monthStartUtc.AddMonths(1);
+
+                var clients = await _db.ApiClients
+                    .AsNoTracking()
+                    .Where(client => client.UserId == userId)
+                    .OrderByDescending(client => client.CreatedAt)
+                    .ToListAsync(cancellationToken);
+
+                var clientIds = clients
+                    .Select(client => client.Id)
+                    .ToList();
+
+                var monthlyUsage = clientIds.Count == 0
+                    ? new Dictionary<int, long>()
+                    : await _db.ApiUsageLogs
+                        .AsNoTracking()
+                        .Where(log =>
+                            log.ApiClientId.HasValue &&
+                            clientIds.Contains(log.ApiClientId.Value) &&
+                            log.CreatedAt >= monthStartUtc &&
+                            log.CreatedAt < nextMonthUtc)
+                        .GroupBy(log => log.ApiClientId!.Value)
+                        .Select(group => new
+                        {
+                            ApiClientId = group.Key,
+                            Requests = group.LongCount()
+                        })
+                        .ToDictionaryAsync(
+                            item => item.ApiClientId,
+                            item => item.Requests,
+                            cancellationToken);
+
+                var applications = clients
+                    .Select(client =>
+                    {
+                        monthlyUsage.TryGetValue(
+                            client.Id,
+                            out var requestsThisMonth);
+
+                        var hasUnlimitedQuota =
+                            client.MonthlyQuota <= 0;
+
+                        var remainingQuota =
+                            hasUnlimitedQuota
+                                ? long.MaxValue
+                                : Math.Max(
+                                    client.MonthlyQuota -
+                                    requestsThisMonth,
+                                    0);
+
+                        var quotaUsagePercentage =
+                            hasUnlimitedQuota
+                                ? 0
+                                : Math.Min(
+                                    requestsThisMonth * 100d /
+                                    Math.Max(client.MonthlyQuota, 1),
+                                    100);
+
+                        return new DeveloperApplicationListItemVm
+                        {
+                            Id = client.Id,
+                            Name = client.Name,
+                            Website = client.Website,
+                            MaskedApiKey = client.MaskedApiKey,
+                            Status = client.LifecycleStatus,
+                            IsUsable = client.IsUsable,
+
+                            RateLimitPerMinute =
+                                client.RateLimitPerMinute,
+
+                            MonthlyQuota =
+                                client.MonthlyQuota,
+
+                            RequestsThisMonth =
+                                requestsThisMonth,
+
+                            RemainingQuota =
+                                remainingQuota,
+
+                            QuotaUsagePercentage =
+                                Math.Round(
+                                    quotaUsagePercentage,
+                                    2),
+
+                            CreatedAtUtc =
+                                client.CreatedAt,
+
+                            LastUsedAtUtc =
+                                client.LastUsedAt,
+
+                            ExpiresAtUtc =
+                                client.ExpiresAt
+                        };
+                    })
+                    .ToList();
+
+                var model = new DeveloperApplicationsViewModel
+                {
+                    TotalApplications =
+                        clients.Count,
+
+                    ActiveApplications =
+                        clients.Count(client =>
+                            client.IsUsable),
+
+                    DisabledApplications =
+                        clients.Count(client =>
+                            !client.IsActive &&
+                            !client.IsRevoked &&
+                            !client.IsExpired),
+
+                    ExpiredApplications =
+                        clients.Count(client =>
+                            client.IsExpired),
+
+                    RevokedApplications =
+                        clients.Count(client =>
+                            client.IsRevoked),
+
+                    RequestsThisMonth =
+                        applications.Sum(application =>
+                            application.RequestsThisMonth),
+
+                    Applications =
+                        applications
+                };
+
+                return View(model);
+            }
     }
 }

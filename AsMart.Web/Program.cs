@@ -2,6 +2,7 @@
 using AsMart.Web.Middleware;
 using AsMart.Web.Models.Api;
 using AsMart.Web.Models.Entities;
+using AsMart.Web.Models.Security;
 using AsMart.Web.Services;
 using AsMart.Web.Services.Email;
 using AsMart.Web.Services.Marketing;
@@ -14,9 +15,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Threading.RateLimiting;
-using AsMart.Web.Models.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -103,6 +104,17 @@ builder.Services
             options.HashingPepper.Length >= 32,
         "ApiKeySecurity:HashingPepper must contain at least 32 characters.")
     .ValidateOnStart();
+
+builder.Services.AddHttpClient(
+    "DeveloperPlayground",
+    client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(30);
+
+        client.DefaultRequestHeaders.Accept.Add(
+            new MediaTypeWithQualityHeaderValue(
+                "application/json"));
+    });
 
 builder.Services.AddScoped<IApiKeyService,ApiKeyService>();
 builder.Services.AddHostedService<ApiKeyLegacyBackfillHostedService>();

@@ -352,32 +352,83 @@
 
                     </a>
                 </li>
+
+                <li>
+                    <hr class="dropdown-divider as-dd-divider" />
+                </li>
+
+                <li class="dropdown-header as-dd-header">
+                    <i class="fa-solid fa-code"></i>
+                    <span>Developer Tools</span>
+                </li>
+
                 <li>
                     <a asp-area=""
                        asp-controller="Developer"
                        asp-action="Index"
                        class="dropdown-item">
-                        <i class="fa-solid fa-code"></i>
+
+                        <i class="fa-solid fa-gauge-high"></i>
                         <span>Developer Dashboard</span>
+
                     </a>
                 </li>
+
+                <li>
+                    <a asp-area=""
+                       asp-controller="Developer"
+                       asp-action="Applications"
+                       class="dropdown-item">
+
+                        <i class="fa-solid fa-cubes"></i>
+                        <span>Applications</span>
+
+                    </a>
+                </li>
+
                 <li>
                     <a asp-area=""
                        asp-controller="ApiKeys"
                        asp-action="Index"
                        class="dropdown-item">
+
                         <i class="fa-solid fa-key"></i>
-                        My API Keys
+                        <span>My API Keys</span>
+
                     </a>
                 </li>
+
+                <li>
+                    <a asp-area=""
+                       asp-controller="DeveloperPlayground"
+                       asp-action="Index"
+                       class="dropdown-item">
+
+                        <i class="fa-solid fa-flask"></i>
+                        <span>API Playground</span>
+
+                    </a>
+                </li>
+
                 <li>
                     <a asp-area=""
                        asp-controller="Home"
                        asp-action="ApiDocumentation"
                        class="dropdown-item">
+
                         <i class="fa-solid fa-book-open"></i>
                         <span>API Documentation</span>
+
                     </a>
+                </li>
+
+                <li>
+                    <hr class="dropdown-divider as-dd-divider" />
+                </li>
+
+                <li class="dropdown-header as-dd-header">
+                    <i class="fa-solid fa-user"></i>
+                    <span>My Activity</span>
                 </li>
 
                 <li>
@@ -459,9 +510,12 @@
                 <li>
                     <form asp-area="Identity"
                           asp-page="/Account/Logout"
-                          asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
-                          method="post"
-                          class="m-0">
+                          asp-route-returnUrl="@Url.Action(
+                                            "Index",
+                                            "Home",
+                                            new { area = "" })"
+                      method="post"
+                      class="m-0">
 
                         <button type="submit"
                                 class="dropdown-item as-logout-btn">

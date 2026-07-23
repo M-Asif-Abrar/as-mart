@@ -1,0 +1,1192 @@
+﻿@model AsMart.Web.Models.ViewModels.DeveloperPlaygroundViewModel
+
+@{
+    ViewData["Title"] = "API Playground";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var selectedEndpoint = Model.Endpoints.FirstOrDefault(
+        x => string.Equals(
+            x.Key,
+            Model.EndpointKey,
+            StringComparison.OrdinalIgnoreCase));
+}
+
+<section class="api-playground-page">
+
+    <div class="playground-hero">
+        <div>
+            <div class="playground-badge">
+                <i class="fa-solid fa-flask"></i>
+                Developer Playground
+            </div>
+
+            <h1>Test the AS-Mart API</h1>
+
+            <p>
+                Select an API endpoint, configure its parameters, send a live
+                server-side request, inspect the JSON response, and copy
+                integration-ready code.
+            </p>
+
+            <div class="playground-meta">
+                <span>
+                    <i class="fa-solid fa-code-branch"></i>
+                    API v1
+                </span>
+
+                <span>
+                    <i class="fa-solid fa-shield-halved"></i>
+                    Secure server request
+                </span>
+
+                <span>
+                    <i class="fa-solid fa-bolt"></i>
+                    Live JSON
+                </span>
+            </div>
+        </div>
+
+        <div class="playground-hero-actions">
+            <a asp-controller="Developer"
+               asp-action="Index"
+               class="btn playground-btn playground-btn-light">
+                <i class="fa-solid fa-gauge-high"></i>
+                Developer Dashboard
+            </a>
+
+            <a asp-controller="Home"
+               asp-action="ApiDocumentation"
+               class="btn playground-btn playground-btn-primary">
+                <i class="fa-solid fa-book-open"></i>
+                Documentation
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-xl-5">
+            <article class="playground-panel h-100">
+
+                <div class="playground-panel-header">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-sliders"></i>
+                            Build Request
+                        </h2>
+
+                        <p>Configure a supported public API request.</p>
+                    </div>
+
+                    <span class="http-method-pill">GET</span>
+                </div>
+
+                <form asp-controller="DeveloperPlayground"
+                      asp-action="Index"
+                      method="post"
+                      id="playgroundForm"
+                      class="playground-form">
+
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="alert alert-danger validation-summary">
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="EndpointKey"
+                               class="form-label playground-label">
+                            API endpoint
+                        </label>
+
+                        <select asp-for="EndpointKey"
+                                id="endpointSelect"
+                                class="form-select playground-control">
+
+                            @foreach (var endpoint in Model.Endpoints)
+                            {
+                                <option value="@endpoint.Key"
+                                        data-path="@endpoint.Path"
+                                        data-description="@endpoint.Description"
+                                        data-count="@endpoint.SupportsCount.ToString().ToLowerInvariant()"
+                                        data-query="@endpoint.SupportsQuery.ToString().ToLowerInvariant()"
+                                        data-paging="@endpoint.SupportsPaging.ToString().ToLowerInvariant()"
+                                        data-price="@endpoint.SupportsPriceRange.ToString().ToLowerInvariant()">
+                                    @endpoint.Name
+                                </option>
+                            }
+                        </select>
+
+                        <span asp-validation-for="EndpointKey"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div class="endpoint-preview">
+                        <div class="endpoint-preview-path">
+                            <span>GET</span>
+
+                            <code id="endpointPath">
+                                @(selectedEndpoint?.Path ??
+                                                                "api/v1/products/featured")
+                            </code>
+                        </div>
+
+                        <p id="endpointDescription">
+                            @(selectedEndpoint?.Description ??
+                                                        "Returns featured active products.")
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ApiClientId"
+                               class="form-label playground-label">
+                            Request identity
+                        </label>
+
+                        <select asp-for="ApiClientId"
+                                asp-items="Model.ApiClients"
+                                class="form-select playground-control">
+                        </select>
+
+                        <span asp-validation-for="ApiClientId"
+                              class="text-danger small">
+                        </span>
+
+                        <div class="playground-help">
+                            Existing raw keys cannot be recovered because AS-Mart
+                            securely stores only their hashes. Use the anonymous
+                            option in this first playground version.
+                        </div>
+                    </div>
+
+                    <div id="countField" class="mb-3">
+                        <label asp-for="Count"
+                               class="form-label playground-label">
+                            Result count
+                        </label>
+
+                        <input asp-for="Count"
+                               type="number"
+                               min="1"
+                               max="50"
+                               class="form-control playground-control" />
+
+                        <span asp-validation-for="Count"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div id="queryField" class="mb-3">
+                        <label asp-for="Query"
+                               class="form-label playground-label">
+                            Search query
+                        </label>
+
+                        <input asp-for="Query"
+                               type="text"
+                               class="form-control playground-control"
+                               placeholder="Example: laptop, watch, calculator"
+                               autocomplete="off" />
+
+                        <span asp-validation-for="Query"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div id="pagingFields" class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label asp-for="Page"
+                                   class="form-label playground-label">
+                                Page
+                            </label>
+
+                            <input asp-for="Page"
+                                   type="number"
+                                   min="1"
+                                   class="form-control playground-control" />
+                        </div>
+
+                        <div class="col-6">
+                            <label asp-for="PageSize"
+                                   class="form-label playground-label">
+                                Page size
+                            </label>
+
+                            <input asp-for="PageSize"
+                                   type="number"
+                                   min="1"
+                                   max="100"
+                                   class="form-control playground-control" />
+                        </div>
+                    </div>
+
+                    <div id="priceFields" class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label asp-for="MinimumPrice"
+                                   class="form-label playground-label">
+                                Minimum price
+                            </label>
+
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+
+                                <input asp-for="MinimumPrice"
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       class="form-control playground-control"
+                                       placeholder="10.00" />
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <label asp-for="MaximumPrice"
+                                   class="form-label playground-label">
+                                Maximum price
+                            </label>
+
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+
+                                <input asp-for="MaximumPrice"
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       class="form-control playground-control"
+                                       placeholder="100.00" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                            id="sendRequestButton"
+                            class="btn send-request-btn w-100">
+
+                        <span class="send-default">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Send Request
+                        </span>
+
+                        <span class="send-loading d-none">
+                            <span class="spinner-border spinner-border-sm"></span>
+                            Sending...
+                        </span>
+                    </button>
+
+                    <p class="security-note">
+                        <i class="fa-solid fa-lock"></i>
+                        The request executes on the AS-Mart server.
+                    </p>
+                </form>
+            </article>
+        </div>
+
+        <div class="col-12 col-xl-7">
+            <article class="playground-panel h-100">
+
+                <div class="playground-panel-header">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-terminal"></i>
+                            API Response
+                        </h2>
+
+                        <p>
+                            Inspect status, timing, headers, JSON, and code examples.
+                        </p>
+                    </div>
+
+                    @if (Model.Result is not null)
+                    {
+                        <span class="response-status @(Model.Result.IsSuccess
+                                                          ? "response-success"
+                                                          : "response-error")">
+                        HTTP @Model.Result.StatusCode
+                    </span>
+                                        }
+                </div>
+
+                @if (Model.Result is null)
+                {
+                    <div class="empty-response">
+                        <div class="empty-response-icon">
+                            <i class="fa-solid fa-code"></i>
+                        </div>
+
+                        <h3>No request sent yet</h3>
+
+                        <p>
+                            Select an endpoint and press
+                            <strong>Send Request</strong> to see its live response.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <div class="response-summary">
+                        <div>
+                            <span>Status</span>
+
+                            <strong class="@(Model.Result.IsSuccess
+                                                                    ? "text-success"
+                                                                    : "text-danger")">
+                            @Model.Result.StatusCode
+                        </strong>
+                    </div>
+
+                        <div>
+                            <span>Response time</span>
+                            <strong>@Model.Result.ResponseTimeMs.ToString("N0") ms</strong>
+                        </div>
+
+                        <div class="response-url">
+                            <span>Request URL</span>
+                            <code>@Model.Result.RequestUrl</code>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-pills response-tabs"
+                        id="resultTabs"
+                        role="tablist">
+
+                        <li class="nav-item">
+                            <button class="nav-link active"
+                                    data-bs-toggle="pill"
+                                    data-bs-target="#responseJson"
+                                    type="button">
+                                <i class="fa-solid fa-code"></i>
+                                Response
+                            </button>
+                        </li>
+
+                        <li class="nav-item">
+                            <button class="nav-link"
+                                    data-bs-toggle="pill"
+                                    data-bs-target="#responseHeaders"
+                                    type="button">
+                                <i class="fa-solid fa-list"></i>
+                                Headers
+                            </button>
+                        </li>
+
+                        <li class="nav-item">
+                            <button class="nav-link"
+                                    data-bs-toggle="pill"
+                                    data-bs-target="#curlExample"
+                                    type="button">
+                                <i class="fa-solid fa-terminal"></i>
+                                cURL
+                            </button>
+                        </li>
+
+                        <li class="nav-item">
+                            <button class="nav-link"
+                                    data-bs-toggle="pill"
+                                    data-bs-target="#csharpExample"
+                                    type="button">
+                                <i class="fa-solid fa-code"></i>
+                                C#
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content response-tab-content">
+
+                        <div class="tab-pane fade show active"
+                             id="responseJson">
+
+                            <div class="code-card">
+                                <button type="button"
+                                        class="copy-code-btn"
+                                        data-copy-target="responseCode">
+                                    <i class="fa-regular fa-copy"></i>
+                                    Copy
+                                </button>
+
+                                <pre id="responseCode"
+                                     class="response-code">@Model.Result.ResponseBody</pre>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade"
+                             id="responseHeaders">
+
+                            <div class="table-responsive headers-table-wrap">
+                                <table class="table headers-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Header</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    @if (Model.Result.ResponseHeaders.Count == 0)
+                                        {
+                                            <tr>
+                                                <td colspan="2"
+                                                    class="text-center text-muted py-4">
+                                                    No response headers were returned.
+                                                </td>
+                                            </tr>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var header
+                                                                                in Model.Result.ResponseHeaders)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <code>@header.Key</code>
+                                                    </td>
+
+                                                    <td>@header.Value</td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade"
+                             id="curlExample">
+
+                            <div class="code-card">
+                                <button type="button"
+                                        class="copy-code-btn"
+                                        data-copy-target="curlCode">
+                                    <i class="fa-regular fa-copy"></i>
+                                    Copy
+                                </button>
+
+                                <pre id="curlCode"
+                                     class="response-code">@Model.Result.CurlExample</pre>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade"
+                             id="csharpExample">
+
+                            <div class="code-card">
+                                <button type="button"
+                                        class="copy-code-btn"
+                                        data-copy-target="csharpCode">
+                                    <i class="fa-regular fa-copy"></i>
+                                    Copy
+                                </button>
+
+                                <pre id="csharpCode"
+                                     class="response-code">@Model.Result.CSharpExample</pre>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </article>
+        </div>
+    </div>
+
+    <div class="playground-info-grid">
+        <article>
+            <i class="fa-solid fa-code-branch"></i>
+
+            <div>
+                <h3>Versioned requests</h3>
+                <p>Every request uses the recommended <code>/api/v1</code> routes.</p>
+            </div>
+        </article>
+
+        <article>
+            <i class="fa-solid fa-chart-line"></i>
+
+            <div>
+                <h3>Analytics enabled</h3>
+                <p>Requests appear in API analytics with timing and status data.</p>
+            </div>
+        </article>
+
+        <article>
+            <i class="fa-solid fa-shield-halved"></i>
+
+            <div>
+                <h3>Secure key storage</h3>
+                <p>Existing raw keys remain unrecoverable because only hashes are stored.</p>
+            </div>
+        </article>
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .api-playground-page {
+            padding: 1rem 0 3rem;
+        }
+
+        .playground-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 1.4rem;
+            padding: clamp(1.4rem, 3vw, 2.3rem);
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 30px;
+            background: radial-gradient(700px 310px at 0 0, rgba(37, 99, 235, .18), transparent 62%), radial-gradient(560px 280px at 100% 10%, rgba(168, 85, 247, .14), transparent 60%), linear-gradient(135deg, rgba(255,255,255,.98), rgba(248,250,252,.92));
+            box-shadow: 0 24px 62px rgba(15, 23, 42, .10);
+        }
+
+        .playground-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: .75rem;
+            padding: .48rem .8rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, .10);
+            color: #1d4ed8;
+            font-size: .75rem;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .playground-hero h1 {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(1.9rem, 4vw, 3.15rem);
+            font-weight: 950;
+            letter-spacing: -.055em;
+        }
+
+        .playground-hero p {
+            max-width: 760px;
+            margin: .85rem 0 0;
+            color: #64748b;
+            font-weight: 650;
+            line-height: 1.75;
+        }
+
+        .playground-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .55rem;
+            margin-top: 1rem;
+        }
+
+            .playground-meta span {
+                display: inline-flex;
+                align-items: center;
+                gap: .4rem;
+                padding: .42rem .7rem;
+                border: 1px solid rgba(15, 23, 42, .08);
+                border-radius: 999px;
+                background: rgba(255,255,255,.80);
+                color: #475569;
+                font-size: .72rem;
+                font-weight: 850;
+            }
+
+            .playground-meta i {
+                color: #2563eb;
+            }
+
+        .playground-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .7rem;
+        }
+
+        .playground-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            min-height: 44px;
+            padding: .68rem 1rem;
+            border-radius: 15px;
+            font-size: .85rem;
+            font-weight: 900;
+        }
+
+        .playground-btn-primary {
+            border: 0;
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+            color: #fff;
+            box-shadow: 0 15px 28px rgba(37, 99, 235, .22);
+        }
+
+            .playground-btn-primary:hover {
+                color: #fff;
+            }
+
+        .playground-btn-light {
+            border: 1px solid rgba(15,23,42,.11);
+            background: rgba(255,255,255,.88);
+            color: #0f172a;
+        }
+
+        .playground-panel {
+            overflow: hidden;
+            border: 1px solid rgba(15,23,42,.09);
+            border-radius: 25px;
+            background: rgba(255,255,255,.91);
+            box-shadow: 0 18px 46px rgba(15,23,42,.075);
+        }
+
+        .playground-panel-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.15rem 1.2rem;
+            border-bottom: 1px solid rgba(15,23,42,.07);
+        }
+
+            .playground-panel-header h2 {
+                margin: 0;
+                color: #0f172a;
+                font-size: 1rem;
+                font-weight: 950;
+            }
+
+                .playground-panel-header h2 i {
+                    margin-right: .4rem;
+                    color: #2563eb;
+                }
+
+            .playground-panel-header p {
+                margin: .38rem 0 0;
+                color: #64748b;
+                font-size: .81rem;
+                font-weight: 650;
+            }
+
+        .http-method-pill,
+        .response-status {
+            display: inline-flex;
+            padding: .3rem .65rem;
+            border-radius: 999px;
+            font-size: .7rem;
+            font-weight: 950;
+        }
+
+        .http-method-pill,
+        .response-success {
+            background: rgba(16,185,129,.11);
+            color: #047857;
+        }
+
+        .response-error {
+            background: rgba(239,68,68,.11);
+            color: #b91c1c;
+        }
+
+        .playground-form {
+            padding: 1.2rem;
+        }
+
+        .validation-summary:empty {
+            display: none;
+        }
+
+        .playground-label {
+            color: #334155;
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+        .playground-control {
+            min-height: 46px;
+            border: 1px solid rgba(15,23,42,.13);
+            border-radius: 14px;
+            color: #0f172a;
+            font-size: .86rem;
+            font-weight: 750;
+            box-shadow: none;
+        }
+
+            .playground-control:focus {
+                border-color: rgba(37,99,235,.62);
+                box-shadow: 0 0 0 .22rem rgba(37,99,235,.10);
+            }
+
+        .endpoint-preview {
+            margin-bottom: 1rem;
+            padding: .85rem;
+            border: 1px solid rgba(37,99,235,.11);
+            border-radius: 15px;
+            background: linear-gradient(135deg, #eff6ff, #f5f3ff);
+        }
+
+        .endpoint-preview-path {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
+            .endpoint-preview-path span {
+                padding: .25rem .48rem;
+                border-radius: 8px;
+                background: #059669;
+                color: #fff;
+                font-size: .65rem;
+                font-weight: 950;
+            }
+
+            .endpoint-preview-path code {
+                color: #1e3a8a;
+                font-size: .76rem;
+                font-weight: 850;
+                overflow-wrap: anywhere;
+            }
+
+        .endpoint-preview p {
+            margin: .55rem 0 0;
+            color: #64748b;
+            font-size: .76rem;
+            line-height: 1.55;
+        }
+
+        .playground-help {
+            margin-top: .45rem;
+            color: #64748b;
+            font-size: .7rem;
+            line-height: 1.5;
+        }
+
+        .send-request-btn {
+            min-height: 48px;
+            border: 0;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: #fff;
+            font-size: .9rem;
+            font-weight: 950;
+            box-shadow: 0 16px 30px rgba(37,99,235,.22);
+        }
+
+            .send-request-btn:hover {
+                color: #fff;
+            }
+
+        .send-default,
+        .send-loading {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .security-note {
+            display: flex;
+            gap: .45rem;
+            margin: .8rem 0 0;
+            color: #64748b;
+            font-size: .7rem;
+        }
+
+            .security-note i {
+                color: #2563eb;
+            }
+
+        .empty-response {
+            display: grid;
+            min-height: 600px;
+            place-items: center;
+            align-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .empty-response-icon {
+            display: grid;
+            width: 82px;
+            height: 82px;
+            place-items: center;
+            margin-bottom: 1rem;
+            border-radius: 26px;
+            background: rgba(37,99,235,.10);
+            color: #2563eb;
+            font-size: 1.8rem;
+        }
+
+        .empty-response h3 {
+            color: #0f172a;
+            font-size: 1.15rem;
+            font-weight: 950;
+        }
+
+        .empty-response p {
+            max-width: 430px;
+            color: #64748b;
+        }
+
+        .response-summary {
+            display: grid;
+            grid-template-columns: 130px 160px minmax(0,1fr);
+            gap: .75rem;
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid rgba(15,23,42,.07);
+        }
+
+            .response-summary > div {
+                min-width: 0;
+                padding: .75rem;
+                border-radius: 14px;
+                background: #f8fafc;
+            }
+
+            .response-summary span {
+                display: block;
+                color: #64748b;
+                font-size: .66rem;
+                font-weight: 900;
+                text-transform: uppercase;
+            }
+
+            .response-summary strong {
+                display: block;
+                margin-top: .23rem;
+                font-weight: 950;
+            }
+
+        .response-url code {
+            display: block;
+            margin-top: .23rem;
+            font-size: .69rem;
+            overflow-wrap: anywhere;
+        }
+
+        .response-tabs {
+            flex-wrap: nowrap;
+            gap: .45rem;
+            padding: .9rem 1.2rem 0;
+            overflow-x: auto;
+        }
+
+            .response-tabs .nav-link {
+                display: inline-flex;
+                align-items: center;
+                gap: .4rem;
+                border: 1px solid rgba(15,23,42,.09);
+                border-radius: 11px;
+                background: #f8fafc;
+                color: #475569;
+                font-size: .74rem;
+                font-weight: 900;
+                white-space: nowrap;
+            }
+
+                .response-tabs .nav-link.active {
+                    border-color: transparent;
+                    background: linear-gradient(135deg, #2563eb, #4f46e5);
+                    color: #fff;
+                }
+
+        .response-tab-content {
+            padding: 1rem 1.2rem 1.2rem;
+        }
+
+        .code-card {
+            position: relative;
+            min-height: 480px;
+            max-height: 650px;
+            overflow: auto;
+            border-radius: 17px;
+            background: #0f172a;
+        }
+
+        .response-code {
+            width: max-content;
+            min-width: 100%;
+            margin: 0;
+            padding: 3.4rem 1rem 1rem;
+            color: #dbeafe;
+            font-family: "Cascadia Code", Consolas, monospace;
+            font-size: .78rem;
+            line-height: 1.65;
+            white-space: pre;
+        }
+
+        .copy-code-btn {
+            position: absolute;
+            top: .75rem;
+            right: .75rem;
+            z-index: 2;
+            padding: .4rem .65rem;
+            border: 1px solid rgba(255,255,255,.14);
+            border-radius: 10px;
+            background: rgba(255,255,255,.10);
+            color: #e2e8f0;
+            font-size: .7rem;
+            font-weight: 900;
+        }
+
+        .headers-table-wrap {
+            max-height: 570px;
+            border: 1px solid rgba(15,23,42,.09);
+            border-radius: 16px;
+        }
+
+        .headers-table {
+            font-size: .76rem;
+        }
+
+            .headers-table thead th {
+                background: #f8fafc;
+                color: #475569;
+                font-size: .68rem;
+                font-weight: 950;
+                text-transform: uppercase;
+            }
+
+            .headers-table td,
+            .headers-table th {
+                padding: .75rem .85rem;
+                overflow-wrap: anywhere;
+            }
+
+        .playground-info-grid {
+            display: grid;
+            grid-template-columns: repeat(3,minmax(0,1fr));
+            gap: 1rem;
+            margin-top: 1.4rem;
+        }
+
+            .playground-info-grid article {
+                display: flex;
+                align-items: flex-start;
+                gap: .85rem;
+                padding: 1rem;
+                border: 1px solid rgba(15,23,42,.08);
+                border-radius: 20px;
+                background: rgba(255,255,255,.88);
+                box-shadow: 0 14px 34px rgba(15,23,42,.06);
+            }
+
+                .playground-info-grid article > i {
+                    display: grid;
+                    flex: 0 0 auto;
+                    width: 43px;
+                    height: 43px;
+                    place-items: center;
+                    border-radius: 14px;
+                    background: rgba(37,99,235,.10);
+                    color: #2563eb;
+                }
+
+            .playground-info-grid h3 {
+                margin: 0;
+                color: #0f172a;
+                font-size: .89rem;
+                font-weight: 950;
+            }
+
+            .playground-info-grid p {
+                margin: .35rem 0 0;
+                color: #64748b;
+                font-size: .75rem;
+                line-height: 1.55;
+            }
+
+        @@media (max-width: 1199.98px) {
+            .empty-response {
+                min-height: 380px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .response-summary {
+                grid-template-columns: repeat(2,minmax(0,1fr));
+            }
+
+            .response-url {
+                grid-column: 1 / -1;
+            }
+
+            .playground-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .playground-hero {
+                align-items: flex-start;
+                flex-direction: column;
+                border-radius: 24px;
+            }
+
+            .playground-hero-actions {
+                width: 100%;
+            }
+
+                .playground-hero-actions .playground-btn {
+                    flex: 1 1 auto;
+                }
+
+            .playground-panel {
+                border-radius: 20px;
+            }
+
+            .playground-panel-header {
+                flex-direction: column;
+            }
+
+            .code-card {
+                min-height: 330px;
+                max-height: 520px;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .playground-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .response-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .response-url {
+                grid-column: auto;
+            }
+
+            .playground-form,
+            .playground-panel-header,
+            .response-tab-content {
+                padding-left: .9rem;
+                padding-right: .9rem;
+            }
+
+            .response-code {
+                font-size: .72rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (() => {
+            const endpointSelect =
+                document.getElementById("endpointSelect");
+
+            const endpointPath =
+                document.getElementById("endpointPath");
+
+            const endpointDescription =
+                document.getElementById("endpointDescription");
+
+            const countField =
+                document.getElementById("countField");
+
+            const queryField =
+                document.getElementById("queryField");
+
+            const pagingFields =
+                document.getElementById("pagingFields");
+
+            const priceFields =
+                document.getElementById("priceFields");
+
+            const form =
+                document.getElementById("playgroundForm");
+
+            const sendButton =
+                document.getElementById("sendRequestButton");
+
+            function isEnabled(option, name) {
+                return option?.dataset?.[name] === "true";
+            }
+
+            function updateFields() {
+                const option =
+                    endpointSelect?.selectedOptions?.[0];
+
+                if (!option) {
+                    return;
+                }
+
+                endpointPath.textContent =
+                    option.dataset.path ?? "";
+
+                endpointDescription.textContent =
+                    option.dataset.description ?? "";
+
+                countField.classList.toggle(
+                    "d-none",
+                    !isEnabled(option, "count"));
+
+                queryField.classList.toggle(
+                    "d-none",
+                    !isEnabled(option, "query"));
+
+                pagingFields.classList.toggle(
+                    "d-none",
+                    !isEnabled(option, "paging"));
+
+                priceFields.classList.toggle(
+                    "d-none",
+                    !isEnabled(option, "price"));
+            }
+
+            endpointSelect?.addEventListener(
+                "change",
+                updateFields);
+
+            updateFields();
+
+            form?.addEventListener("submit", () => {
+                sendButton.disabled = true;
+
+                sendButton
+                    .querySelector(".send-default")
+                    ?.classList.add("d-none");
+
+                sendButton
+                    .querySelector(".send-loading")
+                    ?.classList.remove("d-none");
+            });
+
+            document
+                .querySelectorAll("[data-copy-target]")
+                .forEach(button => {
+                    button.addEventListener(
+                        "click",
+                        async () => {
+                            const id =
+                                button.getAttribute(
+                                    "data-copy-target");
+
+                            const element =
+                                document.getElementById(id);
+
+                            if (!element) {
+                                return;
+                            }
+
+                            try {
+                                await navigator.clipboard.writeText(
+                                    element.textContent ?? "");
+
+                                const original =
+                                    button.innerHTML;
+
+                                button.innerHTML =
+                                    '<i class="fa-solid fa-check"></i> Copied';
+
+                                setTimeout(() => {
+                                    button.innerHTML = original;
+                                }, 1500);
+                            }
+                            catch {
+                                button.textContent = "Copy failed";
+                            }
+                        });
+                });
+        })();
+    </script>
+}
