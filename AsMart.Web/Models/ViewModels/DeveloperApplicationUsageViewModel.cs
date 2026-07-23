@@ -37,6 +37,36 @@
         public bool HasUnlimitedQuota =>
             MonthlyQuota <= 0;
 
+        // Request-log filters
+        public string EndpointFilter { get; init; } = string.Empty;
+
+        public string MethodFilter { get; init; } = "all";
+
+        public string StatusFilter { get; init; } = "all";
+
+        public DateTime? FromDateUtc { get; init; }
+
+        public DateTime? ToDateUtc { get; init; }
+
+        public int PageNumber { get; init; } = 1;
+
+        public int PageSize { get; init; } = 25;
+
+        public int TotalFilteredRequests { get; init; }
+
+        public int TotalPages =>
+            TotalFilteredRequests <= 0
+                ? 1
+                : (int)Math.Ceiling(
+                    TotalFilteredRequests /
+                    (double)Math.Max(PageSize, 1));
+
+        public bool HasPreviousPage =>
+            PageNumber > 1;
+
+        public bool HasNextPage =>
+            PageNumber < TotalPages;
+
         public IReadOnlyList<DeveloperUsageDailyVm>
             DailyUsage
         { get; init; }

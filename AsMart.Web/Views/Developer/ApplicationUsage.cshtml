@@ -108,6 +108,15 @@
                 <i class="fa-solid fa-flask"></i>
                 API Playground
             </a>
+
+            <a asp-controller="Developer"
+               asp-action="ExportApplicationUsageCsv"
+               asp-route-id="@Model.ApplicationId"
+               asp-route-days="@Model.SelectedDays"
+               class="btn usage-btn usage-btn-success">
+                <i class="fa-solid fa-file-csv"></i>
+                Export CSV
+            </a>
         </div>
     </div>
 
@@ -1180,6 +1189,19 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
+        .usage-btn-success {
+            border: 0;
+            background: linear-gradient( 135deg, #059669, #10b981 );
+            color: #fff;
+            box-shadow: 0 15px 28px rgba(5, 150, 105, .18);
+        }
+
+            .usage-btn-success:hover,
+            .usage-btn-success:focus {
+                color: #fff;
+                transform: translateY(-1px);
+            }
 
         @@media (max-width: 1199.98px) {
             .usage-stat-grid {

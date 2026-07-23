@@ -57,11 +57,11 @@
         </div>
 
         <div class="dev-hero-actions">
-            <a asp-controller="ApiKeys"
-               asp-action="Index"
+            <a asp-controller="Developer"
+               asp-action="Applications"
                class="btn dev-btn dev-btn-primary">
-                <i class="fa-solid fa-key"></i>
-                Manage API Keys
+                <i class="fa-solid fa-cubes"></i>
+                Manage Applications
             </a>
 
             <a asp-controller="Home"
@@ -261,17 +261,17 @@
                 <div class="dev-panel-heading">
                     <div>
                         <h2>
-                            <i class="fa-solid fa-key"></i>
-                            Your API Keys
+                            <i class="fa-solid fa-cubes"></i>
+                            Your Applications
                         </h2>
 
                         <p>
-                            Credential status, usage, limits, and lifecycle information.
+                            Application status, API usage, limits, and lifecycle information.
                         </p>
                     </div>
 
-                    <a asp-controller="ApiKeys"
-                       asp-action="Index"
+                    <a asp-controller="Developer"
+                       asp-action="Applications"
                        class="btn dev-btn dev-btn-light">
                         View All
                     </a>
@@ -300,13 +300,13 @@
                                     <td colspan="9" class="dev-empty-cell">
                                         <div class="dev-empty-state">
                                             <i class="fa-solid fa-key"></i>
-                                            <strong>No API keys yet</strong>
-                                            <p>Create your first API key to start using the As-Mart API.</p>
+                                            <strong>No applications yet</strong>
+                                            <p>Create your first application to start using the AS-Mart API.</p>
 
                                             <a asp-controller="ApiKeys"
                                                asp-action="Index"
                                                class="btn dev-btn dev-btn-primary">
-                                                Create API Key
+                                                Create Application
                                             </a>
                                         </div>
                                     </td>
@@ -370,13 +370,23 @@
                                 </td>
 
                                         <td>
-                                            <a asp-controller="ApiKeys"
-                                               asp-action="Usage"
-                                               asp-route-id="@key.Id"
-                                               class="btn dev-icon-btn"
-                                               title="View usage">
-                                                <i class="fa-solid fa-chart-line"></i>
-                                            </a>
+                                            <div class="dev-row-actions">
+                                                <a asp-controller="Developer"
+                                                   asp-action="ApplicationUsage"
+                                                   asp-route-id="@key.Id"
+                                                   class="btn dev-icon-btn"
+                                                   title="View usage">
+                                                    <i class="fa-solid fa-chart-line"></i>
+                                                </a>
+
+                                                <a asp-controller="Developer"
+                                                   asp-action="ApplicationDetails"
+                                                   asp-route-id="@key.Id"
+                                                   class="btn dev-icon-btn dev-manage-icon-btn"
+                                                   title="Manage application">
+                                                    <i class="fa-solid fa-gear"></i>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                                         }
@@ -555,6 +565,91 @@
                             }
                         </tbody>
                     </table>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12">
+            <article class="dev-panel">
+                <div class="dev-panel-heading">
+                    <div>
+                        <h2>
+                            <i class="fa-solid fa-bolt"></i>
+                            Quick Actions
+                        </h2>
+
+                        <p>
+                            Open the most frequently used developer tools.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="dev-quick-actions">
+                    <a asp-controller="ApiKeys"
+                       asp-action="Index"
+                       class="dev-quick-action">
+                        <span class="dev-quick-action-icon dev-blue">
+                            <i class="fa-solid fa-plus"></i>
+                        </span>
+
+                        <span>
+                            <strong>Create Application</strong>
+                            <small>Generate a new API credential</small>
+                        </span>
+                    </a>
+
+                    <a asp-controller="Developer"
+                       asp-action="Applications"
+                       class="dev-quick-action">
+                        <span class="dev-quick-action-icon dev-indigo">
+                            <i class="fa-solid fa-cubes"></i>
+                        </span>
+
+                        <span>
+                            <strong>Applications</strong>
+                            <small>Manage lifecycle and limits</small>
+                        </span>
+                    </a>
+
+                    <a asp-controller="DeveloperPlayground"
+                       asp-action="Index"
+                       class="dev-quick-action">
+                        <span class="dev-quick-action-icon dev-purple">
+                            <i class="fa-solid fa-flask"></i>
+                        </span>
+
+                        <span>
+                            <strong>API Playground</strong>
+                            <small>Test AS-Mart API endpoints</small>
+                        </span>
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="ApiDocumentation"
+                       class="dev-quick-action">
+                        <span class="dev-quick-action-icon dev-green">
+                            <i class="fa-solid fa-book-open"></i>
+                        </span>
+
+                        <span>
+                            <strong>Documentation</strong>
+                            <small>Read integration guidance</small>
+                        </span>
+                    </a>
+
+                    <a href="/swagger"
+                       target="_blank"
+                       rel="noopener"
+                       class="dev-quick-action">
+                        <span class="dev-quick-action-icon dev-orange">
+                            <i class="fa-solid fa-file-code"></i>
+                        </span>
+
+                        <span>
+                            <strong>Swagger</strong>
+                            <small>Explore the OpenAPI specification</small>
+                        </span>
+                    </a>
                 </div>
             </article>
         </div>
@@ -1102,13 +1197,103 @@
                 color: #64748b;
             }
 
+        .dev-row-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: .4rem;
+            white-space: nowrap;
+        }
+
+        .dev-manage-icon-btn {
+            border-color: rgba(124, 58, 237, .16);
+            background: rgba(124, 58, 237, .08);
+            color: #7c3aed;
+        }
+
+            .dev-manage-icon-btn:hover,
+            .dev-manage-icon-btn:focus {
+                border-color: #7c3aed;
+                background: #7c3aed;
+                color: #fff;
+            }
+
+        .dev-quick-actions {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 1rem;
+            padding: 1.2rem;
+        }
+
+        .dev-quick-action {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            min-width: 0;
+            min-height: 88px;
+            padding: 1rem;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 18px;
+            background: #fff;
+            color: #334155;
+            text-decoration: none;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, .05);
+            transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+        }
+
+            .dev-quick-action:hover,
+            .dev-quick-action:focus {
+                border-color: rgba(37, 99, 235, .24);
+                color: #0f172a;
+                transform: translateY(-2px);
+                box-shadow: 0 18px 38px rgba(15, 23, 42, .09);
+            }
+
+        .dev-quick-action-icon {
+            display: grid;
+            flex: 0 0 auto;
+            width: 46px;
+            height: 46px;
+            place-items: center;
+            border-radius: 15px;
+            font-size: 1rem;
+        }
+
+        .dev-quick-action > span:last-child {
+            min-width: 0;
+        }
+
+        .dev-quick-action strong {
+            display: block;
+            color: #0f172a;
+            font-size: .82rem;
+            font-weight: 950;
+        }
+
+        .dev-quick-action small {
+            display: block;
+            margin-top: .22rem;
+            color: #64748b;
+            font-size: .69rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
         @@media (max-width: 1199.98px) {
+            .dev-quick-actions {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
             .dev-stat-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
         @@media (max-width: 767.98px) {
+            .dev-quick-actions {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .dev-hero {
                 align-items: flex-start;
                 flex-direction: column;
@@ -1140,6 +1325,14 @@
         }
 
         @@media (max-width: 575.98px) {
+            .dev-quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .dev-quick-action {
+                min-height: 78px;
+            }
+
             .dev-dashboard-page {
                 padding-top: .4rem;
             }

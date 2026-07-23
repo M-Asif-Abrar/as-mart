@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Globalization;
+using System.Text;
 
 namespace AsMart.Web.Controllers
 {
@@ -355,6 +357,321 @@ namespace AsMart.Web.Controllers
             return View(model);
         }
 
+        [HttpGet("/Developer/Applications")]
+        public async Task<IActionResult> Applications(
+    [FromQuery] string? search,
+    [FromQuery] string? status = "all",
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 12,
+    CancellationToken cancellationToken = default)
+        {
+            var userId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Challenge();
+            }
+
+            search = search?.Trim();
+
+            status = string.IsNullOrWhiteSpace(status)
+                ? "all"
+                : status.Trim().ToLowerInvariant();
+
+            status = status switch
+            {
+                "all" => "all",
+                "active" => "active",
+                "disabled" => "disabled",
+                "expired" => "expired",
+                "revoked" => "revoked",
+                _ => "all"
+            };
+
+            page = Math.Max(page, 1);
+
+            pageSize = pageSize switch
+            {
+                12 => 12,
+                24 => 24,
+                48 => 48,
+                _ => 12
+            };
+
+            var utcNow = DateTime.UtcNow;
+
+            var monthStartUtc = new DateTime(
+                utcNow.Year,
+                utcNow.Month,
+                1,
+                0,
+                0,
+                0,
+                DateTimeKind.Utc);
+
+            var nextMonthUtc =
+                monthStartUtc.AddMonths(1);
+
+            var allClientsQuery = _db.ApiClients
+                .AsNoTracking()
+                .Where(client => client.UserId == userId);
+
+            var totalApplications =
+                await allClientsQuery.CountAsync(
+                    cancellationToken);
+
+            var activeApplications =
+                await allClientsQuery.CountAsync(
+                    client =>
+                        client.IsActive &&
+                        !client.RevokedAt.HasValue &&
+                        (
+                            !client.ExpiresAt.HasValue ||
+                            client.ExpiresAt > utcNow
+                        ),
+                    cancellationToken);
+
+            var disabledApplications =
+                await allClientsQuery.CountAsync(
+                    client =>
+                        !client.IsActive &&
+                        !client.RevokedAt.HasValue &&
+                        (
+                            !client.ExpiresAt.HasValue ||
+                            client.ExpiresAt > utcNow
+                        ),
+                    cancellationToken);
+
+            var expiredApplications =
+                await allClientsQuery.CountAsync(
+                    client =>
+                        client.ExpiresAt.HasValue &&
+                        client.ExpiresAt <= utcNow,
+                    cancellationToken);
+
+            var revokedApplications =
+                await allClientsQuery.CountAsync(
+                    client => client.RevokedAt.HasValue,
+                    cancellationToken);
+
+            var filteredQuery =
+                allClientsQuery;
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                filteredQuery = filteredQuery.Where(
+                    client =>
+                        client.Name.Contains(search) ||
+                        (
+                            client.Website != null &&
+                            client.Website.Contains(search)
+                        ) ||
+                        client.ApiKeyPrefix.Contains(search));
+            }
+
+            filteredQuery = status switch
+            {
+                "active" => filteredQuery.Where(
+                    client =>
+                        client.IsActive &&
+                        !client.RevokedAt.HasValue &&
+                        (
+                            !client.ExpiresAt.HasValue ||
+                            client.ExpiresAt > utcNow
+                        )),
+
+                "disabled" => filteredQuery.Where(
+                    client =>
+                        !client.IsActive &&
+                        !client.RevokedAt.HasValue &&
+                        (
+                            !client.ExpiresAt.HasValue ||
+                            client.ExpiresAt > utcNow
+                        )),
+
+                "expired" => filteredQuery.Where(
+                    client =>
+                        client.ExpiresAt.HasValue &&
+                        client.ExpiresAt <= utcNow),
+
+                "revoked" => filteredQuery.Where(
+                    client => client.RevokedAt.HasValue),
+
+                _ => filteredQuery
+            };
+
+            var totalFilteredApplications =
+                await filteredQuery.CountAsync(
+                    cancellationToken);
+
+            var totalPages = Math.Max(
+                1,
+                (int)Math.Ceiling(
+                    totalFilteredApplications /
+                    (double)pageSize));
+
+            page = Math.Min(
+                page,
+                totalPages);
+
+            var clients = await filteredQuery
+                .OrderByDescending(client => client.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var clientIds = clients
+                .Select(client => client.Id)
+                .ToList();
+
+            var monthlyUsage =
+                clientIds.Count == 0
+                    ? new Dictionary<int, long>()
+                    : await _db.ApiUsageLogs
+                        .AsNoTracking()
+                        .Where(log =>
+                            log.ApiClientId.HasValue &&
+                            clientIds.Contains(
+                                log.ApiClientId.Value) &&
+                            log.CreatedAt >= monthStartUtc &&
+                            log.CreatedAt < nextMonthUtc)
+                        .GroupBy(log =>
+                            log.ApiClientId!.Value)
+                        .Select(group => new
+                        {
+                            ApiClientId = group.Key,
+                            Requests = group.LongCount()
+                        })
+                        .ToDictionaryAsync(
+                            item => item.ApiClientId,
+                            item => item.Requests,
+                            cancellationToken);
+
+            var totalMonthlyRequests =
+                await _db.ApiUsageLogs
+                    .AsNoTracking()
+                    .LongCountAsync(
+                        log =>
+                            log.ApiClientId.HasValue &&
+                            _db.ApiClients.Any(client =>
+                                client.Id ==
+                                    log.ApiClientId.Value &&
+                                client.UserId == userId) &&
+                            log.CreatedAt >= monthStartUtc &&
+                            log.CreatedAt < nextMonthUtc,
+                        cancellationToken);
+
+            var applications = clients
+                .Select(client =>
+                {
+                    monthlyUsage.TryGetValue(
+                        client.Id,
+                        out var requestsThisMonth);
+
+                    var hasUnlimitedQuota =
+                        client.MonthlyQuota <= 0;
+
+                    var remainingQuota =
+                        hasUnlimitedQuota
+                            ? long.MaxValue
+                            : Math.Max(
+                                client.MonthlyQuota -
+                                requestsThisMonth,
+                                0);
+
+                    var quotaUsagePercentage =
+                        hasUnlimitedQuota
+                            ? 0
+                            : Math.Min(
+                                requestsThisMonth * 100d /
+                                Math.Max(
+                                    client.MonthlyQuota,
+                                    1),
+                                100);
+
+                    return new DeveloperApplicationListItemVm
+                    {
+                        Id = client.Id,
+                        Name = client.Name,
+                        Website = client.Website,
+                        MaskedApiKey = client.MaskedApiKey,
+                        Status = client.LifecycleStatus,
+                        IsUsable = client.IsUsable,
+
+                        RateLimitPerMinute =
+                            client.RateLimitPerMinute,
+
+                        MonthlyQuota =
+                            client.MonthlyQuota,
+
+                        RequestsThisMonth =
+                            requestsThisMonth,
+
+                        RemainingQuota =
+                            remainingQuota,
+
+                        QuotaUsagePercentage =
+                            Math.Round(
+                                quotaUsagePercentage,
+                                2),
+
+                        CreatedAtUtc =
+                            client.CreatedAt,
+
+                        LastUsedAtUtc =
+                            client.LastUsedAt,
+
+                        ExpiresAtUtc =
+                            client.ExpiresAt
+                    };
+                })
+                .ToList();
+
+            var model =
+                new DeveloperApplicationsViewModel
+                {
+                    TotalApplications =
+                        totalApplications,
+
+                    ActiveApplications =
+                        activeApplications,
+
+                    DisabledApplications =
+                        disabledApplications,
+
+                    ExpiredApplications =
+                        expiredApplications,
+
+                    RevokedApplications =
+                        revokedApplications,
+
+                    RequestsThisMonth =
+                        totalMonthlyRequests,
+
+                    SearchTerm =
+                        search ?? string.Empty,
+
+                    StatusFilter =
+                        status,
+
+                    PageNumber =
+                        page,
+
+                    PageSize =
+                        pageSize,
+
+                    TotalFilteredApplications =
+                        totalFilteredApplications,
+
+                    Applications =
+                        applications
+                };
+
+            return View(model);
+        }
+
+
         [HttpGet("/Developer/Applications/{id:int}")]
         public async Task<IActionResult> ApplicationDetails(
         int id,
@@ -580,158 +897,475 @@ namespace AsMart.Web.Controllers
                 return View(model);
             }
 
-        [HttpGet("/Developer/Applications")]
-        public async Task<IActionResult> Applications(
+
+        [HttpGet("/Developer/Applications/{id:int}/Usage")]
+        public async Task<IActionResult> ApplicationUsage(
+        int id,
+        [FromQuery] int days = 30,
+        [FromQuery] string? endpoint = null,
+        [FromQuery] string? method = "all",
+        [FromQuery] string? requestStatus = "all",
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
         CancellationToken cancellationToken = default)
+        {
+            var userId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrWhiteSpace(userId))
             {
-                var userId = User.FindFirstValue(
-                    ClaimTypes.NameIdentifier);
+                return Challenge();
+            }
 
-                if (string.IsNullOrWhiteSpace(userId))
-                {
-                    return Challenge();
-                }
+            days = days switch
+            {
+                7 => 7,
+                30 => 30,
+                90 => 90,
+                _ => 30
+            };
 
-                var utcNow = DateTime.UtcNow;
+            endpoint = endpoint?.Trim();
 
-                var monthStartUtc = new DateTime(
-                    utcNow.Year,
-                    utcNow.Month,
-                    1,
-                    0,
-                    0,
-                    0,
-                    DateTimeKind.Utc);
+            method = string.IsNullOrWhiteSpace(method)
+                ? "all"
+                : method.Trim().ToUpperInvariant();
 
-                var nextMonthUtc = monthStartUtc.AddMonths(1);
+            method = method switch
+            {
+                "GET" => "GET",
+                "POST" => "POST",
+                "PUT" => "PUT",
+                "PATCH" => "PATCH",
+                "DELETE" => "DELETE",
+                "HEAD" => "HEAD",
+                "OPTIONS" => "OPTIONS",
+                _ => "all"
+            };
 
-                var clients = await _db.ApiClients
+            requestStatus = string.IsNullOrWhiteSpace(requestStatus)
+                ? "all"
+                : requestStatus.Trim().ToLowerInvariant();
+
+            requestStatus = requestStatus switch
+            {
+                "success" => "success",
+                "redirect" => "redirect",
+                "client-error" => "client-error",
+                "server-error" => "server-error",
+                "error" => "error",
+                _ => "all"
+            };
+
+            page = Math.Max(page, 1);
+
+            pageSize = pageSize switch
+            {
+                25 => 25,
+                50 => 50,
+                100 => 100,
+                _ => 25
+            };
+
+            var application = await _db.ApiClients
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    client =>
+                        client.Id == id &&
+                        client.UserId == userId,
+                    cancellationToken);
+
+            if (application is null)
+            {
+                return NotFound();
+            }
+
+            var utcNow = DateTime.UtcNow;
+            var periodEndUtc = utcNow;
+            var periodStartUtc =
+                utcNow.Date.AddDays(-(days - 1));
+
+            var monthStartUtc = new DateTime(
+                utcNow.Year,
+                utcNow.Month,
+                1,
+                0,
+                0,
+                0,
+                DateTimeKind.Utc);
+
+            var nextMonthUtc =
+                monthStartUtc.AddMonths(1);
+
+            // Analytics always use the selected 7/30/90-day period.
+            var usageQuery = _db.ApiUsageLogs
+                .AsNoTracking()
+                .Where(log =>
+                    log.ApiClientId == application.Id &&
+                    log.CreatedAt >= periodStartUtc &&
+                    log.CreatedAt <= periodEndUtc);
+
+            var totalRequests =
+                await usageQuery.LongCountAsync(
+                    cancellationToken);
+
+            var successfulRequests =
+                await usageQuery.LongCountAsync(
+                    log =>
+                        log.StatusCode >= 200 &&
+                        log.StatusCode < 400,
+                    cancellationToken);
+
+            var failedRequests =
+                await usageQuery.LongCountAsync(
+                    log => log.StatusCode >= 400,
+                    cancellationToken);
+
+            var averageResponseTimeMs =
+                totalRequests == 0
+                    ? 0
+                    : await usageQuery.AverageAsync(
+                        log => (double)log.ResponseTimeMs,
+                        cancellationToken);
+
+            var requestsToday =
+                await _db.ApiUsageLogs
                     .AsNoTracking()
-                    .Where(client => client.UserId == userId)
-                    .OrderByDescending(client => client.CreatedAt)
+                    .LongCountAsync(
+                        log =>
+                            log.ApiClientId == application.Id &&
+                            log.CreatedAt >= utcNow.Date,
+                        cancellationToken);
+
+            var requestsThisMonth =
+                await _db.ApiUsageLogs
+                    .AsNoTracking()
+                    .LongCountAsync(
+                        log =>
+                            log.ApiClientId == application.Id &&
+                            log.CreatedAt >= monthStartUtc &&
+                            log.CreatedAt < nextMonthUtc,
+                        cancellationToken);
+
+            var remainingQuota =
+                application.MonthlyQuota <= 0
+                    ? long.MaxValue
+                    : Math.Max(
+                        application.MonthlyQuota -
+                        requestsThisMonth,
+                        0);
+
+            var groupedDailyUsage =
+                await usageQuery
+                    .GroupBy(log => log.CreatedAt.Date)
+                    .Select(group => new
+                    {
+                        DateUtc = group.Key,
+                        Requests = group.LongCount(),
+
+                        SuccessfulRequests =
+                            group.LongCount(
+                                log =>
+                                    log.StatusCode >= 200 &&
+                                    log.StatusCode < 400),
+
+                        FailedRequests =
+                            group.LongCount(
+                                log => log.StatusCode >= 400),
+
+                        AverageResponseTimeMs =
+                            group.Average(
+                                log =>
+                                    (double)log.ResponseTimeMs)
+                    })
+                    .OrderBy(item => item.DateUtc)
                     .ToListAsync(cancellationToken);
 
-                var clientIds = clients
-                    .Select(client => client.Id)
-                    .ToList();
+            var dailyLookup =
+                groupedDailyUsage.ToDictionary(
+                    item => item.DateUtc.Date);
 
-                var monthlyUsage = clientIds.Count == 0
-                    ? new Dictionary<int, long>()
-                    : await _db.ApiUsageLogs
-                        .AsNoTracking()
-                        .Where(log =>
-                            log.ApiClientId.HasValue &&
-                            clientIds.Contains(log.ApiClientId.Value) &&
-                            log.CreatedAt >= monthStartUtc &&
-                            log.CreatedAt < nextMonthUtc)
-                        .GroupBy(log => log.ApiClientId!.Value)
-                        .Select(group => new
+            var dailyUsage = Enumerable
+                .Range(0, days)
+                .Select(offset =>
+                {
+                    var date =
+                        periodStartUtc.Date.AddDays(offset);
+
+                    if (dailyLookup.TryGetValue(
+                        date,
+                        out var usage))
+                    {
+                        return new DeveloperUsageDailyVm
                         {
-                            ApiClientId = group.Key,
+                            DateUtc = date,
+                            Requests = usage.Requests,
+
+                            SuccessfulRequests =
+                                usage.SuccessfulRequests,
+
+                            FailedRequests =
+                                usage.FailedRequests,
+
+                            AverageResponseTimeMs =
+                                Math.Round(
+                                    usage.AverageResponseTimeMs,
+                                    2)
+                        };
+                    }
+
+                    return new DeveloperUsageDailyVm
+                    {
+                        DateUtc = date
+                    };
+                })
+                .ToList();
+
+            var endpointUsage =
+                await usageQuery
+                    .GroupBy(log => log.Endpoint)
+                    .Select(group =>
+                        new DeveloperUsageEndpointVm
+                        {
+                            Endpoint = group.Key,
+                            Requests = group.LongCount(),
+
+                            SuccessfulRequests =
+                                group.LongCount(
+                                    log =>
+                                        log.StatusCode >= 200 &&
+                                        log.StatusCode < 400),
+
+                            FailedRequests =
+                                group.LongCount(
+                                    log =>
+                                        log.StatusCode >= 400),
+
+                            AverageResponseTimeMs =
+                                group.Average(
+                                    log =>
+                                        (double)log.ResponseTimeMs)
+                        })
+                    .OrderByDescending(
+                        item => item.Requests)
+                    .Take(15)
+                    .ToListAsync(cancellationToken);
+
+            var statusUsage =
+                await usageQuery
+                    .GroupBy(log => log.StatusCode)
+                    .Select(group =>
+                        new DeveloperUsageStatusVm
+                        {
+                            StatusCode = group.Key,
                             Requests = group.LongCount()
                         })
-                        .ToDictionaryAsync(
-                            item => item.ApiClientId,
-                            item => item.Requests,
-                            cancellationToken);
+                    .OrderBy(item => item.StatusCode)
+                    .ToListAsync(cancellationToken);
 
-                var applications = clients
-                    .Select(client =>
-                    {
-                        monthlyUsage.TryGetValue(
-                            client.Id,
-                            out var requestsThisMonth);
+            /*
+             * Request-log filters are independent from the chart period.
+             * When no custom dates are supplied, the selected days period is used.
+             */
+            var effectiveFromUtc =
+                fromDate?.Date ??
+                periodStartUtc.Date;
 
-                        var hasUnlimitedQuota =
-                            client.MonthlyQuota <= 0;
+            var effectiveToUtc =
+                toDate?.Date.AddDays(1) ??
+                periodEndUtc.Date.AddDays(1);
 
-                        var remainingQuota =
-                            hasUnlimitedQuota
-                                ? long.MaxValue
-                                : Math.Max(
-                                    client.MonthlyQuota -
-                                    requestsThisMonth,
-                                    0);
+            if (effectiveToUtc <= effectiveFromUtc)
+            {
+                effectiveToUtc =
+                    effectiveFromUtc.AddDays(1);
+            }
 
-                        var quotaUsagePercentage =
-                            hasUnlimitedQuota
-                                ? 0
-                                : Math.Min(
-                                    requestsThisMonth * 100d /
-                                    Math.Max(client.MonthlyQuota, 1),
-                                    100);
+            var requestLogsQuery =
+                _db.ApiUsageLogs
+                    .AsNoTracking()
+                    .Where(log =>
+                        log.ApiClientId == application.Id &&
+                        log.CreatedAt >= effectiveFromUtc &&
+                        log.CreatedAt < effectiveToUtc);
 
-                        return new DeveloperApplicationListItemVm
-                        {
-                            Id = client.Id,
-                            Name = client.Name,
-                            Website = client.Website,
-                            MaskedApiKey = client.MaskedApiKey,
-                            Status = client.LifecycleStatus,
-                            IsUsable = client.IsUsable,
+            if (!string.IsNullOrWhiteSpace(endpoint))
+            {
+                requestLogsQuery =
+                    requestLogsQuery.Where(
+                        log =>
+                            log.Endpoint.Contains(endpoint) ||
+                            (
+                                log.QueryString != null &&
+                                log.QueryString.Contains(endpoint)
+                            ));
+            }
 
-                            RateLimitPerMinute =
-                                client.RateLimitPerMinute,
+            if (method != "all")
+            {
+                requestLogsQuery =
+                    requestLogsQuery.Where(
+                        log => log.HttpMethod == method);
+            }
 
-                            MonthlyQuota =
-                                client.MonthlyQuota,
-
-                            RequestsThisMonth =
-                                requestsThisMonth,
-
-                            RemainingQuota =
-                                remainingQuota,
-
-                            QuotaUsagePercentage =
-                                Math.Round(
-                                    quotaUsagePercentage,
-                                    2),
-
-                            CreatedAtUtc =
-                                client.CreatedAt,
-
-                            LastUsedAtUtc =
-                                client.LastUsedAt,
-
-                            ExpiresAtUtc =
-                                client.ExpiresAt
-                        };
-                    })
-                    .ToList();
-
-                var model = new DeveloperApplicationsViewModel
+            requestLogsQuery =
+                requestStatus switch
                 {
-                    TotalApplications =
-                        clients.Count,
+                    "success" =>
+                        requestLogsQuery.Where(
+                            log =>
+                                log.StatusCode >= 200 &&
+                                log.StatusCode < 300),
 
-                    ActiveApplications =
-                        clients.Count(client =>
-                            client.IsUsable),
+                    "redirect" =>
+                        requestLogsQuery.Where(
+                            log =>
+                                log.StatusCode >= 300 &&
+                                log.StatusCode < 400),
 
-                    DisabledApplications =
-                        clients.Count(client =>
-                            !client.IsActive &&
-                            !client.IsRevoked &&
-                            !client.IsExpired),
+                    "client-error" =>
+                        requestLogsQuery.Where(
+                            log =>
+                                log.StatusCode >= 400 &&
+                                log.StatusCode < 500),
 
-                    ExpiredApplications =
-                        clients.Count(client =>
-                            client.IsExpired),
+                    "server-error" =>
+                        requestLogsQuery.Where(
+                            log =>
+                                log.StatusCode >= 500),
 
-                    RevokedApplications =
-                        clients.Count(client =>
-                            client.IsRevoked),
+                    "error" =>
+                        requestLogsQuery.Where(
+                            log =>
+                                log.StatusCode >= 400),
 
-                    RequestsThisMonth =
-                        applications.Sum(application =>
-                            application.RequestsThisMonth),
-
-                    Applications =
-                        applications
+                    _ => requestLogsQuery
                 };
 
-                return View(model);
-            }
+            var totalFilteredRequests =
+                await requestLogsQuery.CountAsync(
+                    cancellationToken);
+
+            var totalPages = Math.Max(
+                1,
+                (int)Math.Ceiling(
+                    totalFilteredRequests /
+                    (double)pageSize));
+
+            page = Math.Min(
+                page,
+                totalPages);
+
+            var recentRequests =
+                await requestLogsQuery
+                    .OrderByDescending(
+                        log => log.CreatedAt)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(log =>
+                        new DeveloperUsageRequestVm
+                        {
+                            Id = log.Id,
+                            CreatedAtUtc = log.CreatedAt,
+                            HttpMethod = log.HttpMethod,
+                            Endpoint = log.Endpoint,
+                            QueryString = log.QueryString,
+                            ApiVersion = log.ApiVersion,
+                            StatusCode = log.StatusCode,
+                            ResponseTimeMs =
+                                log.ResponseTimeMs,
+                            IpAddress = log.IpAddress,
+                            UserAgent = log.UserAgent
+                        })
+                    .ToListAsync(cancellationToken);
+
+            var successRate =
+                totalRequests == 0
+                    ? 0
+                    : successfulRequests * 100d /
+                      totalRequests;
+
+            var model =
+                new DeveloperApplicationUsageViewModel
+                {
+                    ApplicationId = application.Id,
+                    ApplicationName = application.Name,
+                    Status = application.LifecycleStatus,
+                    MaskedApiKey = application.MaskedApiKey,
+
+                    SelectedDays = days,
+                    PeriodStartUtc = periodStartUtc,
+                    PeriodEndUtc = periodEndUtc,
+
+                    TotalRequests = totalRequests,
+
+                    SuccessfulRequests =
+                        successfulRequests,
+
+                    FailedRequests =
+                        failedRequests,
+
+                    SuccessRate = Math.Round(
+                        successRate,
+                        2),
+
+                    AverageResponseTimeMs = Math.Round(
+                        averageResponseTimeMs,
+                        2),
+
+                    RequestsToday = requestsToday,
+
+                    RequestsThisMonth =
+                        requestsThisMonth,
+
+                    MonthlyQuota =
+                        application.MonthlyQuota,
+
+                    RemainingQuota =
+                        remainingQuota,
+
+                    EndpointFilter =
+                        endpoint ?? string.Empty,
+
+                    MethodFilter =
+                        method,
+
+                    StatusFilter =
+                        requestStatus,
+
+                    FromDateUtc =
+                        effectiveFromUtc,
+
+                    ToDateUtc =
+                        effectiveToUtc.AddDays(-1),
+
+                    PageNumber =
+                        page,
+
+                    PageSize =
+                        pageSize,
+
+                    TotalFilteredRequests =
+                        totalFilteredRequests,
+
+                    DailyUsage =
+                        dailyUsage,
+
+                    EndpointUsage =
+                        endpointUsage,
+
+                    StatusUsage =
+                        statusUsage,
+
+                    RecentRequests =
+                        recentRequests
+                };
+
+            return View(model);
+        }
+
 
         [HttpGet("/Developer/Applications/{id:int}/Edit")]
         public async Task<IActionResult> EditApplication(
@@ -1064,8 +1698,8 @@ namespace AsMart.Web.Controllers
                     TempData["SuccessMessage"] =
                         $"Application \"{application.Name}\" was permanently deleted.";
 
-                    return RedirectToAction(
-                        nameof(Applications));
+                return RedirectToAction("Applications","Developer");
+
                 }
                 catch
                 {
@@ -1074,8 +1708,9 @@ namespace AsMart.Web.Controllers
                 }
             }
 
-        [HttpGet("/Developer/Applications/{id:int}/Usage")]
-        public async Task<IActionResult> ApplicationUsage(
+
+        [HttpGet("/Developer/Applications/{id:int}/Usage/Export")]
+        public async Task<IActionResult> ExportApplicationUsageCsv(
         int id,
         [FromQuery] int days = 30,
         CancellationToken cancellationToken = default)
@@ -1110,230 +1745,149 @@ namespace AsMart.Web.Controllers
                 }
 
                 var utcNow = DateTime.UtcNow;
-                var periodEndUtc = utcNow;
-                var periodStartUtc = utcNow.Date.AddDays(-(days - 1));
+                var periodStartUtc =
+                    utcNow.Date.AddDays(-(days - 1));
 
-                var monthStartUtc = new DateTime(
-                    utcNow.Year,
-                    utcNow.Month,
-                    1,
-                    0,
-                    0,
-                    0,
-                    DateTimeKind.Utc);
-
-                var nextMonthUtc = monthStartUtc.AddMonths(1);
-
-                var usageQuery = _db.ApiUsageLogs
+                var logs = await _db.ApiUsageLogs
                     .AsNoTracking()
                     .Where(log =>
                         log.ApiClientId == application.Id &&
                         log.CreatedAt >= periodStartUtc &&
-                        log.CreatedAt <= periodEndUtc);
-
-                var totalRequests = await usageQuery
-                    .LongCountAsync(cancellationToken);
-
-                var successfulRequests = await usageQuery
-                    .LongCountAsync(
-                        log =>
-                            log.StatusCode >= 200 &&
-                            log.StatusCode < 400,
-                        cancellationToken);
-
-                var failedRequests = await usageQuery
-                    .LongCountAsync(
-                        log => log.StatusCode >= 400,
-                        cancellationToken);
-
-                var averageResponseTimeMs = totalRequests == 0
-                    ? 0
-                    : await usageQuery.AverageAsync(
-                        log => (double)log.ResponseTimeMs,
-                        cancellationToken);
-
-                var requestsToday = await _db.ApiUsageLogs
-                    .AsNoTracking()
-                    .LongCountAsync(
-                        log =>
-                            log.ApiClientId == application.Id &&
-                            log.CreatedAt >= utcNow.Date,
-                        cancellationToken);
-
-                var requestsThisMonth = await _db.ApiUsageLogs
-                    .AsNoTracking()
-                    .LongCountAsync(
-                        log =>
-                            log.ApiClientId == application.Id &&
-                            log.CreatedAt >= monthStartUtc &&
-                            log.CreatedAt < nextMonthUtc,
-                        cancellationToken);
-
-                var remainingQuota = application.MonthlyQuota <= 0
-                    ? long.MaxValue
-                    : Math.Max(
-                        application.MonthlyQuota - requestsThisMonth,
-                        0);
-
-                var groupedDailyUsage = await usageQuery
-                    .GroupBy(log => log.CreatedAt.Date)
-                    .Select(group => new
-                    {
-                        DateUtc = group.Key,
-
-                        Requests = group.LongCount(),
-
-                        SuccessfulRequests = group.LongCount(
-                            log =>
-                                log.StatusCode >= 200 &&
-                                log.StatusCode < 400),
-
-                        FailedRequests = group.LongCount(
-                            log => log.StatusCode >= 400),
-
-                        AverageResponseTimeMs = group.Average(
-                            log => (double)log.ResponseTimeMs)
-                    })
-                    .OrderBy(item => item.DateUtc)
-                    .ToListAsync(cancellationToken);
-
-                var dailyLookup = groupedDailyUsage
-                    .ToDictionary(
-                        item => item.DateUtc.Date);
-
-                var dailyUsage = Enumerable
-                    .Range(0, days)
-                    .Select(offset =>
-                    {
-                        var date = periodStartUtc.Date.AddDays(offset);
-
-                        if (dailyLookup.TryGetValue(
-                            date,
-                            out var usage))
-                        {
-                            return new DeveloperUsageDailyVm
-                            {
-                                DateUtc = date,
-                                Requests = usage.Requests,
-
-                                SuccessfulRequests =
-                                    usage.SuccessfulRequests,
-
-                                FailedRequests =
-                                    usage.FailedRequests,
-
-                                AverageResponseTimeMs = Math.Round(
-                                    usage.AverageResponseTimeMs,
-                                    2)
-                            };
-                        }
-
-                        return new DeveloperUsageDailyVm
-                        {
-                            DateUtc = date
-                        };
-                    })
-                    .ToList();
-
-                var endpointUsage = await usageQuery
-                    .GroupBy(log => log.Endpoint)
-                    .Select(group => new DeveloperUsageEndpointVm
-                    {
-                        Endpoint = group.Key,
-
-                        Requests = group.LongCount(),
-
-                        SuccessfulRequests = group.LongCount(
-                            log =>
-                                log.StatusCode >= 200 &&
-                                log.StatusCode < 400),
-
-                        FailedRequests = group.LongCount(
-                            log => log.StatusCode >= 400),
-
-                        AverageResponseTimeMs = group.Average(
-                            log => (double)log.ResponseTimeMs)
-                    })
-                    .OrderByDescending(item => item.Requests)
-                    .Take(15)
-                    .ToListAsync(cancellationToken);
-
-                var statusUsage = await usageQuery
-                    .GroupBy(log => log.StatusCode)
-                    .Select(group => new DeveloperUsageStatusVm
-                    {
-                        StatusCode = group.Key,
-                        Requests = group.LongCount()
-                    })
-                    .OrderBy(item => item.StatusCode)
-                    .ToListAsync(cancellationToken);
-
-                var recentRequests = await _db.ApiUsageLogs
-                    .AsNoTracking()
-                    .Where(log =>
-                        log.ApiClientId == application.Id)
+                        log.CreatedAt <= utcNow)
                     .OrderByDescending(log => log.CreatedAt)
-                    .Take(100)
-                    .Select(log => new DeveloperUsageRequestVm
+                    .Select(log => new
                     {
-                        Id = log.Id,
-                        CreatedAtUtc = log.CreatedAt,
-                        HttpMethod = log.HttpMethod,
-                        Endpoint = log.Endpoint,
-                        QueryString = log.QueryString,
-                        ApiVersion = log.ApiVersion,
-                        StatusCode = log.StatusCode,
-                        ResponseTimeMs = log.ResponseTimeMs,
-                        IpAddress = log.IpAddress,
-                        UserAgent = log.UserAgent
+                        log.CreatedAt,
+                        log.HttpMethod,
+                        log.ApiVersion,
+                        log.Endpoint,
+                        log.QueryString,
+                        log.StatusCode,
+                        log.ResponseTimeMs,
+                        log.IpAddress,
+                        log.UserAgent
                     })
                     .ToListAsync(cancellationToken);
 
-                var successRate = totalRequests == 0
-                    ? 0
-                    : successfulRequests * 100d /
-                      totalRequests;
+                var csv = new StringBuilder();
 
-                var model =
-                    new DeveloperApplicationUsageViewModel
-                    {
-                        ApplicationId = application.Id,
-                        ApplicationName = application.Name,
-                        Status = application.LifecycleStatus,
-                        MaskedApiKey = application.MaskedApiKey,
+                csv.AppendLine(
+                    "UTC Time,Application,HTTP Method,API Version,Endpoint," +
+                    "Query String,Status Code,Response Time (ms),IP Address,User Agent");
 
-                        SelectedDays = days,
-                        PeriodStartUtc = periodStartUtc,
-                        PeriodEndUtc = periodEndUtc,
+                foreach (var log in logs)
+                {
+                    csv.Append(CsvCell(
+                        log.CreatedAt.ToString(
+                            "yyyy-MM-dd HH:mm:ss",
+                            CultureInfo.InvariantCulture)));
 
-                        TotalRequests = totalRequests,
-                        SuccessfulRequests = successfulRequests,
-                        FailedRequests = failedRequests,
+                    csv.Append(',');
+                    csv.Append(CsvCell(application.Name));
 
-                        SuccessRate = Math.Round(
-                            successRate,
-                            2),
+                    csv.Append(',');
+                    csv.Append(CsvCell(log.HttpMethod));
 
-                        AverageResponseTimeMs = Math.Round(
-                            averageResponseTimeMs,
-                            2),
+                    csv.Append(',');
+                    csv.Append(CsvCell(log.ApiVersion));
 
-                        RequestsToday = requestsToday,
-                        RequestsThisMonth = requestsThisMonth,
+                    csv.Append(',');
+                    csv.Append(CsvCell(log.Endpoint));
 
-                        MonthlyQuota =
-                            application.MonthlyQuota,
+                    csv.Append(',');
+                    csv.Append(CsvCell(log.QueryString));
 
-                        RemainingQuota =
-                            remainingQuota,
+                    csv.Append(',');
+                    csv.Append(log.StatusCode.ToString(
+                        CultureInfo.InvariantCulture));
 
-                        DailyUsage = dailyUsage,
-                        EndpointUsage = endpointUsage,
-                        StatusUsage = statusUsage,
-                        RecentRequests = recentRequests
-                    };
+                    csv.Append(',');
+                    csv.Append(log.ResponseTimeMs.ToString(
+                        CultureInfo.InvariantCulture));
 
-                return View(model);
+                    csv.Append(',');
+                    csv.Append(CsvCell(log.IpAddress));
+
+                    csv.Append(',');
+                    csv.Append(CsvCell(log.UserAgent));
+
+                    csv.AppendLine();
+                }
+
+                /*
+                 * UTF-8 BOM helps Microsoft Excel correctly detect UTF-8.
+                 */
+                var preamble = Encoding.UTF8.GetPreamble();
+
+                var csvBytes = Encoding.UTF8.GetBytes(
+                    csv.ToString());
+
+                var fileBytes = new byte[
+                    preamble.Length + csvBytes.Length];
+
+                Buffer.BlockCopy(
+                    preamble,
+                    0,
+                    fileBytes,
+                    0,
+                    preamble.Length);
+
+                Buffer.BlockCopy(
+                    csvBytes,
+                    0,
+                    fileBytes,
+                    preamble.Length,
+                    csvBytes.Length);
+
+                var safeApplicationName =
+                    string.Concat(
+                        application.Name
+                            .Where(character =>
+                                char.IsLetterOrDigit(character) ||
+                                character is '-' or '_'))
+                    .Trim();
+
+                if (string.IsNullOrWhiteSpace(safeApplicationName))
+                {
+                    safeApplicationName =
+                        $"application-{application.Id}";
+                }
+
+                var fileName =
+                    $"{safeApplicationName}-api-usage-" +
+                    $"{periodStartUtc:yyyyMMdd}-" +
+                    $"{utcNow:yyyyMMdd}.csv";
+
+                return File(
+                    fileBytes,
+                    "text/csv; charset=utf-8",
+                    fileName);
             }
+
+        private static string CsvCell(string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            /*
+             * Prevent CSV formula injection when the file is opened in
+             * spreadsheet software.
+             */
+            var sanitized = value;
+
+            if (sanitized[0] is '=' or '+' or '-' or '@' or '\t' or '\r')
+            {
+                sanitized = $"'{sanitized}";
+            }
+
+            var escaped = sanitized.Replace(
+                "\"",
+                "\"\"",
+                StringComparison.Ordinal);
+
+            return $"\"{escaped}\"";
+        }
     }
 }

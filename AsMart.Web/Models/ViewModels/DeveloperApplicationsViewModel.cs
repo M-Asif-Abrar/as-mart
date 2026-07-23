@@ -14,6 +14,29 @@
 
         public long RequestsThisMonth { get; init; }
 
+        public string SearchTerm { get; init; } = string.Empty;
+
+        public string StatusFilter { get; init; } = "all";
+
+        public int PageNumber { get; init; } = 1;
+
+        public int PageSize { get; init; } = 12;
+
+        public int TotalFilteredApplications { get; init; }
+
+        public int TotalPages =>
+            TotalFilteredApplications <= 0
+                ? 1
+                : (int)Math.Ceiling(
+                    TotalFilteredApplications /
+                    (double)Math.Max(PageSize, 1));
+
+        public bool HasPreviousPage =>
+            PageNumber > 1;
+
+        public bool HasNextPage =>
+            PageNumber < TotalPages;
+
         public IReadOnlyList<DeveloperApplicationListItemVm>
             Applications
         { get; init; }

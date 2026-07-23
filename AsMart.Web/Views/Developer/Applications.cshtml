@@ -3,6 +3,29 @@
 @{
     ViewData["Title"] = "Developer Applications";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var hasFilters =
+        !string.IsNullOrWhiteSpace(Model.SearchTerm) ||
+        !string.Equals(
+            Model.StatusFilter,
+            "all",
+            StringComparison.OrdinalIgnoreCase);
+
+    var firstResult = Model.TotalFilteredApplications == 0
+        ? 0
+        : ((Model.PageNumber - 1) * Model.PageSize) + 1;
+
+    var lastResult = Math.Min(
+        Model.PageNumber * Model.PageSize,
+        Model.TotalFilteredApplications);
+
+    var paginationStart = Math.Max(
+        1,
+        Model.PageNumber - 2);
+
+    var paginationEnd = Math.Min(
+        Model.TotalPages,
+        Model.PageNumber + 2);
 }
 
 <section class="developer-applications-page">
@@ -112,26 +135,263 @@
 
     </div>
 
+    <section class="applications-filter-panel">
+        <form asp-controller="Developer"
+              asp-action="Applications"
+              method="get"
+              class="applications-filter-form">
+
+            <div class="applications-search-field">
+                <label for="applicationsSearch">
+                    Search applications
+                </label>
+
+                <div class="applications-search-input">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input id="applicationsSearch"
+                           name="search"
+                           type="search"
+                           value="@Model.SearchTerm"
+                           placeholder="Name, website, or API key prefix"
+                           autocomplete="off" />
+
+                    @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+                    {
+                        <a asp-controller="Developer"
+                           asp-action="Applications"
+                           asp-route-status="@Model.StatusFilter"
+                           asp-route-pageSize="@Model.PageSize"
+                           class="applications-clear-search"
+                           aria-label="Clear search"
+                           title="Clear search">
+                            <i class="fa-solid fa-xmark"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="applications-filter-select">
+                <label for="applicationsStatus">
+                    Status
+                </label>
+
+                <select id="applicationsStatus"
+                        name="status">
+                    <option value="all"
+                            selected="@(Model.StatusFilter == "all")">
+                        All statuses
+                    </option>
+
+                    <option value="active"
+                            selected="@(Model.StatusFilter == "active")">
+                        Active
+                    </option>
+
+                    <option value="disabled"
+                            selected="@(Model.StatusFilter == "disabled")">
+                        Disabled
+                    </option>
+
+                    <option value="expired"
+                            selected="@(Model.StatusFilter == "expired")">
+                        Expired
+                    </option>
+
+                    <option value="revoked"
+                            selected="@(Model.StatusFilter == "revoked")">
+                        Revoked
+                    </option>
+                </select>
+            </div>
+
+            <div class="applications-filter-select applications-page-size">
+                <label for="applicationsPageSize">
+                    Page size
+                </label>
+
+                <select id="applicationsPageSize"
+                        name="pageSize">
+                    <option value="12"
+                            selected="@(Model.PageSize == 12)">
+                        12
+                    </option>
+
+                    <option value="24"
+                            selected="@(Model.PageSize == 24)">
+                        24
+                    </option>
+
+                    <option value="48"
+                            selected="@(Model.PageSize == 48)">
+                        48
+                    </option>
+                </select>
+            </div>
+
+            <input type="hidden"
+                   name="page"
+                   value="1" />
+
+            <div class="applications-filter-actions">
+                <button type="submit"
+                        class="btn applications-filter-submit">
+                    <i class="fa-solid fa-filter"></i>
+                    Apply Filters
+                </button>
+
+                @if (hasFilters)
+                {
+                    <a asp-controller="Developer"
+                       asp-action="Applications"
+                       asp-route-pageSize="@Model.PageSize"
+                       class="btn applications-filter-reset">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        Reset
+                    </a>
+                }
+            </div>
+        </form>
+
+        <div class="applications-status-tabs">
+            <a asp-controller="Developer"
+               asp-action="Applications"
+               asp-route-search="@Model.SearchTerm"
+               asp-route-status="all"
+               asp-route-pageSize="@Model.PageSize"
+               class="applications-status-tab @(Model.StatusFilter == "all" ? "active" : "")">
+                All
+                <span>@Model.TotalApplications</span>
+            </a>
+
+            <a asp-controller="Developer"
+               asp-action="Applications"
+               asp-route-search="@Model.SearchTerm"
+               asp-route-status="active"
+               asp-route-pageSize="@Model.PageSize"
+               class="applications-status-tab @(Model.StatusFilter == "active" ? "active" : "")">
+                Active
+                <span>@Model.ActiveApplications</span>
+            </a>
+
+            <a asp-controller="Developer"
+               asp-action="Applications"
+               asp-route-search="@Model.SearchTerm"
+               asp-route-status="disabled"
+               asp-route-pageSize="@Model.PageSize"
+               class="applications-status-tab @(Model.StatusFilter == "disabled" ? "active" : "")">
+                Disabled
+                <span>@Model.DisabledApplications</span>
+            </a>
+
+            <a asp-controller="Developer"
+               asp-action="Applications"
+               asp-route-search="@Model.SearchTerm"
+               asp-route-status="expired"
+               asp-route-pageSize="@Model.PageSize"
+               class="applications-status-tab @(Model.StatusFilter == "expired" ? "active" : "")">
+                Expired
+                <span>@Model.ExpiredApplications</span>
+            </a>
+
+            <a asp-controller="Developer"
+               asp-action="Applications"
+               asp-route-search="@Model.SearchTerm"
+               asp-route-status="revoked"
+               asp-route-pageSize="@Model.PageSize"
+               class="applications-status-tab @(Model.StatusFilter == "revoked" ? "active" : "")">
+                Revoked
+                <span>@Model.RevokedApplications</span>
+            </a>
+        </div>
+
+        <div class="applications-result-summary">
+            <div>
+                <strong>
+                    @Model.TotalFilteredApplications.ToString("N0")
+                    result@(Model.TotalFilteredApplications == 1 ? "" : "s")
+                </strong>
+
+                <span>
+                    @if (Model.TotalFilteredApplications > 0)
+                    {
+                        <text>
+                            Showing @firstResult.ToString("N0")
+                            to @lastResult.ToString("N0")
+                        </text>
+                    }
+                    else
+                    {
+                        <text>No matching applications</text>
+                    }
+                </span>
+            </div>
+
+            @if (hasFilters)
+            {
+                <div class="applications-active-filters">
+                    @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+                    {
+                        <span>
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            @Model.SearchTerm
+                        </span>
+                    }
+
+                    @if (Model.StatusFilter != "all")
+                    {
+                        <span>
+                            <i class="fa-solid fa-circle"></i>
+                            @Model.StatusFilter
+                        </span>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+
     @if (Model.Applications.Count == 0)
     {
         <article class="applications-empty">
             <div class="applications-empty-icon">
-                <i class="fa-solid fa-cube"></i>
-            </div>
+                <i class="fa-solid @(hasFilters
+                                       ? "fa-magnifying-glass"
+                                       : "fa-cube")"></i>
+        </div>
 
-            <h2>Create your first application</h2>
+        @if (hasFilters)
+            {
+                <h2>No applications match your filters</h2>
 
-            <p>
-                Register an application to generate an API key and start
-                consuming the AS-Mart API v1.
-            </p>
+                <p>
+                    Change the search term or status filter to find
+                    another application.
+                </p>
 
-            <a asp-controller="ApiKeys"
-               asp-action="Index"
-               class="btn applications-btn applications-btn-primary">
-                <i class="fa-solid fa-plus"></i>
-                Create Application
-            </a>
+                <a asp-controller="Developer"
+                   asp-action="Applications"
+                   asp-route-pageSize="@Model.PageSize"
+                   class="btn applications-btn applications-btn-primary">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Clear Filters
+                </a>
+            }
+            else
+            {
+                <h2>Create your first application</h2>
+
+                <p>
+                    Register an application to generate an API key and start
+                    consuming the AS-Mart API v1.
+                </p>
+
+                <a asp-controller="ApiKeys"
+                   asp-action="Index"
+                   class="btn applications-btn applications-btn-primary">
+                    <i class="fa-solid fa-plus"></i>
+                    Create Application
+                </a>
+            }
         </article>
     }
     else
@@ -185,11 +445,11 @@
                         </div>
 
                         <span class="application-status @(application.IsUsable
-                                                          ? "status-active"
-                                                          : "status-inactive")">
-                                                                            @application.Status
-                                                                        </span>
-                                                                    </div>
+                                                                                        ? "status-active"
+                                                                                        : "status-inactive")">
+                                                                                                          @application.Status
+                                                                                                      </span>
+                                                                                                  </div>
 
                     <div class="application-key">
                         <span>API key</span>
@@ -318,6 +578,102 @@
                 }
 
         </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="applications-pagination"
+                 aria-label="Applications pagination">
+
+                <div class="applications-pagination-summary">
+                    Page @Model.PageNumber of @Model.TotalPages
+                </div>
+
+                <ul>
+                    <li>
+                        <a asp-controller="Developer"
+                           asp-action="Applications"
+                           asp-route-search="@Model.SearchTerm"
+                           asp-route-status="@Model.StatusFilter"
+                           asp-route-pageSize="@Model.PageSize"
+                           asp-route-page="1"
+                           class="@(!Model.HasPreviousPage ? "disabled" : "")"
+                           aria-label="First page">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="Developer"
+                           asp-action="Applications"
+                           asp-route-search="@Model.SearchTerm"
+                           asp-route-status="@Model.StatusFilter"
+                           asp-route-pageSize="@Model.PageSize"
+                           asp-route-page="@(Model.PageNumber - 1)"
+                           class="@(!Model.HasPreviousPage ? "disabled" : "")"
+                           aria-label="Previous page">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+                    </li>
+
+                    @if (paginationStart > 1)
+                    {
+                        <li class="applications-pagination-ellipsis">
+                            …
+                        </li>
+                    }
+
+                    @for (var pageNumber = paginationStart;
+                                pageNumber <= paginationEnd;
+                                pageNumber++)
+                    {
+                        <li>
+                            <a asp-controller="Developer"
+                               asp-action="Applications"
+                               asp-route-search="@Model.SearchTerm"
+                               asp-route-status="@Model.StatusFilter"
+                               asp-route-pageSize="@Model.PageSize"
+                               asp-route-page="@pageNumber"
+                               class="@(pageNumber == Model.PageNumber ? "active" : "")">
+                                @pageNumber
+                            </a>
+                        </li>
+                    }
+
+                    @if (paginationEnd < Model.TotalPages)
+                    {
+                        <li class="applications-pagination-ellipsis">
+                            …
+                        </li>
+                    }
+
+                    <li>
+                        <a asp-controller="Developer"
+                           asp-action="Applications"
+                           asp-route-search="@Model.SearchTerm"
+                           asp-route-status="@Model.StatusFilter"
+                           asp-route-pageSize="@Model.PageSize"
+                           asp-route-page="@(Model.PageNumber + 1)"
+                           class="@(!Model.HasNextPage ? "disabled" : "")"
+                           aria-label="Next page">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="Developer"
+                           asp-action="Applications"
+                           asp-route-search="@Model.SearchTerm"
+                           asp-route-status="@Model.StatusFilter"
+                           asp-route-pageSize="@Model.PageSize"
+                           asp-route-page="@Model.TotalPages"
+                           class="@(!Model.HasNextPage ? "disabled" : "")"
+                           aria-label="Last page">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
     }
 
 </section>
@@ -488,6 +844,296 @@
             margin-top: .15rem;
             color: #94a3b8;
             font-size: .67rem;
+        }
+
+        .applications-filter-panel {
+            margin-bottom: 1.4rem;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, .92);
+            box-shadow: 0 16px 38px rgba(15, 23, 42, .06);
+        }
+
+        .applications-filter-form {
+            display: grid;
+            grid-template-columns: minmax(260px, 1.7fr) minmax(150px, .7fr) minmax(110px, .45fr) auto;
+            gap: .8rem;
+            align-items: end;
+            padding: 1rem;
+        }
+
+        .applications-search-field,
+        .applications-filter-select {
+            min-width: 0;
+        }
+
+            .applications-search-field label,
+            .applications-filter-select label {
+                display: block;
+                margin-bottom: .4rem;
+                color: #475569;
+                font-size: .68rem;
+                font-weight: 900;
+                letter-spacing: .04em;
+                text-transform: uppercase;
+            }
+
+        .applications-search-input {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            min-height: 45px;
+            padding: 0 .75rem;
+            border: 1px solid rgba(15, 23, 42, .12);
+            border-radius: 13px;
+            background: #f8fafc;
+            color: #94a3b8;
+        }
+
+            .applications-search-input:focus-within {
+                border-color: rgba(37, 99, 235, .55);
+                box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .08);
+            }
+
+            .applications-search-input input {
+                width: 100%;
+                min-width: 0;
+                border: 0;
+                outline: 0;
+                background: transparent;
+                color: #0f172a;
+                font-size: .82rem;
+                font-weight: 700;
+            }
+
+        .applications-clear-search {
+            display: grid;
+            flex: 0 0 auto;
+            width: 28px;
+            height: 28px;
+            place-items: center;
+            border-radius: 9px;
+            color: #64748b;
+            text-decoration: none;
+        }
+
+            .applications-clear-search:hover {
+                background: rgba(239, 68, 68, .09);
+                color: #dc2626;
+            }
+
+        .applications-filter-select select {
+            width: 100%;
+            min-height: 45px;
+            padding: 0 .75rem;
+            border: 1px solid rgba(15, 23, 42, .12);
+            border-radius: 13px;
+            background: #f8fafc;
+            color: #334155;
+            font-size: .8rem;
+            font-weight: 800;
+            outline: 0;
+        }
+
+            .applications-filter-select select:focus {
+                border-color: rgba(37, 99, 235, .55);
+                box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .08);
+            }
+
+        .applications-filter-actions {
+            display: flex;
+            gap: .55rem;
+        }
+
+        .applications-filter-submit,
+        .applications-filter-reset {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            min-height: 45px;
+            padding: .62rem .8rem;
+            border-radius: 13px;
+            font-size: .75rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .applications-filter-submit {
+            border: 0;
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+            color: #fff;
+        }
+
+            .applications-filter-submit:hover,
+            .applications-filter-submit:focus {
+                color: #fff;
+            }
+
+        .applications-filter-reset {
+            border: 1px solid rgba(15, 23, 42, .11);
+            background: #fff;
+            color: #475569;
+        }
+
+        .applications-status-tabs {
+            display: flex;
+            gap: .45rem;
+            padding: 0 1rem 1rem;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .applications-status-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            min-height: 37px;
+            padding: .45rem .7rem;
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 11px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: .72rem;
+            font-weight: 900;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+            .applications-status-tab span {
+                display: inline-flex;
+                min-width: 22px;
+                height: 22px;
+                align-items: center;
+                justify-content: center;
+                border-radius: 999px;
+                background: rgba(15, 23, 42, .07);
+                color: #475569;
+                font-size: .64rem;
+            }
+
+            .applications-status-tab:hover,
+            .applications-status-tab.active {
+                border-color: transparent;
+                background: #2563eb;
+                color: #fff;
+            }
+
+                .applications-status-tab:hover span,
+                .applications-status-tab.active span {
+                    background: rgba(255, 255, 255, .18);
+                    color: #fff;
+                }
+
+        .applications-result-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .85rem 1rem;
+            border-top: 1px solid rgba(15, 23, 42, .07);
+            background: rgba(248, 250, 252, .72);
+        }
+
+            .applications-result-summary strong {
+                display: block;
+                color: #0f172a;
+                font-size: .78rem;
+                font-weight: 950;
+            }
+
+            .applications-result-summary > div > span {
+                display: block;
+                margin-top: .16rem;
+                color: #64748b;
+                font-size: .69rem;
+            }
+
+        .applications-active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: .4rem;
+        }
+
+            .applications-active-filters span {
+                display: inline-flex !important;
+                align-items: center;
+                gap: .35rem;
+                margin: 0 !important;
+                padding: .35rem .55rem;
+                border-radius: 999px;
+                background: rgba(37, 99, 235, .09);
+                color: #1d4ed8 !important;
+                font-size: .66rem !important;
+                font-weight: 850;
+                text-transform: capitalize;
+            }
+
+            .applications-active-filters i {
+                font-size: .56rem;
+            }
+
+        .applications-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 1.4rem;
+            padding: .85rem 1rem;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .92);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, .05);
+        }
+
+        .applications-pagination-summary {
+            color: #64748b;
+            font-size: .72rem;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+
+        .applications-pagination ul {
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .applications-pagination a,
+        .applications-pagination-ellipsis {
+            display: inline-flex;
+            min-width: 36px;
+            height: 36px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 10px;
+            background: #f8fafc;
+            color: #475569;
+            font-size: .72rem;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+            .applications-pagination a:hover,
+            .applications-pagination a.active {
+                border-color: transparent;
+                background: #2563eb;
+                color: #fff;
+            }
+
+            .applications-pagination a.disabled {
+                pointer-events: none;
+                opacity: .4;
+            }
+
+        .applications-pagination-ellipsis {
+            border-color: transparent;
+            background: transparent;
         }
 
         .applications-grid {
@@ -752,6 +1398,15 @@
         }
 
         @@media (max-width: 1199.98px) {
+            .applications-filter-form {
+                grid-template-columns: minmax(240px, 1fr) minmax(150px, .55fr) minmax(110px, .35fr);
+            }
+
+            .applications-filter-actions {
+                grid-column: 1 / -1;
+                justify-content: flex-end;
+            }
+
             .applications-stat-grid {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }
@@ -764,6 +1419,34 @@
         }
 
         @@media (max-width: 767.98px) {
+            .applications-filter-form {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .applications-search-field {
+                grid-column: 1 / -1;
+            }
+
+            .applications-filter-actions {
+                grid-column: 1 / -1;
+            }
+
+            .applications-result-summary,
+            .applications-pagination {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .applications-active-filters {
+                justify-content: flex-start;
+            }
+
+            .applications-pagination ul {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: .25rem;
+            }
+
             .applications-hero {
                 align-items: flex-start;
                 flex-direction: column;
@@ -784,6 +1467,39 @@
         }
 
         @@media (max-width: 575.98px) {
+            .applications-filter-form {
+                grid-template-columns: 1fr;
+            }
+
+            .applications-search-field,
+            .applications-filter-select,
+            .applications-filter-actions {
+                grid-column: auto;
+            }
+
+            .applications-filter-actions {
+                flex-direction: column;
+            }
+
+            .applications-filter-submit,
+            .applications-filter-reset {
+                width: 100%;
+            }
+
+            .applications-page-size {
+                display: none;
+            }
+
+            .applications-pagination {
+                padding: .75rem;
+            }
+
+                .applications-pagination a,
+                .applications-pagination-ellipsis {
+                    min-width: 34px;
+                    height: 34px;
+                }
+
             .applications-stat-grid {
                 grid-template-columns: 1fr;
             }
