@@ -281,10 +281,13 @@ body {
         padding: 18px 20px;
         border: 1px solid var(--as-border);
         border-radius: var(--as-radius-lg);
-        background: var(--as-surface);
+        background: #fff;
         box-shadow: var(--as-shadow-md);
-        -webkit-backdrop-filter: blur(16px);
-        backdrop-filter: blur(16px);
+        position: relative;
+        z-index: 1;
+        overflow: visible !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
     }
 
         .swagger-ui .scheme-container .schemes {
@@ -307,6 +310,8 @@ body {
         justify-content: flex-end;
         width: auto;
         margin-left: auto;
+        position: static !important;
+        overflow: visible !important;
     }
 
     .swagger-ui .btn.authorize {
@@ -897,4 +902,40 @@ body {
     .swagger-ui .btn.authorize {
         transition: none;
     }
+}
+
+
+
+/* ===== FINAL AUTH DIALOG FIX ===== */
+
+.swagger-ui .dialog-ux {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483647 !important;
+}
+
+    .swagger-ui .dialog-ux .backdrop-ux {
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(15,23,42,.65) !important;
+        z-index: 2147483646 !important;
+    }
+
+    .swagger-ui .dialog-ux .modal-ux {
+        position: fixed !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%,-50%) !important;
+        width: min(760px,92vw) !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        z-index: 2147483647 !important;
+    }
+
+.swagger-ui .filter-container,
+.swagger-ui .filter,
+.swagger-ui .opblock-tag-section,
+.swagger-ui .models {
+    position: relative !important;
+    z-index: 0 !important;
 }
