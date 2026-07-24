@@ -1,4 +1,5 @@
 ﻿// Data/ApplicationDbContext.cs
+using AsMart.Web.Data.Configurations;
 using AsMart.Web.Models;
 using AsMart.Web.Models.Entities;
 using AsMart.Web.Models.Entities.Marketing;
@@ -43,10 +44,13 @@ namespace AsMart.Web.Data
         public DbSet<MarketingPostingLog> MarketingPostingLogs => Set<MarketingPostingLog>();
         public DbSet<ApiClient> ApiClients => Set<ApiClient>();
         public DbSet<ApiUsageLog> ApiUsageLogs => Set<ApiUsageLog>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.ApplyConfiguration(new RefreshTokenConfiguration());
 
             // Product
             builder.Entity<Product>(b =>

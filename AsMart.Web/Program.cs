@@ -9,14 +9,19 @@ using AsMart.Web.Services.Marketing;
 using AsMart.Web.Services.Repositories;
 using AsMart.Web.Services.Repositories.ErrorPages;
 using AsMart.Web.Services.Repositories.Redirects;
+using AsMart.Web.Services.Security;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,8 +54,91 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/error/403";
 });
 
+var jwtOptions = builder.Configuration
+    .GetRequiredSection(JwtOptions.SectionName)
+    .Get<JwtOptions>()
+    ?? throw new InvalidOperationException(
+        "JWT configuration is missing.");
+
 builder.Services
     .AddAuthentication()
+    .AddJwtBearer(
+        JwtBearerDefaults.AuthenticationScheme,
+        options =>
+        {
+            options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+            options.SaveToken = false;
+            options.MapInboundClaims = false;
+
+            options.TokenValidationParameters =
+                new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtOptions.Issuer,
+
+                    ValidateAudience = true,
+                    ValidAudience = jwtOptions.Audience,
+
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(
+                            jwtOptions.SigningKey)),
+
+                    ValidateLifetime = true,
+                    RequireExpirationTime = true,
+                    ClockSkew = TimeSpan.FromSeconds(30),
+
+                    NameClaimType = ClaimTypes.Name,
+                    RoleClaimType = ClaimTypes.Role
+                };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnChallenge = async context =>
+                {
+                    context.HandleResponse();
+
+                    if (context.Response.HasStarted)
+                    {
+                        return;
+                    }
+
+                    context.Response.StatusCode =
+                        StatusCodes.Status401Unauthorized;
+                    context.Response.ContentType =
+                        "application/json; charset=utf-8";
+                    context.Response.Headers.CacheControl = "no-store";
+
+                    var response = ApiResponseFactory.Error(
+                        "unauthorized",
+                        "A valid bearer access token is required.",
+                        context.HttpContext.TraceIdentifier);
+
+                    await context.Response.WriteAsJsonAsync(response);
+                },
+
+                OnForbidden = async context =>
+                {
+                    if (context.Response.HasStarted)
+                    {
+                        return;
+                    }
+
+                    context.Response.StatusCode =
+                        StatusCodes.Status403Forbidden;
+                    context.Response.ContentType =
+                        "application/json; charset=utf-8";
+                    context.Response.Headers.CacheControl = "no-store";
+
+                    var response = ApiResponseFactory.Error(
+                        "forbidden",
+                        "You do not have permission to access this resource.",
+                        context.HttpContext.TraceIdentifier);
+
+                    await context.Response.WriteAsJsonAsync(response);
+                }
+            };
+        })
     .AddGoogle(options =>
     {
         options.ClientId =
@@ -105,6 +193,39 @@ builder.Services
         "ApiKeySecurity:HashingPepper must contain at least 32 characters.")
     .ValidateOnStart();
 
+builder.Services
+    .AddOptions<JwtOptions>()
+    .Bind(
+        builder.Configuration.GetSection(
+            JwtOptions.SectionName))
+    .ValidateDataAnnotations()
+    .Validate(
+        options =>
+            !string.IsNullOrWhiteSpace(options.SigningKey) &&
+            options.SigningKey.Length >= 32,
+        "Jwt:SigningKey must contain at least 32 characters.")
+    .Validate(
+        options =>
+            Uri.TryCreate(
+                options.Issuer,
+                UriKind.Absolute,
+                out _),
+        "Jwt:Issuer must be a valid absolute URL.")
+    .Validate(
+        options =>
+            Uri.TryCreate(
+                options.Audience,
+                UriKind.Absolute,
+                out _),
+        "Jwt:Audience must be a valid absolute URL.")
+    .ValidateOnStart();
+
+builder.Services.AddSingleton(TimeProvider.System);
+
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+
+
 builder.Services.AddHttpClient(
     "DeveloperPlayground",
     client =>
@@ -116,7 +237,7 @@ builder.Services.AddHttpClient(
                 "application/json"));
     });
 
-builder.Services.AddScoped<IApiKeyService,ApiKeyService>();
+builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 builder.Services.AddHostedService<ApiKeyLegacyBackfillHostedService>();
 
 
@@ -275,6 +396,34 @@ builder.Services.AddSwaggerGen(options =>
         {
             [new OpenApiSecuritySchemeReference(
                 apiKeySchemeName,
+                document)] = []
+        });
+
+    const string bearerSchemeName = "Bearer";
+
+    options.AddSecurityDefinition(
+        bearerSchemeName,
+        new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Description =
+                """
+                    JWT bearer access token.
+
+                    First call POST /api/v1/auth/login, copy data.accessToken,
+                    click Authorize, and paste only the token value.
+                """,
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT"
+        });
+
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference(
+                bearerSchemeName,
                 document)] = []
         });
 
