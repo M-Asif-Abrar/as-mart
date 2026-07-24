@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using AsMart.Web.Data;
+﻿using AsMart.Web.Data;
 using AsMart.Web.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,70 +8,294 @@ namespace AsMart.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = "Admin")]
-    public class DashboardController : Controller
+    public sealed class DashboardController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly TimeProvider _timeProvider;
 
-        public DashboardController(ApplicationDbContext db)
+        public DashboardController(
+            ApplicationDbContext db,
+            TimeProvider timeProvider)
         {
             _db = db;
+            _timeProvider = timeProvider;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            CancellationToken cancellationToken)
         {
-            var utcToday = DateTime.UtcNow.Date;
-            var last7 = utcToday.AddDays(-6);    // inclusive
-            var last30 = utcToday.AddDays(-29);  // inclusive
+            var nowUtc = _timeProvider.GetUtcNow().UtcDateTime;
+            var utcToday = nowUtc.Date;
+            var tomorrowUtc = utcToday.AddDays(1);
+            var last7 = utcToday.AddDays(-6);
+            var last30 = utcToday.AddDays(-29);
+
+            var totalApiRequestsLast30Days = await _db.ApiUsageLogs
+                .CountAsync(
+                    x => x.CreatedAt >= last30 &&
+                         x.CreatedAt < tomorrowUtc,
+                    cancellationToken);
+
+            var apiErrorsLast30Days = await _db.ApiUsageLogs
+                .CountAsync(
+                    x => x.CreatedAt >= last30 &&
+                         x.CreatedAt < tomorrowUtc &&
+                         x.StatusCode >= 400,
+                    cancellationToken);
+
+            var averageRating = await _db.Products
+                .Where(x => x.Rating > 0)
+                .Select(x => (decimal?)x.Rating)
+                .AverageAsync(cancellationToken) ?? 0m;
 
             var vm = new AdminDashboardViewModel
             {
-                TotalUsers = await _db.Users.CountAsync(),
-                TotalProducts = await _db.Products.CountAsync(),
-                TotalCategories = await _db.Categories.CountAsync(),
-                TotalBlogPosts = await _db.BlogPosts.CountAsync(),
-                TotalCollections = await _db.Collections.CountAsync(),
-                TotalClickLogs = await _db.ClickLogs.CountAsync(),
-                TotalUserProductStatuses = await _db.UserProductStatuses.CountAsync()
+                TotalUsers = await _db.Users.CountAsync(cancellationToken),
+
+                TotalProducts = await _db.Products
+                    .CountAsync(cancellationToken),
+
+                ActiveProducts = await _db.Products
+                    .CountAsync(x => x.IsActive, cancellationToken),
+
+                FeaturedProducts = await _db.Products
+                    .CountAsync(x => x.IsFeatured, cancellationToken),
+
+                DealProducts = await _db.Products
+                    .CountAsync(x => x.IsDealOfTheDay, cancellationToken),
+
+                TotalCategories = await _db.Categories
+                    .CountAsync(cancellationToken),
+
+                TotalBlogPosts = await _db.BlogPosts
+                    .CountAsync(cancellationToken),
+
+                VisibleBlogPosts = await _db.BlogPosts
+                        .CountAsync(x => x.IsPublished, cancellationToken),
+
+                TotalCollections = await _db.Collections
+                    .CountAsync(cancellationToken),
+
+                TotalClickLogs = await _db.ClickLogs
+                    .CountAsync(cancellationToken),
+
+                TotalUserProductStatuses =
+                    await _db.UserProductStatuses
+                        .CountAsync(cancellationToken),
+
+                ClicksToday = await _db.ClickLogs
+                    .CountAsync(
+                        x => x.ClickedAt >= utcToday &&
+                             x.ClickedAt < tomorrowUtc,
+                        cancellationToken),
+
+                ClicksLast7Days = await _db.ClickLogs
+                    .CountAsync(
+                        x => x.ClickedAt >= last7 &&
+                             x.ClickedAt < tomorrowUtc,
+                        cancellationToken),
+
+                ClicksLast30Days = await _db.ClickLogs
+                    .CountAsync(
+                        x => x.ClickedAt >= last30 &&
+                             x.ClickedAt < tomorrowUtc,
+                        cancellationToken),
+
+                SocialClicksLast30Days = await _db.ClickLogs
+                    .CountAsync(
+                        x => x.ClickedAt >= last30 &&
+                             x.ClickedAt < tomorrowUtc &&
+                             x.IsSocialTraffic,
+                        cancellationToken),
+
+                FacebookClicksLast30Days = await _db.ClickLogs
+                    .CountAsync(
+                        x => x.ClickedAt >= last30 &&
+                             x.ClickedAt < tomorrowUtc &&
+                             x.IsFacebookTraffic,
+                        cancellationToken),
+
+                AverageProductRating = Math.Round(averageRating, 2),
+
+                TotalApiClients = await _db.ApiClients
+                    .CountAsync(cancellationToken),
+
+                ActiveApiClients = await _db.ApiClients
+                    .CountAsync(
+                        x => x.IsActive &&
+                             x.RevokedAt == null &&
+                             (x.ExpiresAt == null ||
+                              x.ExpiresAt > nowUtc),
+                        cancellationToken),
+
+                ApiRequestsToday = await _db.ApiUsageLogs
+                    .CountAsync(
+                        x => x.CreatedAt >= utcToday &&
+                             x.CreatedAt < tomorrowUtc,
+                        cancellationToken),
+
+                ApiRequestsLast7Days = await _db.ApiUsageLogs
+                    .CountAsync(
+                        x => x.CreatedAt >= last7 &&
+                             x.CreatedAt < tomorrowUtc,
+                        cancellationToken),
+
+                ApiRequestsLast30Days = totalApiRequestsLast30Days,
+                ApiErrorsLast30Days = apiErrorsLast30Days,
+
+                ApiSuccessRateLast30Days =
+                    totalApiRequestsLast30Days == 0
+                        ? 100
+                        : Math.Round(
+                            (totalApiRequestsLast30Days -
+                             apiErrorsLast30Days) * 100d /
+                            totalApiRequestsLast30Days,
+                            1),
+
+                ActiveRefreshTokens = await _db.RefreshTokens
+                    .CountAsync(
+                        x => x.RevokedAtUtc == null &&
+                             x.ExpiresAtUtc > nowUtc,
+                        cancellationToken),
+
+                RevokedRefreshTokens = await _db.RefreshTokens
+                    .CountAsync(
+                        x => x.RevokedAtUtc != null,
+                        cancellationToken),
+
+                ExpiredRefreshTokens = await _db.RefreshTokens
+                    .CountAsync(
+                        x => x.ExpiresAtUtc <= nowUtc,
+                        cancellationToken)
             };
 
-            // -------- Click metrics --------
-            vm.ClicksToday = await _db.ClickLogs
-                .CountAsync(cl => cl.ClickedAt >= utcToday && cl.ClickedAt < utcToday.AddDays(1));
-
-            vm.ClicksLast7Days = await _db.ClickLogs
-                .CountAsync(cl => cl.ClickedAt >= last7 && cl.ClickedAt < utcToday.AddDays(1));
-
-            vm.ClicksLast30Days = await _db.ClickLogs
-                .CountAsync(cl => cl.ClickedAt >= last30 && cl.ClickedAt < utcToday.AddDays(1));
-
-            // -------- Products per category (Top 10) --------
-            // Use the Category -> ProductCategories navigation; no GroupBy on navigation.
             vm.ProductsPerCategory = await _db.Categories
-                .Select(c => new AdminDashboardViewModel.CategoryProductsItem
-                {
-                    CategoryName = c.Name,
-                    ProductCount = c.ProductCategories.Count()
-                })
+                .AsNoTracking()
+                .Select(c =>
+                    new AdminDashboardViewModel.CategoryProductsItem
+                    {
+                        CategoryName = c.Name,
+                        ProductCount = c.ProductCategories.Count()
+                    })
                 .OrderByDescending(x => x.ProductCount)
+                .ThenBy(x => x.CategoryName)
                 .Take(10)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            // -------- Products per collection (Top 10) --------
             vm.ProductsPerCollection = await _db.Collections
-                .Select(col => new AdminDashboardViewModel.CollectionProductsItem
-                {
-                    CollectionName = col.Name,
-                    ProductCount = col.CollectionProducts.Count()
-                })
+                .AsNoTracking()
+                .Select(c =>
+                    new AdminDashboardViewModel.CollectionProductsItem
+                    {
+                        CollectionName = c.Name,
+                        ProductCount = c.CollectionProducts.Count()
+                    })
                 .OrderByDescending(x => x.ProductCount)
+                .ThenBy(x => x.CollectionName)
                 .Take(10)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            // -------- Top products by clicks (last 30 days) --------
-            // First group ClickLogs by ProductId, then join with Products.
-            var topProducts = await _db.ClickLogs
-                .Where(cl => cl.ClickedAt >= last30 && cl.ProductId != 0)
-                .GroupBy(cl => cl.ProductId)
+            var dailyClickCounts = await _db.ClickLogs
+                .AsNoTracking()
+                .Where(x => x.ClickedAt >= last30 &&
+                            x.ClickedAt < tomorrowUtc)
+                .GroupBy(x => x.ClickedAt.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Count = g.Count()
+                })
+                .ToDictionaryAsync(
+                    x => x.Date,
+                    x => x.Count,
+                    cancellationToken);
+
+            vm.DailyClicks = Enumerable
+                .Range(0, 30)
+                .Select(index =>
+                {
+                    var date = last30.AddDays(index);
+
+                    return new AdminDashboardViewModel.DailyMetricItem
+                    {
+                        Date = date,
+                        Count = dailyClickCounts.GetValueOrDefault(date)
+                    };
+                })
+                .ToList();
+
+            var dailyApiCounts = await _db.ApiUsageLogs
+                .AsNoTracking()
+                .Where(x => x.CreatedAt >= last30 &&
+                            x.CreatedAt < tomorrowUtc)
+                .GroupBy(x => x.CreatedAt.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Count = g.Count()
+                })
+                .ToDictionaryAsync(
+                    x => x.Date,
+                    x => x.Count,
+                    cancellationToken);
+
+            vm.DailyApiRequests = Enumerable
+                .Range(0, 30)
+                .Select(index =>
+                {
+                    var date = last30.AddDays(index);
+
+                    return new AdminDashboardViewModel.DailyMetricItem
+                    {
+                        Date = date,
+                        Count = dailyApiCounts.GetValueOrDefault(date)
+                    };
+                })
+                .ToList();
+
+            vm.TrafficSources = await _db.ClickLogs
+                .AsNoTracking()
+                .Where(x => x.ClickedAt >= last30 &&
+                            x.ClickedAt < tomorrowUtc)
+                .GroupBy(x =>
+                    string.IsNullOrEmpty(x.UtmSource)
+                        ? "Direct / Unknown"
+                        : x.UtmSource)
+                .Select(g =>
+                    new AdminDashboardViewModel.NamedCountItem
+                    {
+                        Name = g.Key!,
+                        Count = g.Count()
+                    })
+                .OrderByDescending(x => x.Count)
+                .Take(8)
+                .ToListAsync(cancellationToken);
+
+            vm.ApiStatusGroups = await _db.ApiUsageLogs
+                .AsNoTracking()
+                .Where(x => x.CreatedAt >= last30 &&
+                            x.CreatedAt < tomorrowUtc)
+                .GroupBy(x =>
+                    x.StatusCode >= 500 ? "5xx Server Error" :
+                    x.StatusCode >= 400 ? "4xx Client Error" :
+                    x.StatusCode >= 300 ? "3xx Redirect" :
+                    x.StatusCode >= 200 ? "2xx Success" :
+                    "Other")
+                .Select(g =>
+                    new AdminDashboardViewModel.NamedCountItem
+                    {
+                        Name = g.Key,
+                        Count = g.Count()
+                    })
+                .OrderByDescending(x => x.Count)
+                .ToListAsync(cancellationToken);
+
+            vm.TopProductsByClicks = await _db.ClickLogs
+                .AsNoTracking()
+                .Where(x => x.ClickedAt >= last30 &&
+                            x.ClickedAt < tomorrowUtc &&
+                            x.ProductId != 0)
+                .GroupBy(x => x.ProductId)
                 .Select(g => new
                 {
                     ProductId = g.Key,
@@ -83,50 +305,90 @@ namespace AsMart.Web.Areas.Admin.Controllers
                 .OrderByDescending(x => x.Clicks)
                 .Take(10)
                 .Join(
-                    _db.Products,
-                    g => g.ProductId,
-                    p => p.Id,
-                    (g, p) => new { g, p }
-                )
-                .Select(x => new AdminDashboardViewModel.TopProductClicksItem
-                {
-                    ProductId = x.p.Id,
-                    Slug = x.p.Slug,
-                    Title = x.p.Title,
-                    CategoryName = x.p.ProductCategories
-                        .Select(pc => pc.Category!.Name)
-                        .FirstOrDefault(),
-                    Clicks = x.g.Clicks,
-                    LastClickedAt = x.g.LastClickedAt
-                })
-                .ToListAsync();
+                    _db.Products.AsNoTracking(),
+                    click => click.ProductId,
+                    product => product.Id,
+                    (click, product) => new
+                    {
+                        click,
+                        product
+                    })
+                .Select(x =>
+                    new AdminDashboardViewModel.TopProductClicksItem
+                    {
+                        ProductId = x.product.Id,
+                        Slug = x.product.Slug,
+                        Title = x.product.Title,
+                        CategoryName = x.product.ProductCategories
+                            .Select(pc => pc.Category!.Name)
+                            .FirstOrDefault(),
+                        Clicks = x.click.Clicks,
+                        LastClickedAt = x.click.LastClickedAt
+                    })
+                .ToListAsync(cancellationToken);
 
-            vm.TopProductsByClicks = topProducts;
-
-            // -------- Top categories by clicks (last 30 days) --------
             vm.TopCategoriesByClicks = await _db.ClickLogs
-                .Where(cl => cl.ClickedAt >= last30)
-                .Join(_db.ProductCategories,
-                      cl => cl.ProductId,
-                      pc => pc.ProductId,
-                      (cl, pc) => pc.CategoryId)
-                .Join(_db.Categories,
-                      cid => cid,
-                      c => c.Id,
-                      (cid, c) => c.Name)
-                .GroupBy(name => name)
-                .Select(g => new AdminDashboardViewModel.TopCategoryClicksItem
-                {
-                    CategoryName = g.Key,
-                    Clicks = g.Count()
-                })
+                .AsNoTracking()
+                .Where(x => x.ClickedAt >= last30 &&
+                            x.ClickedAt < tomorrowUtc)
+                .Join(
+                    _db.ProductCategories.AsNoTracking(),
+                    click => click.ProductId,
+                    productCategory => productCategory.ProductId,
+                    (click, productCategory) =>
+                        productCategory.CategoryId)
+                .Join(
+                    _db.Categories.AsNoTracking(),
+                    categoryId => categoryId,
+                    category => category.Id,
+                    (categoryId, category) => category.Name)
+                .GroupBy(x => x)
+                .Select(g =>
+                    new AdminDashboardViewModel.TopCategoryClicksItem
+                    {
+                        CategoryName = g.Key,
+                        Clicks = g.Count()
+                    })
                 .OrderByDescending(x => x.Clicks)
                 .Take(10)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
+
+            vm.TopApiEndpoints = await _db.ApiUsageLogs
+                .AsNoTracking()
+                .Where(x => x.CreatedAt >= last30 &&
+                            x.CreatedAt < tomorrowUtc)
+                .GroupBy(x => x.Endpoint)
+                .Select(g =>
+                    new AdminDashboardViewModel.TopApiEndpointItem
+                    {
+                        Endpoint = g.Key,
+                        Requests = g.Count(),
+                        Errors = g.Count(x => x.StatusCode >= 400),
+                        LastRequestedAt = g.Max(x => x.CreatedAt)
+                    })
+                .OrderByDescending(x => x.Requests)
+                .Take(10)
+                .ToListAsync(cancellationToken);
+
+            vm.RecentClicks = await _db.ClickLogs
+                .AsNoTracking()
+                .OrderByDescending(x => x.ClickedAt)
+                .Take(10)
+                .Select(x =>
+                    new AdminDashboardViewModel.RecentClickItem
+                    {
+                        ClickedAt = x.ClickedAt,
+                        ClickType = x.ClickType,
+                        ProductTitle =
+                            x.Product == null
+                                ? null
+                                : x.Product.Title,
+                        UtmSource = x.UtmSource,
+                        IsSocialTraffic = x.IsSocialTraffic
+                    })
+                .ToListAsync(cancellationToken);
 
             return View(vm);
         }
-
-
     }
 }

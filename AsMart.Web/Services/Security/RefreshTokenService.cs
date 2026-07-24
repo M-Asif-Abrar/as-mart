@@ -30,9 +30,34 @@ namespace AsMart.Web.Services.Security
             string? userAgent,
             CancellationToken cancellationToken = default)
         {
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException(
+                    "User ID is required.",
+                    nameof(userId));
+            }
+
             var nowUtc = _timeProvider.GetUtcNow().UtcDateTime;
             var expiresAtUtc = nowUtc.AddDays(
                 _options.RefreshTokenDays);
+
+            /*
+             * Revoke every currently active refresh token for this user.
+             * This enforces one active refresh token per user.
+             */
+            var activeTokens = await _db.Set<RefreshToken>()
+                .Where(x =>
+                    x.UserId == userId &&
+                    x.RevokedAtUtc == null &&
+                    x.ExpiresAtUtc > nowUtc)
+                .ToListAsync(cancellationToken);
+
+            foreach (var activeToken in activeTokens)
+            {
+                activeToken.RevokedAtUtc = nowUtc;
+                activeToken.RevokedByIp =
+                    Truncate(ipAddress, 64);
+            }
 
             var rawToken = GenerateToken();
             var tokenHash = HashToken(rawToken);
@@ -48,6 +73,7 @@ namespace AsMart.Web.Services.Security
             };
 
             _db.Set<RefreshToken>().Add(entity);
+
             await _db.SaveChangesAsync(cancellationToken);
 
             return new RefreshTokenIssueResult(
@@ -83,6 +109,9 @@ namespace AsMart.Web.Services.Security
                 current.RevokedAtUtc is not null ||
                 current.ExpiresAtUtc <= nowUtc)
             {
+                await transaction.RollbackAsync(
+                    cancellationToken);
+
                 return null;
             }
 
@@ -92,7 +121,8 @@ namespace AsMart.Web.Services.Security
                 _options.RefreshTokenDays);
 
             current.RevokedAtUtc = nowUtc;
-            current.RevokedByIp = Truncate(ipAddress, 64);
+            current.RevokedByIp =
+                Truncate(ipAddress, 64);
             current.ReplacedByTokenHash = newHash;
 
             var replacement = new RefreshToken
@@ -106,6 +136,7 @@ namespace AsMart.Web.Services.Security
             };
 
             _db.Set<RefreshToken>().Add(replacement);
+
             await _db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
@@ -132,8 +163,9 @@ namespace AsMart.Web.Services.Security
 
             var token = await _db.Set<RefreshToken>()
                 .SingleOrDefaultAsync(
-                    x => x.TokenHash == tokenHash &&
-                         x.UserId == userId,
+                    x =>
+                        x.TokenHash == tokenHash &&
+                        x.UserId == userId,
                     cancellationToken);
 
             if (token is null ||
@@ -143,9 +175,11 @@ namespace AsMart.Web.Services.Security
             }
 
             token.RevokedAtUtc = nowUtc;
-            token.RevokedByIp = Truncate(ipAddress, 64);
+            token.RevokedByIp =
+                Truncate(ipAddress, 64);
 
             await _db.SaveChangesAsync(cancellationToken);
+
             return true;
         }
 

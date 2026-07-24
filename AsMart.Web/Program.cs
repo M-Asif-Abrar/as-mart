@@ -410,7 +410,7 @@ builder.Services.AddSwaggerGen(options =>
                 """
                     JWT bearer access token.
 
-                    First call POST /api/v1/auth/login, copy data.accessToken,
+                    Call POST /api/v1/auth/login, copy data.accessToken,
                     click Authorize, and paste only the token value.
                 """,
             In = ParameterLocation.Header,

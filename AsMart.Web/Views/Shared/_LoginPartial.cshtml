@@ -69,22 +69,54 @@
 
     .as-user-dropdown {
         min-width: 330px;
+        width: min(390px, calc(100vw - 24px));
+        max-height: calc(100dvh - 88px);
+        margin-top: 10px !important;
         border-radius: 24px;
         border: 1px solid rgba(15,23,42,.10);
         padding: 12px;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
         background: radial-gradient(520px 240px at 0% 0%, rgba(59,130,246,.13), transparent 58%), radial-gradient(420px 220px at 100% 0%, rgba(168,85,247,.10), transparent 58%), linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.96));
         box-shadow: 0 26px 65px rgba(2,6,23,.18);
     }
 
+        .as-user-dropdown::-webkit-scrollbar {
+            width: 9px;
+        }
+
+        .as-user-dropdown::-webkit-scrollbar-track {
+            margin: 14px 0;
+            background: transparent;
+        }
+
+        .as-user-dropdown::-webkit-scrollbar-thumb {
+            border: 2px solid transparent;
+            border-radius: 999px;
+            background: rgba(100,116,139,.38);
+            background-clip: padding-box;
+        }
+
+            .as-user-dropdown::-webkit-scrollbar-thumb:hover {
+                background: rgba(71,85,105,.55);
+                background-clip: padding-box;
+            }
+
     .as-user-header {
+        position: sticky;
+        top: 0;
+        z-index: 3;
         display: flex;
         align-items: center;
         gap: 12px;
         padding: 12px;
         border-radius: 18px;
-        background: linear-gradient(135deg, rgba(239,246,255,.92), rgba(255,255,255,.86));
+        background: linear-gradient(135deg, rgba(239,246,255,.98), rgba(255,255,255,.96));
         border: 1px solid rgba(37,99,235,.10);
+        box-shadow: 0 10px 24px rgba(15,23,42,.06);
+        backdrop-filter: blur(14px);
     }
 
     .as-user-header-avatar {
@@ -165,11 +197,20 @@
         border-color: rgba(15,23,42,.09);
     }
 
+    .as-user-dropdown > li:last-child {
+        position: sticky;
+        bottom: 0;
+        z-index: 3;
+        padding-top: 6px;
+        background: linear-gradient(180deg, rgba(248,250,252,0), rgba(248,250,252,.98) 26%);
+    }
+
     .as-logout-btn {
         width: 100%;
-        border: 0;
-        background: transparent;
+        border: 1px solid rgba(220,38,38,.12);
+        background: rgba(255,255,255,.96);
         color: #dc2626 !important;
+        box-shadow: 0 8px 20px rgba(15,23,42,.06);
     }
 
         .as-logout-btn i {
@@ -231,7 +272,8 @@
         .as-user-dropdown {
             min-width: 100%;
             width: 100%;
-            margin-top: 8px;
+            max-height: min(72dvh, 620px);
+            margin-top: 8px !important;
             box-shadow: none;
         }
 
@@ -511,9 +553,9 @@
                     <form asp-area="Identity"
                           asp-page="/Account/Logout"
                           asp-route-returnUrl="@Url.Action(
-                                            "Index",
-                                            "Home",
-                                            new { area = "" })"
+                                                                      "Index",
+                                                                      "Home",
+                                                                      new { area = "" })"
                       method="post"
                       class="m-0">
 
@@ -530,7 +572,7 @@
 
             </ul>
         </li>
-    }
+        }
     else
     {
         <li class="nav-item">
