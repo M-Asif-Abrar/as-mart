@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using AsMart.Web.Data;
 using AsMart.Web.Models.Api;
 using AsMart.Web.Models.DTOs;
@@ -7,23 +8,58 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
-namespace AsMart.Web.Controllers.Api
+namespace AsMart.Web.Controllers.Api.V1
 {
     [ApiController]
-    [Route("api/widgets")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/widgets")]
     [Produces("application/json")]
     [EnableRateLimiting("public-api")]
     public sealed class WidgetsApiController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
+        private readonly IConfiguration _configuration;
 
-        public WidgetsApiController(ApplicationDbContext db)
+        public WidgetsApiController(
+            ApplicationDbContext db,
+            IConfiguration configuration)
         {
             _db = db;
+            _configuration = configuration;
         }
 
+        /// <summary>
+        /// Returns the combined home-page widget data used by external clients.
+        /// </summary>
+        /// <param name="productCount">
+        /// Maximum number of products returned in each product section.
+        /// </param>
+        /// <param name="blogCount">
+        /// Maximum number of latest published blog posts returned.
+        /// </param>
+        /// <param name="categoryCount">
+        /// Maximum number of product categories returned.
+        /// </param>
+        /// <param name="collectionCount">
+        /// Maximum number of product collections returned.
+        /// </param>
+        /// <param name="guideCount">
+        /// Maximum number of published SEO guides returned.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// Request cancellation token.
+        /// </param>
+        /// <returns>
+        /// A standardized API response containing products, blogs, categories,
+        /// collections, and SEO guides.
+        /// </returns>
         [HttpGet("home")]
-        [ProducesResponseType(typeof(ApiResponse<PublicHomeWidgetsApiDto>), StatusCodes.Status200OK)]
+        [MapToApiVersion("1.0")]
+        [ProducesResponseType(
+            typeof(ApiResponse<PublicHomeWidgetsApiDto>),
+            StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Home(
             [FromQuery] int productCount = 8,
             [FromQuery] int blogCount = 6,
@@ -32,14 +68,37 @@ namespace AsMart.Web.Controllers.Api
             [FromQuery] int guideCount = 8,
             CancellationToken cancellationToken = default)
         {
-            productCount = NormalizeCount(productCount, 8, 24);
-            blogCount = NormalizeCount(blogCount, 6, 12);
-            categoryCount = NormalizeCount(categoryCount, 12, 24);
-            collectionCount = NormalizeCount(collectionCount, 8, 16);
-            guideCount = NormalizeCount(guideCount, 8, 16);
+            productCount = NormalizeCount(
+                productCount,
+                defaultValue: 8,
+                maximum: 24);
 
-            // Important: EF Core DbContext does not support concurrent queries.
-            // These queries deliberately execute sequentially.
+            blogCount = NormalizeCount(
+                blogCount,
+                defaultValue: 6,
+                maximum: 12);
+
+            categoryCount = NormalizeCount(
+                categoryCount,
+                defaultValue: 12,
+                maximum: 24);
+
+            collectionCount = NormalizeCount(
+                collectionCount,
+                defaultValue: 8,
+                maximum: 16);
+
+            guideCount = NormalizeCount(
+                guideCount,
+                defaultValue: 8,
+                maximum: 16);
+
+            /*
+             * ApplicationDbContext is not thread-safe.
+             * Run these EF Core operations sequentially rather than using
+             * Task.WhenAll against the same DbContext instance.
+             */
+
             var featured = await ProductQuery()
                 .Where(product => product.IsFeatured)
                 .OrderByDescending(product => product.ClickCount)
@@ -69,14 +128,18 @@ namespace AsMart.Web.Controllers.Api
             var blogs = await _db.BlogPosts
                 .AsNoTracking()
                 .Where(blog => blog.IsPublished)
-                .OrderByDescending(blog => blog.PublishedAt ?? blog.UpdatedAt ?? blog.CreatedAt)
+                .OrderByDescending(
+                    blog => blog.PublishedAt
+                            ?? blog.UpdatedAt
+                            ?? blog.CreatedAt)
                 .Take(blogCount)
                 .ToListAsync(cancellationToken);
 
             var categories = await _db.Categories
                 .AsNoTracking()
                 .OrderByDescending(category =>
-                    category.ProductCategories.Count(item => item.Product.IsActive))
+                    category.ProductCategories.Count(
+                        item => item.Product.IsActive))
                 .ThenBy(category => category.Name)
                 .Take(categoryCount)
                 .Select(category => new PublicCategoryApiDto
@@ -84,14 +147,16 @@ namespace AsMart.Web.Controllers.Api
                     Id = category.Id,
                     Name = category.Name,
                     Slug = category.Slug,
-                    ProductCount = category.ProductCategories.Count(item => item.Product.IsActive)
+                    ProductCount = category.ProductCategories.Count(
+                        item => item.Product.IsActive)
                 })
                 .ToListAsync(cancellationToken);
 
             var collections = await _db.Collections
                 .AsNoTracking()
                 .OrderByDescending(collection =>
-                    collection.CollectionProducts.Count(item => item.Product.IsActive))
+                    collection.CollectionProducts.Count(
+                        item => item.Product.IsActive))
                 .ThenBy(collection => collection.Name)
                 .Take(collectionCount)
                 .Select(collection => new PublicCollectionApiDto
@@ -99,14 +164,16 @@ namespace AsMart.Web.Controllers.Api
                     Id = collection.Id,
                     Name = collection.Name,
                     Slug = collection.Slug,
-                    ProductCount = collection.CollectionProducts.Count(item => item.Product.IsActive)
+                    ProductCount = collection.CollectionProducts.Count(
+                        item => item.Product.IsActive)
                 })
                 .ToListAsync(cancellationToken);
 
             var guides = await _db.SeoPages
                 .AsNoTracking()
                 .Where(page => page.Status == 1)
-                .OrderByDescending(page => page.PublishedAt ?? page.UpdatedAt)
+                .OrderByDescending(
+                    page => page.PublishedAt ?? page.UpdatedAt)
                 .Take(guideCount)
                 .ToListAsync(cancellationToken);
 
@@ -121,37 +188,59 @@ namespace AsMart.Web.Controllers.Api
                 : await _db.Categories
                     .AsNoTracking()
                     .Where(category => categoryIds.Contains(category.Id))
-                    .ToDictionaryAsync(category => category.Id, cancellationToken);
+                    .ToDictionaryAsync(
+                        category => category.Id,
+                        cancellationToken);
 
             var data = new PublicHomeWidgetsApiDto
             {
                 Products = new ProductHomeWidgetApiDto
                 {
-                    Featured = featured.Select(ToProductDto).ToList(),
-                    Deals = deals.Select(ToProductDto).ToList(),
-                    Popular = popular.Select(ToProductDto).ToList(),
-                    Latest = latest.Select(ToProductDto).ToList()
+                    Featured = featured
+                        .Select(ToProductDto)
+                        .ToList(),
+
+                    Deals = deals
+                        .Select(ToProductDto)
+                        .ToList(),
+
+                    Popular = popular
+                        .Select(ToProductDto)
+                        .ToList(),
+
+                    Latest = latest
+                        .Select(ToProductDto)
+                        .ToList()
                 },
-                LatestBlogs = blogs.Select(ToBlogDto).ToList(),
+
+                LatestBlogs = blogs
+                    .Select(ToBlogDto)
+                    .ToList(),
+
                 Categories = categories,
+
                 Collections = collections,
+
                 LatestSeoGuides = guides
                     .Select(page => ToSeoGuideDto(page, categoryMap))
                     .ToList(),
+
                 GeneratedAtUtc = DateTime.UtcNow
             };
 
-            return Ok(ApiResponseFactory.Success(
-                data,
-                "Home widget data retrieved successfully.",
-                new
-                {
-                    productCount,
-                    blogCount,
-                    categoryCount,
-                    collectionCount,
-                    guideCount
-                }));
+            return Ok(
+                ApiResponseFactory.Success(
+                    data,
+                    "Home widget data retrieved successfully.",
+                    new
+                    {
+                        apiVersion = "1.0",
+                        productCount,
+                        blogCount,
+                        categoryCount,
+                        collectionCount,
+                        guideCount
+                    }));
         }
 
         private IQueryable<Product> ProductQuery()
@@ -177,15 +266,21 @@ namespace AsMart.Web.Controllers.Api
                 Currency = product.Currency,
                 Rating = product.Rating,
                 RatingCount = product.RatingCount,
-                MainImageUrl = product.MainImageUrl,
-                ProductUrl = BuildAbsoluteUrl($"/product/{product.Slug}")!,
-                BuyUrl = BuildAbsoluteUrl($"/product/go/{product.Id}")!,
+                MainImageUrl = BuildAbsoluteUrl(product.MainImageUrl),
+
+                ProductUrl = BuildAbsoluteUrl(
+                    $"/product/{product.Slug}")!,
+
+                BuyUrl = BuildAbsoluteUrl(
+                    $"/product/go/{product.Id}")!,
+
                 IsFeatured = product.IsFeatured,
                 IsDealOfTheDay = product.IsDealOfTheDay,
                 ClickCount = product.ClickCount,
+
                 Categories = product.ProductCategories
                     .Where(item => item.Category != null)
-                    .Select(item => item.Category.Name)
+                    .Select(item => item.Category!.Name)
                     .Distinct()
                     .OrderBy(name => name)
                     .ToList()
@@ -200,12 +295,17 @@ namespace AsMart.Web.Controllers.Api
                 Title = blog.Title,
                 Slug = blog.Slug,
                 MetaDescription = blog.MetaDescription,
-                FeaturedImageUrl = BuildAbsoluteUrl(blog.FeaturedImageUrl),
+
+                FeaturedImageUrl = BuildAbsoluteUrl(
+                    blog.FeaturedImageUrl),
+
                 OgImageUrl = BuildAbsoluteUrl(
                     !string.IsNullOrWhiteSpace(blog.OgImageUrl)
                         ? blog.OgImageUrl
                         : blog.FeaturedImageUrl),
-                BlogUrl = BuildAbsoluteUrl($"/blog/{blog.Slug}")!
+
+                BlogUrl = BuildAbsoluteUrl(
+                    $"/blog/{blog.Slug}")!
             };
         }
 
@@ -217,7 +317,9 @@ namespace AsMart.Web.Controllers.Api
 
             if (page.CategoryId.HasValue)
             {
-                categoryMap.TryGetValue(page.CategoryId.Value, out category);
+                categoryMap.TryGetValue(
+                    page.CategoryId.Value,
+                    out category);
             }
 
             return new PublicSeoPageApiDto
@@ -238,7 +340,9 @@ namespace AsMart.Web.Controllers.Api
                 CategoryId = page.CategoryId,
                 CategoryName = category?.Name,
                 CategorySlug = category?.Slug,
-                Url = BuildAbsoluteUrl($"/guides/{page.Slug}")
+
+                Url = BuildAbsoluteUrl(
+                    $"/guides/{page.Slug}")
             };
         }
 
@@ -251,17 +355,31 @@ namespace AsMart.Web.Controllers.Api
 
             var value = pathOrUrl.Trim();
 
-            if (Uri.TryCreate(value, UriKind.Absolute, out var absoluteUri))
+            if (Uri.TryCreate(
+                    value,
+                    UriKind.Absolute,
+                    out var absoluteUri))
             {
                 return absoluteUri.ToString();
             }
 
-            return $"{Request.Scheme}://{Request.Host}/{value.TrimStart('/')}";
+            var configuredBaseUrl = _configuration["PublicSite:BaseUrl"];
+
+            var baseUrl = string.IsNullOrWhiteSpace(configuredBaseUrl)
+                ? $"{Request.Scheme}://{Request.Host}"
+                : configuredBaseUrl.Trim().TrimEnd('/');
+
+            return $"{baseUrl}/{value.TrimStart('/')}";
         }
 
-        private static int NormalizeCount(int count, int defaultValue, int maximum)
+        private static int NormalizeCount(
+            int count,
+            int defaultValue,
+            int maximum)
         {
-            return count <= 0 ? defaultValue : Math.Min(count, maximum);
+            return count <= 0
+                ? defaultValue
+                : Math.Min(count, maximum);
         }
     }
 }

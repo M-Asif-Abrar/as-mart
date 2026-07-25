@@ -1,24 +1,29 @@
-﻿using AsMart.Web.Data;
+﻿using Asp.Versioning;
+using AsMart.Web.Data;
 using AsMart.Web.Models.DTOs;
 using AsMart.Web.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.RateLimiting;
 
-namespace AsMart.Web.Controllers.Api
+namespace AsMart.Web.Controllers.API.V1
 {
     [ApiController]
-    [Route("api/seopages")]
-    [Route("api/v1/seopages")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/seopages")]
     [Produces("application/json")]
     [EnableRateLimiting("public-api")]
     public class SeoPagesApiController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
+        private readonly IConfiguration _configuration;
 
-        public SeoPagesApiController(ApplicationDbContext db)
+        public SeoPagesApiController(
+            ApplicationDbContext db,
+            IConfiguration configuration)
         {
             _db = db;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -99,8 +104,8 @@ namespace AsMart.Web.Controllers.Api
                     x.Title.Contains(q) ||
                     x.Slug.Contains(q) ||
                     x.TargetKeyword.Contains(q) ||
-                    (x.H1 != null && x.H1.Contains(q)) ||
-                    (x.MetaDescription != null && x.MetaDescription.Contains(q)));
+                    x.H1 != null && x.H1.Contains(q) ||
+                    x.MetaDescription != null && x.MetaDescription.Contains(q));
 
             var total = await query.CountAsync();
 
@@ -147,8 +152,8 @@ namespace AsMart.Web.Controllers.Api
                     x.Title.Contains(q) ||
                     x.Slug.Contains(q) ||
                     x.TargetKeyword.Contains(q) ||
-                    (x.H1 != null && x.H1.Contains(q)) ||
-                    (x.MetaDescription != null && x.MetaDescription.Contains(q)));
+                    x.H1 != null && x.H1.Contains(q) ||
+                    x.MetaDescription != null && x.MetaDescription.Contains(q));
             }
 
             if (!string.IsNullOrWhiteSpace(category))
@@ -176,11 +181,9 @@ namespace AsMart.Web.Controllers.Api
                 query = query.Where(x => x.TemplateKey == template);
             }
 
-            if (!string.IsNullOrWhiteSpace(sortMode))
-            {
-                sortMode = sortMode.Trim();
-                query = query.Where(x => x.SortMode == sortMode);
-            }
+            sortMode = string.IsNullOrWhiteSpace(sortMode)
+                ? "latest"
+                : sortMode.Trim().ToLowerInvariant();
 
             if (priceMin.HasValue)
                 query = query.Where(x => x.PriceMin == null || x.PriceMin >= priceMin.Value);
@@ -190,8 +193,31 @@ namespace AsMart.Web.Controllers.Api
 
             var total = await query.CountAsync();
 
-            var pages = await query
-                .OrderByDescending(x => x.UpdatedAt)
+            var orderedQuery = sortMode switch
+            {
+                "oldest" => query
+                    .OrderBy(x => x.PublishedAt ?? x.UpdatedAt),
+
+                "title" => query
+                    .OrderBy(x => x.Title),
+
+                "price-low-high" => query
+                    .OrderBy(x => x.PriceMin ?? x.PriceMax ?? decimal.MaxValue)
+                    .ThenByDescending(x => x.UpdatedAt),
+
+                "price-high-low" => query
+                    .OrderByDescending(x => x.PriceMax ?? x.PriceMin ?? 0m)
+                    .ThenByDescending(x => x.UpdatedAt),
+
+                "rank" => query
+                    .OrderByDescending(x => x.SortMode == "rank")
+                    .ThenByDescending(x => x.PublishedAt ?? x.UpdatedAt),
+
+                _ => query
+                    .OrderByDescending(x => x.PublishedAt ?? x.UpdatedAt)
+            };
+
+            var pages = await orderedQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -469,7 +495,7 @@ namespace AsMart.Web.Controllers.Api
                     x.Title.Contains(q) ||
                     x.TargetKeyword.Contains(q) ||
                     x.Slug.Contains(q) ||
-                    (x.MetaDescription != null && x.MetaDescription.Contains(q)))
+                    x.MetaDescription != null && x.MetaDescription.Contains(q))
                 .OrderByDescending(x => x.UpdatedAt)
                 .Take(count)
                 .ToListAsync();
@@ -580,12 +606,30 @@ namespace AsMart.Web.Controllers.Api
 
         private string BuildGuideUrl(string slug)
         {
-            return Url.Action(
-                action: "Details",
-                controller: "Guides",
-                values: new { slug },
-                protocol: Request.Scheme
-            ) ?? $"/guides/{slug}";
+            return BuildAbsoluteUrl($"/guides/{slug}")!;
+        }
+
+        private string? BuildAbsoluteUrl(string? pathOrUrl)
+        {
+            if (string.IsNullOrWhiteSpace(pathOrUrl))
+            {
+                return null;
+            }
+
+            var value = pathOrUrl.Trim();
+
+            if (Uri.TryCreate(value, UriKind.Absolute, out var absoluteUri))
+            {
+                return absoluteUri.ToString();
+            }
+
+            var configuredBaseUrl = _configuration["PublicSite:BaseUrl"];
+
+            var baseUrl = string.IsNullOrWhiteSpace(configuredBaseUrl)
+                ? $"{Request.Scheme}://{Request.Host}"
+                : configuredBaseUrl.Trim().TrimEnd('/');
+
+            return $"{baseUrl}/{value.TrimStart('/')}";
         }
 
         private static int NormalizeCount(int count)

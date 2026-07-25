@@ -1,14 +1,15 @@
-﻿using AsMart.Web.Data;
+﻿using Asp.Versioning;
+using AsMart.Web.Data;
 using AsMart.Web.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
-namespace AsMart.Web.Controllers.Api
+namespace AsMart.Web.Controllers.API.V1
 {
     [ApiController]
-    [Route("api/categories")]
-    [Route("api/v1/categories")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/categories")]
     [Produces("application/json")]
     [EnableRateLimiting("public-api")]
     public sealed class CategoriesApiController : ControllerBase
@@ -21,10 +22,17 @@ namespace AsMart.Web.Controllers.Api
             _db = db;
         }
 
+        // GET: /api/v1/categories
         [HttpGet]
+        [MapToApiVersion("1.0")]
+        [ProducesResponseType(
+            typeof(List<PublicCategoryApiDto>),
+            StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<PublicCategoryApiDto>>>
             GetCategories(
-                CancellationToken cancellationToken)
+                CancellationToken cancellationToken = default)
         {
             var categories = await _db.Categories
                 .AsNoTracking()

@@ -1,4 +1,5 @@
-﻿using AsMart.Web.Data;
+﻿using Asp.Versioning;
+using AsMart.Web.Data;
 using AsMart.Web.Middleware;
 using AsMart.Web.Models.Api;
 using AsMart.Web.Models.Entities;
@@ -282,6 +283,21 @@ builder.Services
 
             return new BadRequestObjectResult(response);
         };
+    });
+
+builder.Services
+    .AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = false;
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    })
+    .AddMvc()
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
     });
 
 builder.Services.AddRazorPages();

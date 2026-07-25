@@ -1,30 +1,38 @@
-﻿using AsMart.Web.Data;
+﻿using Asp.Versioning;
+using AsMart.Web.Data;
 using AsMart.Web.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
-namespace AsMart.Web.Controllers.Api
+namespace AsMart.Web.Controllers.API.V1
 {
     [ApiController]
-    [Route("api/blogs")]
-    [Route("api/v1/blogs")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/blogs")]
     [Produces("application/json")]
     [EnableRateLimiting("public-api")]
     public sealed class BlogsApiController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
+        private readonly IConfiguration _configuration;
 
-        public BlogsApiController(ApplicationDbContext db)
+        public BlogsApiController(
+            ApplicationDbContext db,
+            IConfiguration configuration)
         {
             _db = db;
+            _configuration = configuration;
         }
 
-        // GET: /api/blogs/latest?count=6
+        // GET: /api/v1/blogs/latest?count=6
         [HttpGet("latest")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(
             typeof(List<PublicBlogApiDto>),
             StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<PublicBlogApiDto>>> Latest(
             [FromQuery] int count = 6,
             CancellationToken cancellationToken = default)
@@ -57,24 +65,12 @@ namespace AsMart.Web.Controllers.Api
                             ? blog.OgImageUrl
                             : blog.FeaturedImageUrl),
 
-                    BlogUrl = BuildBlogUrl(blog.Slug)
+                    BlogUrl = BuildAbsoluteUrl(
+                        $"/blog/{Uri.EscapeDataString(blog.Slug.Trim())}")!
                 })
                 .ToList();
 
             return Ok(blogs);
-        }
-
-        private string BuildBlogUrl(string slug)
-        {
-            var encodedSlug = Uri.EscapeDataString(
-                slug.Trim());
-
-            return string.Concat(
-                Request.Scheme,
-                "://",
-                Request.Host,
-                "/blog/",
-                encodedSlug);
         }
 
         private string? BuildAbsoluteUrl(string? pathOrUrl)
@@ -94,12 +90,14 @@ namespace AsMart.Web.Controllers.Api
                 return absoluteUri.ToString();
             }
 
-            return string.Concat(
-                Request.Scheme,
-                "://",
-                Request.Host,
-                "/",
-                value.TrimStart('/'));
+            var configuredBaseUrl =
+                _configuration["PublicSite:BaseUrl"];
+
+            var baseUrl = string.IsNullOrWhiteSpace(configuredBaseUrl)
+                ? $"{Request.Scheme}://{Request.Host}"
+                : configuredBaseUrl.Trim().TrimEnd('/');
+
+            return $"{baseUrl}/{value.TrimStart('/')}";
         }
 
         private static int NormalizeCount(int count)

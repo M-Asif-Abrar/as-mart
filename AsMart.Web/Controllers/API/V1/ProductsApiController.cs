@@ -1,4 +1,5 @@
-﻿using AsMart.Web.Data;
+﻿using Asp.Versioning;
+using AsMart.Web.Data;
 using AsMart.Web.Models.Api;
 using AsMart.Web.Models.DTOs;
 using AsMart.Web.Models.Entities;
@@ -7,11 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
-namespace AsMart.Web.Controllers.Api
+namespace AsMart.Web.Controllers.API.V1
 {
     [ApiController]
-    [Route("api/products")]
-    [Route("api/v1/products")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/products")]
     [Produces("application/json")]
     [EnableRateLimiting("public-api")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
@@ -22,10 +23,14 @@ namespace AsMart.Web.Controllers.Api
     public sealed class ProductsApiController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
+        private readonly IConfiguration _configuration;
 
-        public ProductsApiController(ApplicationDbContext db)
+        public ProductsApiController(
+            ApplicationDbContext db,
+            IConfiguration configuration)
         {
             _db = db;
+            _configuration = configuration;
         }
 
         [HttpGet("featured")]
@@ -177,8 +182,12 @@ namespace AsMart.Web.Controllers.Api
             var products = await BaseProductQuery()
                 .Where(p =>
                     p.Title.Contains(q) ||
-                    (p.Brand != null && p.Brand.Contains(q)) ||
-                    (p.ShortDescription != null && p.ShortDescription.Contains(q)))
+                    p.Brand != null && p.Brand.Contains(q) ||
+                    p.ShortDescription != null && p.ShortDescription.Contains(q) ||
+                    p.ProductCategories.Any(pc =>
+                        pc.Category != null &&
+                        (pc.Category.Name.Contains(q) ||
+                         pc.Category.Slug.Contains(q))))
                 .OrderByDescending(p => p.IsFeatured)
                 .ThenByDescending(p => p.ClickCount)
                 .ThenByDescending(p => p.Rating ?? 0)
@@ -556,20 +565,6 @@ namespace AsMart.Web.Controllers.Api
 
         private PublicProductApiDto ToPublicDto(Product product)
         {
-            var productUrl = Url.Action(
-                action: "Details",
-                controller: "Product",
-                values: new { slug = product.Slug },
-                protocol: Request.Scheme)
-                ?? $"/product/{product.Slug}";
-
-            var buyUrl = Url.Action(
-                action: "Go",
-                controller: "Product",
-                values: new { id = product.Id },
-                protocol: Request.Scheme)
-                ?? $"/product/go/{product.Id}";
-
             return new PublicProductApiDto
             {
                 Id = product.Id,
@@ -582,9 +577,9 @@ namespace AsMart.Web.Controllers.Api
                 Currency = product.Currency,
                 Rating = product.Rating,
                 RatingCount = product.RatingCount,
-                MainImageUrl = product.MainImageUrl,
-                ProductUrl = productUrl,
-                BuyUrl = buyUrl,
+                MainImageUrl = BuildAbsoluteUrl(product.MainImageUrl),
+                ProductUrl = BuildAbsoluteUrl($"/product/{product.Slug}")!,
+                BuyUrl = BuildAbsoluteUrl($"/product/go/{product.Id}")!,
                 IsFeatured = product.IsFeatured,
                 IsDealOfTheDay = product.IsDealOfTheDay,
                 ClickCount = product.ClickCount,
@@ -595,6 +590,29 @@ namespace AsMart.Web.Controllers.Api
                     .OrderBy(x => x)
                     .ToList()
             };
+        }
+
+        private string? BuildAbsoluteUrl(string? pathOrUrl)
+        {
+            if (string.IsNullOrWhiteSpace(pathOrUrl))
+            {
+                return null;
+            }
+
+            var value = pathOrUrl.Trim();
+
+            if (Uri.TryCreate(value, UriKind.Absolute, out var absoluteUri))
+            {
+                return absoluteUri.ToString();
+            }
+
+            var configuredBaseUrl = _configuration["PublicSite:BaseUrl"];
+
+            var baseUrl = string.IsNullOrWhiteSpace(configuredBaseUrl)
+                ? $"{Request.Scheme}://{Request.Host}"
+                : configuredBaseUrl.Trim().TrimEnd('/');
+
+            return $"{baseUrl}/{value.TrimStart('/')}";
         }
 
         private static int NormalizeCount(int count)
