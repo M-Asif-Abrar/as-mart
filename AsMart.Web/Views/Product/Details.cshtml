@@ -58,6 +58,187 @@
 
 @section Styles {
     <style>
+
+        /*==================================================
+          PRODUCT DESCRIPTION
+        ==================================================*/
+
+        .pd-desc {
+            padding: 20px;
+        }
+
+        .pd-desc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .pd-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            color: #0f172a;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+            .pd-section-title i {
+                color: #2563eb;
+            }
+
+        .pd-desc-toggle {
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            border: 0;
+            border-radius: 50%;
+            background: #eff6ff;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: .25s;
+        }
+
+            .pd-desc-toggle:hover {
+                background: #2563eb;
+                color: #fff;
+            }
+
+            .pd-desc-toggle:focus {
+                outline: none;
+                box-shadow: 0 0 0 3px rgba(37,99,235,.18);
+            }
+
+            .pd-desc-toggle i {
+                font-size: 15px;
+                transition: transform .35s ease;
+            }
+
+        .pd-desc.is-expanded .pd-desc-toggle i {
+            transform: rotate(180deg);
+        }
+
+        .pd-desc-content {
+            position: relative;
+        }
+
+        .pd-desc-body {
+            max-height: 360px;
+            overflow: hidden;
+            position: relative;
+            color: #334155;
+            font-size: 15px;
+            line-height: 1.95;
+            text-align: justify;
+            word-break: break-word;
+            transition: max-height .45s ease;
+        }
+
+        .pd-desc.is-expanded .pd-desc-body {
+            max-height: 10000px;
+        }
+
+        .pd-desc-body > *:first-child {
+            margin-top: 0;
+        }
+
+        .pd-desc-body > *:last-child {
+            margin-bottom: 0;
+        }
+
+        .pd-desc-body h1,
+        .pd-desc-body h2,
+        .pd-desc-body h3,
+        .pd-desc-body h4,
+        .pd-desc-body h5,
+        .pd-desc-body h6 {
+            color: #0f172a;
+            margin-top: 18px;
+            margin-bottom: 10px;
+            font-weight: 900;
+            line-height: 1.35;
+        }
+
+        .pd-desc-body p {
+            margin-bottom: 16px;
+        }
+
+        .pd-desc-body ul,
+        .pd-desc-body ol {
+            margin-bottom: 16px;
+            padding-left: 22px;
+        }
+
+        .pd-desc-body li {
+            margin-bottom: 8px;
+        }
+
+        .pd-desc-body strong {
+            color: #0f172a;
+        }
+
+        .pd-desc-body a {
+            color: #2563eb;
+            font-weight: 700;
+            text-decoration: underline;
+        }
+
+        .pd-desc-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 18px;
+        }
+
+        .pd-desc-body table {
+            width: 100%;
+            display: block;
+            overflow-x: auto;
+            border: 1px solid rgba(15,23,42,.10);
+            border-radius: 16px;
+        }
+
+        .pd-desc-fade {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 90px;
+            pointer-events: none;
+            background: linear-gradient( rgba(255,255,255,0), rgba(255,255,255,.85), #fff );
+            transition: .25s;
+        }
+
+        .pd-desc.is-expanded .pd-desc-fade {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        @@media (max-width:767px) {
+            .pd-desc
+
+        {
+            padding: 16px;
+        }
+
+        .pd-desc-body {
+            max-height: 260px;
+            font-size: 14px;
+            line-height: 1.85;
+            text-align: left;
+        }
+
+        .pd-desc-toggle {
+            width: 34px;
+            height: 34px;
+            flex-basis: 34px;
+        }
+
+        }
         .pd-page {
             min-height: calc(100vh - 90px);
             padding: 24px 0 42px;
@@ -1242,15 +1423,39 @@
                                 </div>
                             </div>
 
-                            <div class="pd-card pd-desc">
-                                <div class="pd-section-title">
-                                    <i class="fa-solid fa-circle-info"></i>
-                                    Description
+                            <div class="pd-card pd-desc" id="productDescriptionCard">
+
+                                <div class="pd-desc-header">
+
+                                    <div class="pd-section-title">
+                                        <i class="fa-solid fa-circle-info"></i>
+                                        <span>Description</span>
+                                    </div>
+
+                                    <button type="button"
+                                            id="descriptionToggle"
+                                            class="pd-desc-toggle"
+                                            aria-label="Expand description"
+                                            title="Expand description">
+
+                                        <i class="fa-solid fa-chevron-down"></i>
+
+                                    </button>
+
                                 </div>
 
-                                <div class="pd-desc-body">
-                                    @Html.Raw(product.Description)
+                                <div class="pd-desc-content">
+
+                                    <div class="pd-desc-body" id="productDescription">
+
+                                        @Html.Raw(product.Description)
+
+                                    </div>
+
+                                    <div class="pd-desc-fade"></div>
+
                                 </div>
+
                             </div>
 
                             @if (User.IsInRole("Admin"))
@@ -1521,6 +1726,94 @@
                     price: product.price
                 }]
             });
+        })();
+
+                (function () {
+
+            const card = document.getElementById("productDescriptionCard");
+            const body = document.getElementById("productDescription");
+            const button = document.getElementById("descriptionToggle");
+
+            if (!card || !body || !button)
+                return;
+
+            const icon = button.querySelector("i");
+
+            function updateDescription() {
+
+                // Show toggle only if description is taller than collapsed height
+                if (body.scrollHeight <= 360) {
+
+                    button.style.display = "none";
+                    body.style.maxHeight = "none";
+                    return;
+                }
+
+                button.style.display = "flex";
+
+                if (!card.classList.contains("is-expanded")) {
+
+                    body.style.maxHeight = "360px";
+
+                } else {
+
+                    body.style.maxHeight = body.scrollHeight + "px";
+
+                }
+            }
+
+            button.addEventListener("click", function (e) {
+
+                e.preventDefault();
+
+                const expanded = card.classList.toggle("is-expanded");
+
+                if (expanded) {
+
+                    body.style.maxHeight = body.scrollHeight + "px";
+
+                    if (icon) {
+                        icon.classList.remove("fa-chevron-down");
+                        icon.classList.add("fa-chevron-up");
+                    }
+
+                } else {
+
+                    body.style.maxHeight = "360px";
+
+                    if (icon) {
+                        icon.classList.remove("fa-chevron-up");
+                        icon.classList.add("fa-chevron-down");
+                    }
+
+                    setTimeout(function () {
+
+                        card.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                        });
+
+                    }, 150);
+                }
+
+            });
+
+            window.addEventListener("load", updateDescription);
+
+            window.addEventListener("resize", updateDescription);
+
+            body.querySelectorAll("img").forEach(function (img) {
+
+                if (!img.complete) {
+
+                    img.addEventListener("load", updateDescription);
+
+                }
+
+            });
+
+            updateDescription();
+
         })();
     </script>
 }
