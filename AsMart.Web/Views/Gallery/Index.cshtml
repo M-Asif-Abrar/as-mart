@@ -1,0 +1,1793 @@
+﻿@using AsMart.Web.Models.ViewModels.Gallery
+@using System.Text.Json
+@model GalleryIndexViewModel
+
+@{
+    var selectedCategory = Model.Query.CategoryId.HasValue
+        ? Model.AvailableCategories.FirstOrDefault(
+            category => category.Id == Model.Query.CategoryId.Value)
+        : null;
+
+    var pageTitle = selectedCategory == null
+        ? "Product Image Gallery"
+        : $"{selectedCategory.Name} Image Gallery";
+
+    var metaDescription = selectedCategory == null
+        ? "Browse product images from As-Mart. Search images by product, brand, category, rating and image type."
+        : $"Browse {selectedCategory.Name} product images at As-Mart. Preview product images and open related product pages.";
+
+    var canonicalUrl = Url.Action(
+        action: "Index",
+        controller: "Gallery",
+        values: new
+        {
+            categoryId = Model.Query.CategoryId,
+            searchTerm = Model.Query.SearchTerm,
+            brand = Model.Query.Brand,
+            imageType = Model.Query.ImageType,
+            page = Model.Query.Page > 1
+                ? Model.Query.Page
+                : (int?)null
+        },
+        protocol: Context.Request.Scheme);
+
+    var firstGalleryImage =
+        Model.Images.FirstOrDefault()?.ImageUrl;
+
+    ViewData["Title"] = pageTitle;
+    ViewData["MetaTitle"] = $"{pageTitle} | As-Mart";
+    ViewData["MetaDescription"] = metaDescription;
+    ViewData["Canonical"] = canonicalUrl;
+
+    if (!string.IsNullOrWhiteSpace(firstGalleryImage))
+    {
+        ViewData["OgImage"] = firstGalleryImage;
+    }
+
+    var startPage = Math.Max(
+        1,
+        Model.CurrentPage - 2);
+
+    var endPage = Math.Min(
+        Model.TotalPages,
+        Model.CurrentPage + 2);
+
+    if (endPage - startPage < 4)
+    {
+        if (startPage == 1)
+        {
+            endPage = Math.Min(
+                Model.TotalPages,
+                startPage + 4);
+        }
+        else if (endPage == Model.TotalPages)
+        {
+            startPage = Math.Max(
+                1,
+                endPage - 4);
+        }
+    }
+
+    var structuredImages = Model.Images
+        .Take(30)
+        .Select((item, index) => new
+        {
+            Type = "ImageObject",
+
+            Position =
+                ((Model.CurrentPage - 1) * Model.PageSize)
+                + index
+                + 1,
+
+            ContentUrl = item.ImageUrl,
+            ThumbnailUrl = item.ImageUrl,
+            Name = item.Title,
+
+            Caption =
+                $"{item.Title} - {item.ImageTypeText} product image",
+
+            RepresentativeOfPage =
+                item.IsMainImage,
+
+            ProductName = item.Title,
+            ProductSku = item.ASIN,
+
+            ProductUrl = Url.Action(
+                "Details",
+                "Product",
+                new
+                {
+                    slug = item.Slug
+                },
+                Context.Request.Scheme),
+
+            Brand = item.Brand
+        })
+        .ToList();
+
+    var gallerySchema = new
+    {
+        Context = "https://schema.org",
+        Type = "CollectionPage",
+        Name = pageTitle,
+        Description = metaDescription,
+        Url = canonicalUrl,
+
+        MainEntity = new
+        {
+            Type = "ItemList",
+            NumberOfItems = Model.TotalImages,
+            ItemListElement = structuredImages
+        }
+    };
+
+    var gallerySchemaJson = JsonSerializer.Serialize(
+        gallerySchema,
+        new JsonSerializerOptions
+        {
+            PropertyNamingPolicy =
+                JsonNamingPolicy.CamelCase
+        });
+}
+
+@functions {
+    private string BuildGalleryPageUrl(int page)
+    {
+        return Url.Action(
+            "Index",
+            "Gallery",
+            new
+            {
+                searchTerm = Model.Query.SearchTerm,
+                categoryId = Model.Query.CategoryId,
+                brand = Model.Query.Brand,
+                imageType = Model.Query.ImageType,
+                isActive = Model.Query.IsActive,
+                featuredOnly = Model.Query.FeaturedOnly,
+                dealsOnly = Model.Query.DealsOnly,
+                hasImagesOnly = Model.Query.HasImagesOnly,
+                sortBy = Model.Query.SortBy,
+                page,
+                pageSize = Model.Query.PageSize
+            }) ?? "#";
+    }
+
+    private string BuildGalleryCategoryUrl(int? categoryId)
+    {
+        return Url.Action(
+            "Index",
+            "Gallery",
+            new
+            {
+                searchTerm = Model.Query.SearchTerm,
+                categoryId,
+                brand = Model.Query.Brand,
+                imageType = Model.Query.ImageType,
+                isActive = Model.Query.IsActive,
+                featuredOnly = Model.Query.FeaturedOnly,
+                dealsOnly = Model.Query.DealsOnly,
+                hasImagesOnly = Model.Query.HasImagesOnly,
+                sortBy = Model.Query.SortBy,
+                page = 1,
+                pageSize = Model.Query.PageSize
+            }) ?? "#";
+    }
+}
+
+@section Head {
+    <script type="application/ld+json">
+        @Html.Raw(gallerySchemaJson)
+    </script>
+
+    @if (Model.HasPreviousPage)
+    {
+        <link rel="prev"
+              href="@BuildGalleryPageUrl(Model.CurrentPage - 1)" />
+    }
+
+    @if (Model.HasNextPage)
+    {
+        <link rel="next"
+              href="@BuildGalleryPageUrl(Model.CurrentPage + 1)" />
+    }
+}
+
+@section Styles {
+    <style>
+        .gallery-page {
+            --gallery-primary: #4f46e5;
+            --gallery-primary-dark: #3730a3;
+            --gallery-cyan: #0891b2;
+            --gallery-pink: #db2777;
+            --gallery-text: #0f172a;
+            --gallery-muted: #64748b;
+            --gallery-border: rgba(15, 23, 42, .10);
+            --gallery-card: rgba(255, 255, 255, .88);
+            padding-bottom: 48px;
+        }
+
+        .gallery-shell {
+            max-width: 1480px;
+            margin: 0 auto;
+        }
+
+        /* Hero */
+
+        .gallery-hero {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            padding: clamp(24px, 4vw, 46px);
+            border: 1px solid rgba(99, 102, 241, .14);
+            border-radius: 30px;
+            background: radial-gradient(700px 300px at 3% 0%, rgba(59, 130, 246, .20), transparent 62%), radial-gradient(620px 300px at 95% 5%, rgba(236, 72, 153, .16), transparent 60%), radial-gradient(500px 260px at 55% 110%, rgba(6, 182, 212, .14), transparent 62%), linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(248, 250, 255, .92));
+            box-shadow: 0 28px 70px rgba(15, 23, 42, .10);
+        }
+
+            .gallery-hero::before,
+            .gallery-hero::after {
+                position: absolute;
+                z-index: -1;
+                content: "";
+                border-radius: 999px;
+                filter: blur(2px);
+                pointer-events: none;
+            }
+
+            .gallery-hero::before {
+                top: -90px;
+                right: -65px;
+                width: 230px;
+                height: 230px;
+                background: rgba(99, 102, 241, .10);
+            }
+
+            .gallery-hero::after {
+                bottom: -110px;
+                left: 22%;
+                width: 260px;
+                height: 260px;
+                background: rgba(6, 182, 212, .09);
+            }
+
+        .gallery-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 13px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(79, 70, 229, .14);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .72);
+            color: #4338ca;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            box-shadow: 0 10px 26px rgba(79, 70, 229, .08);
+        }
+
+        .gallery-title {
+            max-width: 800px;
+            margin: 0;
+            color: var(--gallery-text);
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 950;
+            line-height: .98;
+            letter-spacing: -.055em;
+        }
+
+        .gallery-title-gradient {
+            background: linear-gradient(100deg, #2563eb, #7c3aed 50%, #db2777);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gallery-description {
+            max-width: 760px;
+            margin: 17px 0 0;
+            color: var(--gallery-muted);
+            font-size: clamp(.96rem, 1.4vw, 1.08rem);
+            font-weight: 600;
+            line-height: 1.75;
+        }
+
+        .gallery-stat-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .gallery-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            min-height: 44px;
+            padding: 9px 14px;
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .78);
+            color: #334155;
+            font-size: 13px;
+            font-weight: 800;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
+        }
+
+            .gallery-stat i {
+                color: #6366f1;
+            }
+
+        /* Filters */
+
+        .gallery-filter-panel {
+            position: relative;
+            z-index: 5;
+            margin-top: 20px;
+            padding: 17px;
+            border: 1px solid var(--gallery-border);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .84);
+            box-shadow: 0 20px 48px rgba(15, 23, 42, .08);
+            backdrop-filter: blur(18px);
+        }
+
+        .gallery-search-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, 2fr) minmax(170px, .75fr) minmax(160px, .65fr) auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .gallery-field {
+            position: relative;
+        }
+
+        .gallery-field-icon {
+            position: absolute;
+            top: 50%;
+            left: 16px;
+            z-index: 2;
+            color: #94a3b8;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .gallery-input,
+        .gallery-select {
+            width: 100%;
+            min-height: 48px;
+            border: 1px solid rgba(15, 23, 42, .11);
+            border-radius: 15px;
+            outline: 0;
+            background: rgba(248, 250, 252, .82);
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 700;
+            transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+
+        .gallery-input {
+            padding: 11px 16px 11px 44px;
+        }
+
+        .gallery-select {
+            padding: 11px 38px 11px 14px;
+        }
+
+            .gallery-input:focus,
+            .gallery-select:focus {
+                border-color: rgba(79, 70, 229, .42);
+                background: #fff;
+                box-shadow: 0 0 0 4px rgba(79, 70, 229, .10);
+            }
+
+        .gallery-search-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 48px;
+            padding: 11px 20px;
+            border: 0;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #4f46e5, #2563eb);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 900;
+            box-shadow: 0 14px 28px rgba(79, 70, 229, .22);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+            .gallery-search-btn:hover {
+                color: #fff;
+                transform: translateY(-2px);
+                box-shadow: 0 18px 34px rgba(79, 70, 229, .28);
+            }
+
+        .gallery-reset-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 12px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+            .gallery-reset-link:hover {
+                color: #4338ca;
+            }
+
+        /* Category row */
+
+        .gallery-category-section {
+            margin-top: 23px;
+        }
+
+        .gallery-section-head {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .gallery-section-title {
+            margin: 0;
+            color: var(--gallery-text);
+            font-size: 18px;
+            font-weight: 950;
+            letter-spacing: -.02em;
+        }
+
+        .gallery-section-subtitle {
+            margin: 3px 0 0;
+            color: var(--gallery-muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .gallery-category-scroller {
+            display: flex;
+            gap: 9px;
+            padding: 3px 2px 12px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 102, 241, .28) transparent;
+        }
+
+            .gallery-category-scroller::-webkit-scrollbar {
+                height: 7px;
+            }
+
+            .gallery-category-scroller::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .gallery-category-scroller::-webkit-scrollbar-thumb {
+                border-radius: 999px;
+                background: rgba(99, 102, 241, .22);
+            }
+
+        .gallery-category-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex: 0 0 auto;
+            min-height: 42px;
+            padding: 9px 15px;
+            border: 1px solid rgba(15, 23, 42, .10);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .84);
+            color: #334155;
+            font-size: 13px;
+            font-weight: 850;
+            text-decoration: none;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, .04);
+            transition: transform .17s ease, border-color .17s ease, background .17s ease, color .17s ease;
+        }
+
+            .gallery-category-chip:hover {
+                border-color: rgba(79, 70, 229, .25);
+                background: rgba(238, 242, 255, .95);
+                color: #4338ca;
+                transform: translateY(-2px);
+            }
+
+            .gallery-category-chip.active {
+                border-color: transparent;
+                background: linear-gradient(135deg, #4f46e5, #7c3aed);
+                color: #fff;
+                box-shadow: 0 13px 27px rgba(79, 70, 229, .22);
+            }
+
+        .gallery-category-count {
+            display: inline-grid;
+            place-items: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, .07);
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .gallery-category-chip.active .gallery-category-count {
+            background: rgba(255, 255, 255, .18);
+        }
+
+        /* Results toolbar */
+
+        .gallery-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin: 24px 0 13px;
+        }
+
+        .gallery-result-count {
+            color: #475569;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+            .gallery-result-count strong {
+                color: #0f172a;
+                font-weight: 950;
+            }
+
+        .gallery-selected-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-left: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(99, 102, 241, .10);
+            color: #4338ca;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        /* Gallery grid */
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .gallery-card {
+            position: relative;
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 19px;
+            background: var(--gallery-card);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, .07);
+            transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+            content-visibility: auto;
+            contain-intrinsic-size: 280px;
+        }
+
+            .gallery-card:hover {
+                z-index: 3;
+                border-color: rgba(99, 102, 241, .22);
+                transform: translateY(-5px);
+                box-shadow: 0 24px 48px rgba(15, 23, 42, .14);
+            }
+
+        .gallery-image-wrap {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background: linear-gradient(45deg, rgba(226, 232, 240, .48) 25%, transparent 25%), linear-gradient(-45deg, rgba(226, 232, 240, .48) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(226, 232, 240, .48) 75%), linear-gradient(-45deg, transparent 75%, rgba(226, 232, 240, .48) 75%), #f8fafc;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+            background-size: 20px 20px;
+        }
+
+        .gallery-image {
+            width: 100%;
+            height: 100%;
+            padding: 7px;
+            object-fit: contain;
+            background: rgba(255, 255, 255, .74);
+            transition: transform .35s ease, filter .25s ease;
+        }
+
+        .gallery-card:hover .gallery-image {
+            transform: scale(1.045);
+            filter: saturate(1.05);
+        }
+
+        .gallery-image-badge {
+            position: absolute;
+            top: 9px;
+            left: 9px;
+            z-index: 3;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 9px;
+            border: 1px solid rgba(255, 255, 255, .36);
+            border-radius: 999px;
+            background: rgba(15, 23, 42, .72);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .025em;
+            backdrop-filter: blur(12px);
+        }
+
+        .gallery-main-badge {
+            background: linear-gradient(135deg, rgba(37, 99, 235, .92), rgba(79, 70, 229, .92));
+        }
+
+        .gallery-deal-badge {
+            position: absolute;
+            top: 9px;
+            right: 9px;
+            z-index: 3;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #f97316, #e11d48);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 900;
+            box-shadow: 0 8px 18px rgba(225, 29, 72, .22);
+        }
+
+        .gallery-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            align-items: flex-end;
+            padding: 12px;
+            background: linear-gradient( 180deg, rgba(15, 23, 42, .03) 20%, rgba(15, 23, 42, .18) 55%, rgba(15, 23, 42, .82) 100%);
+            opacity: 0;
+            transition: opacity .22s ease;
+        }
+
+        .gallery-card:hover .gallery-overlay,
+        .gallery-card:focus-within .gallery-overlay {
+            opacity: 1;
+        }
+
+        .gallery-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px;
+            width: 100%;
+            transform: translateY(8px);
+            transition: transform .22s ease;
+        }
+
+        .gallery-card:hover .gallery-actions,
+        .gallery-card:focus-within .gallery-actions {
+            transform: translateY(0);
+        }
+
+        .gallery-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 37px;
+            padding: 7px 9px;
+            border: 1px solid rgba(255, 255, 255, .24);
+            border-radius: 11px;
+            font-size: 11px;
+            font-weight: 900;
+            line-height: 1.1;
+            text-decoration: none;
+            backdrop-filter: blur(14px);
+            cursor: pointer;
+            transition: transform .16s ease, background .16s ease;
+        }
+
+        .gallery-view-image {
+            background: rgba(255, 255, 255, .94);
+            color: #0f172a;
+        }
+
+        .gallery-view-product {
+            background: linear-gradient(135deg, rgba(79, 70, 229, .96), rgba(37, 99, 235, .96));
+            color: #fff;
+        }
+
+        .gallery-action:hover {
+            transform: translateY(-2px);
+        }
+
+        .gallery-view-image:hover {
+            color: #4338ca;
+            background: #fff;
+        }
+
+        .gallery-view-product:hover {
+            color: #fff;
+        }
+
+        .gallery-card-body {
+            padding: 11px 12px 13px;
+        }
+
+        .gallery-product-title {
+            display: -webkit-box;
+            min-height: 36px;
+            margin: 0;
+            overflow: hidden;
+            color: #172033;
+            font-size: 12.5px;
+            font-weight: 850;
+            line-height: 1.4;
+            text-overflow: ellipsis;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .gallery-card-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 7px;
+            margin-top: 9px;
+            color: #64748b;
+            font-size: 10.5px;
+            font-weight: 750;
+        }
+
+        .gallery-card-category {
+            display: block;
+            max-width: 70%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .gallery-card-rating {
+            flex: 0 0 auto;
+            color: #b45309;
+        }
+
+        /* Empty state */
+
+        .gallery-empty {
+            padding: clamp(38px, 7vw, 80px) 20px;
+            border: 1px dashed rgba(99, 102, 241, .25);
+            border-radius: 28px;
+            background: radial-gradient(420px 220px at 50% 0%, rgba(99, 102, 241, .12), transparent 70%), rgba(255, 255, 255, .76);
+            text-align: center;
+        }
+
+        .gallery-empty-icon {
+            display: inline-grid;
+            place-items: center;
+            width: 72px;
+            height: 72px;
+            margin-bottom: 17px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(79, 70, 229, .13), rgba(219, 39, 119, .10));
+            color: #4f46e5;
+            font-size: 29px;
+        }
+
+        .gallery-empty h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 23px;
+            font-weight: 950;
+        }
+
+        .gallery-empty p {
+            max-width: 520px;
+            margin: 9px auto 19px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        /* Pagination */
+
+        .gallery-pagination-shell {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 27px;
+            padding: 15px;
+            border: 1px solid rgba(15, 23, 42, .09);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, .84);
+            box-shadow: 0 15px 36px rgba(15, 23, 42, .06);
+            backdrop-filter: blur(16px);
+        }
+
+        .gallery-pagination-info {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+            .gallery-pagination-info strong {
+                color: #0f172a;
+                font-weight: 900;
+            }
+
+        .gallery-pagination {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .gallery-page-link {
+            display: inline-grid;
+            place-items: center;
+            min-width: 39px;
+            height: 39px;
+            padding: 0 10px;
+            border: 1px solid rgba(15, 23, 42, .10);
+            border-radius: 12px;
+            background: rgba(248, 250, 252, .86);
+            color: #475569;
+            font-size: 13px;
+            font-weight: 850;
+            text-decoration: none;
+            transition: transform .16s ease, border-color .16s ease, background .16s ease;
+        }
+
+            .gallery-page-link:hover {
+                border-color: rgba(79, 70, 229, .24);
+                background: rgba(238, 242, 255, .94);
+                color: #4338ca;
+                transform: translateY(-2px);
+            }
+
+            .gallery-page-link.active {
+                border-color: transparent;
+                background: linear-gradient(135deg, #4f46e5, #7c3aed);
+                color: #fff;
+                box-shadow: 0 11px 22px rgba(79, 70, 229, .22);
+            }
+
+            .gallery-page-link.disabled {
+                opacity: .42;
+                pointer-events: none;
+            }
+
+        .gallery-page-dots {
+            min-width: 26px;
+            color: #94a3b8;
+            text-align: center;
+            font-weight: 900;
+        }
+
+        /* Modal */
+
+        .gallery-modal .modal-dialog {
+            max-width: min(1040px, calc(100vw - 24px));
+        }
+
+        .gallery-modal .modal-content {
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, .15);
+            border-radius: 26px;
+            background: radial-gradient(600px 280px at 10% 0%, rgba(79, 70, 229, .20), transparent 60%), linear-gradient(145deg, #111827, #020617);
+            box-shadow: 0 38px 100px rgba(2, 6, 23, .55);
+        }
+
+        .gallery-modal .modal-header {
+            align-items: start;
+            padding: 17px 19px;
+            border-bottom: 1px solid rgba(255, 255, 255, .10);
+        }
+
+        .gallery-modal-title-wrap {
+            min-width: 0;
+            padding-right: 12px;
+        }
+
+        .gallery-modal-title {
+            display: block;
+            margin: 0;
+            overflow: hidden;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 900;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .gallery-modal-hint {
+            display: block;
+            margin-top: 4px;
+            color: rgba(226, 232, 240, .68);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .gallery-modal .btn-close {
+            flex: 0 0 auto;
+            filter: invert(1);
+            opacity: .8;
+        }
+
+        .gallery-modal .modal-body {
+            padding: 13px;
+        }
+
+        .gallery-modal-image-link {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 100%;
+            min-height: 420px;
+            max-height: 76vh;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, .10);
+            border-radius: 18px;
+            background: linear-gradient(45deg, rgba(255,255,255,.025) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,255,255,.025) 25%, transparent 25%), #050b18;
+            text-decoration: none;
+            cursor: zoom-in;
+        }
+
+        .gallery-modal-image {
+            display: block;
+            max-width: 100%;
+            max-height: 73vh;
+            object-fit: contain;
+            transition: transform .28s ease;
+        }
+
+        .gallery-modal-image-link:hover .gallery-modal-image {
+            transform: scale(1.012);
+        }
+
+        .gallery-modal-open-label {
+            position: absolute;
+            right: 14px;
+            bottom: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 12px;
+            border: 1px solid rgba(255, 255, 255, .15);
+            border-radius: 999px;
+            background: rgba(15, 23, 42, .76);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 850;
+            backdrop-filter: blur(12px);
+        }
+
+        .gallery-modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 13px 13px;
+        }
+
+        .gallery-modal-category {
+            max-width: 60%;
+            overflow: hidden;
+            color: rgba(226, 232, 240, .65);
+            font-size: 12px;
+            font-weight: 650;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .gallery-modal-product-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #6366f1, #2563eb);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 900;
+            text-decoration: none;
+            box-shadow: 0 12px 26px rgba(37, 99, 235, .26);
+        }
+
+            .gallery-modal-product-link:hover {
+                color: #fff;
+            }
+
+        @@media (max-width: 1399.98px) {
+            .gallery-grid {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .gallery-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .gallery-search-grid {
+                grid-template-columns: minmax(260px, 2fr) minmax(160px, 1fr) minmax(150px, .8fr);
+            }
+
+            .gallery-search-btn {
+                grid-column: span 3;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .gallery-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .gallery-pagination-shell {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .gallery-pagination {
+                justify-content: flex-start;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .gallery-hero {
+                border-radius: 24px;
+            }
+
+            .gallery-search-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+                .gallery-search-grid .gallery-field:first-child {
+                    grid-column: span 2;
+                }
+
+            .gallery-search-btn {
+                grid-column: span 2;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .gallery-toolbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .gallery-overlay {
+                align-items: flex-end;
+                padding: 8px;
+                background: linear-gradient( 180deg, transparent 30%, rgba(15, 23, 42, .76) 100%);
+                opacity: 1;
+            }
+
+            .gallery-actions {
+                gap: 5px;
+                transform: none;
+            }
+
+            .gallery-action {
+                min-height: 34px;
+                padding: 6px;
+                font-size: 10px;
+            }
+
+            .gallery-image-badge,
+            .gallery-deal-badge {
+                padding: 5px 7px;
+                font-size: 9px;
+            }
+
+            .gallery-modal-image-link {
+                min-height: 300px;
+            }
+        }
+
+        @@media (max-width: 479.98px) {
+            .gallery-search-grid {
+                grid-template-columns: 1fr;
+            }
+
+                .gallery-search-grid .gallery-field:first-child,
+                .gallery-search-btn {
+                    grid-column: auto;
+                }
+
+            .gallery-card-body {
+                padding: 9px 10px 11px;
+            }
+
+            .gallery-product-title {
+                min-height: 34px;
+                font-size: 11.5px;
+            }
+
+            .gallery-card-meta {
+                font-size: 9.5px;
+            }
+
+            .gallery-pagination-shell {
+                padding: 12px;
+            }
+
+            .gallery-page-link {
+                min-width: 35px;
+                height: 35px;
+                padding: 0 8px;
+            }
+
+            .gallery-modal-footer {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .gallery-modal-category {
+                max-width: 100%;
+            }
+
+            .gallery-modal-product-link {
+                justify-content: center;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .gallery-page *,
+            .gallery-page *::before,
+            .gallery-page *::after {
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+                animation-duration: .01ms !important;
+            }
+        }
+    </style>
+}
+
+<div class="gallery-page">
+    <div class="gallery-shell">
+
+        @if (TempData["ErrorMessage"] is string errorMessage)
+        {
+            <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-3" role="alert">
+                <i class="fa-solid fa-circle-exclamation me-2"></i>
+                @errorMessage
+            </div>
+        }
+
+        <header class="gallery-hero">
+            <span class="gallery-eyebrow">
+                <i class="fa-regular fa-images"></i>
+                As-Mart Visual Collection
+            </span>
+
+            <h1 class="gallery-title">
+                Explore our
+                <span class="gallery-title-gradient">product gallery</span>
+            </h1>
+
+            <p class="gallery-description">
+                Browse main and additional product images, filter by category,
+                preview images instantly, and open the related product page.
+            </p>
+
+            <div class="gallery-stat-row" aria-label="Gallery statistics">
+                <span class="gallery-stat">
+                    <i class="fa-regular fa-images"></i>
+                    <strong>@Model.TotalImages.ToString("N0")</strong> images
+                </span>
+
+                <span class="gallery-stat">
+                    <i class="fa-solid fa-box-open"></i>
+                    <strong>@Model.TotalProducts.ToString("N0")</strong> products
+                </span>
+
+                <span class="gallery-stat">
+                    <i class="fa-regular fa-image"></i>
+                    <strong>@Model.MainImageCount.ToString("N0")</strong> main images
+                </span>
+
+                <span class="gallery-stat">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <strong>@Model.AdditionalImageCount.ToString("N0")</strong> additional
+                </span>
+            </div>
+        </header>
+
+        <section class="gallery-filter-panel" aria-label="Gallery search and filters">
+            <form method="get"
+                  asp-controller="Gallery"
+                  asp-action="Index"
+                  id="galleryFilterForm">
+
+                <input type="hidden" name="categoryId" value="@Model.Query.CategoryId" />
+                <input type="hidden" name="isActive" value="@Model.Query.IsActive?.ToString().ToLowerInvariant()" />
+                <input type="hidden" name="featuredOnly" value="@Model.Query.FeaturedOnly.ToString().ToLowerInvariant()" />
+                <input type="hidden" name="dealsOnly" value="@Model.Query.DealsOnly.ToString().ToLowerInvariant()" />
+                <input type="hidden" name="hasImagesOnly" value="@Model.Query.HasImagesOnly.ToString().ToLowerInvariant()" />
+                <input type="hidden" name="page" value="1" />
+
+                <div class="gallery-search-grid">
+                    <div class="gallery-field">
+                        <i class="fa-solid fa-magnifying-glass gallery-field-icon"></i>
+
+                        <input class="gallery-input"
+                               type="search"
+                               name="searchTerm"
+                               value="@Model.Query.SearchTerm"
+                               placeholder="Search product, ASIN, brand or category..."
+                               maxlength="150"
+                               autocomplete="off"
+                               aria-label="Search gallery images" />
+                    </div>
+
+                    <div class="gallery-field">
+                        <select class="gallery-select"
+                                name="brand"
+                                aria-label="Filter by brand"
+                                onchange="this.form.submit()">
+                            <option value="">All brands</option>
+
+                            @foreach (var brand in Model.AvailableBrands)
+                            {
+                                <option value="@brand"
+                                        selected="@(string.Equals(
+                                                                                    brand,
+                                                                                    Model.Query.Brand,
+                                                                                    StringComparison.OrdinalIgnoreCase))">
+                                @brand
+                            </option>
+                                                        }
+                        </select>
+                    </div>
+
+                    <div class="gallery-field">
+                        <select class="gallery-select"
+                                name="imageType"
+                                aria-label="Filter by image type"
+                                onchange="this.form.submit()">
+                            <option value="">All image types</option>
+
+                            <option value="@GalleryImageType.Main"
+                                    selected="@(Model.Query.ImageType == GalleryImageType.Main)">
+                                Main images
+                            </option>
+
+                            <option value="@GalleryImageType.Additional"
+                                    selected="@(Model.Query.ImageType == GalleryImageType.Additional)">
+                                Additional images
+                            </option>
+                        </select>
+                    </div>
+
+                    <button class="gallery-search-btn" type="submit">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        Search Gallery
+                    </button>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <a class="gallery-reset-link"
+                       asp-controller="Gallery"
+                       asp-action="Index">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        Clear all filters
+                    </a>
+
+                    <div class="d-flex align-items-center gap-2 mt-2">
+                        <label for="gallerySort"
+                               class="small fw-bold text-secondary mb-0">
+                            Sort:
+                        </label>
+
+                        <select class="gallery-select"
+                                id="gallerySort"
+                                name="sortBy"
+                                style="min-height:38px;width:auto;padding-top:6px;padding-bottom:6px"
+                                onchange="this.form.submit()">
+                            <option value="updated-desc"
+                                    selected="@(Model.Query.SortBy == "updated-desc")">
+                                Recently updated
+                            </option>
+
+                            <option value="created-desc"
+                                    selected="@(Model.Query.SortBy == "created-desc")">
+                                Newest products
+                            </option>
+
+                            <option value="title-asc"
+                                    selected="@(Model.Query.SortBy == "title-asc")">
+                                Product A–Z
+                            </option>
+
+                            <option value="rating-desc"
+                                    selected="@(Model.Query.SortBy == "rating-desc")">
+                                Highest rated
+                            </option>
+
+                            <option value="clicks-desc"
+                                    selected="@(Model.Query.SortBy == "clicks-desc")">
+                                Most popular
+                            </option>
+                        </select>
+
+                        <select class="gallery-select"
+                                name="pageSize"
+                                aria-label="Images per page"
+                                style="min-height:38px;width:auto;padding-top:6px;padding-bottom:6px"
+                                onchange="this.form.submit()">
+                            @foreach (var size in new[] { 30, 50, 80, 100 })
+                            {
+                                <option value="@size"
+                                        selected="@(Model.Query.PageSize == size)">
+                                    @size per page
+                                </option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <section class="gallery-category-section" aria-labelledby="galleryCategoriesHeading">
+            <div class="gallery-section-head">
+                <div>
+                    <h2 class="gallery-section-title" id="galleryCategoriesHeading">
+                        Browse categories
+                    </h2>
+
+                    <p class="gallery-section-subtitle">
+                        Categories are loaded dynamically from your database.
+                    </p>
+                </div>
+            </div>
+
+            <nav class="gallery-category-scroller"
+                 aria-label="Product gallery categories">
+
+                <a class="gallery-category-chip @(Model.Query.CategoryId is null ? "active" : null)"
+                   href="@BuildGalleryCategoryUrl(null)"
+                   aria-current="@(Model.Query.CategoryId is null ? "page" : null)">
+                    <i class="fa-solid fa-border-all"></i>
+                    All Images
+
+                    <span class="gallery-category-count">
+                        @Model.TotalImages.ToString("N0")
+                    </span>
+                </a>
+
+                @foreach (var category in Model.AvailableCategories)
+                {
+                    var isSelected = Model.Query.CategoryId == category.Id;
+
+                    <a class="gallery-category-chip @(isSelected ? "active" : null)"
+                       href="@BuildGalleryCategoryUrl(category.Id)"
+                       title="@category.DisplayName"
+                       aria-current="@(isSelected ? "page" : null)">
+                        <i class="fa-regular fa-folder-open"></i>
+                        @category.Name
+                    </a>
+                }
+            </nav>
+        </section>
+
+        <div class="gallery-toolbar">
+            <div class="gallery-result-count">
+                @if (Model.TotalImages > 0)
+                {
+                    <span>
+                        Showing
+                        <strong>
+                            @Model.FirstRecordNumber.ToString("N0")–@Model.LastRecordNumber.ToString("N0")
+                        </strong>
+                        of
+                        <strong>@Model.TotalImages.ToString("N0")</strong>
+                        images
+                    </span>
+                }
+                else
+                {
+                    <span><strong>0</strong> images found</span>
+                }
+
+                @if (selectedCategory is not null)
+                {
+                    <span class="gallery-selected-label">
+                        <i class="fa-solid fa-tag"></i>
+                        @selectedCategory.Name
+                    </span>
+                }
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <div class="small fw-bold text-secondary">
+                    Page @Model.CurrentPage of @Model.TotalPages
+                </div>
+            }
+        </div>
+
+        @if (Model.Images.Count > 0)
+        {
+            <main class="gallery-grid" id="galleryGrid">
+                @foreach (var item in Model.Images)
+                {
+                    var productUrl = Url.Action(
+                    "Details",
+                    "Product",
+                    new { slug = item.Slug });
+
+                    var searchableText = string.Join(
+                    " ",
+                    new[]
+                    {
+                        item.Title,
+                        item.ASIN,
+                        item.Brand,
+                        item.CategoryNames,
+                        item.ImageTypeText
+                    }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+                    var altText = string.IsNullOrWhiteSpace(item.Brand)
+                    ? $"{item.Title} {item.ImageTypeText} product image"
+                    : $"{item.Brand} {item.Title} {item.ImageTypeText} product image";
+
+                    <article class="gallery-card"
+                             id="@item.GalleryItemId"
+                             data-search="@searchableText"
+                             itemscope
+                             itemtype="https://schema.org/ImageObject">
+
+                        <div class="gallery-image-wrap">
+                            <img class="gallery-image"
+                                 src="@item.ImageUrl"
+                                 alt="@altText"
+                                 title="@item.Title"
+                                 width="360"
+                                 height="360"
+                                 loading="lazy"
+                                 decoding="async"
+                                 referrerpolicy="no-referrer"
+                                 itemprop="thumbnailUrl"
+                                 onerror="this.onerror=null;this.src='/Pictures/no-image.png';" />
+
+                            <meta itemprop="contentUrl" content="@item.ImageUrl" />
+                            <meta itemprop="name" content="@item.Title" />
+                            <meta itemprop="caption"
+                                  content="@($"{item.Title} - {item.ImageTypeText} image")" />
+
+                            <span class="gallery-image-badge @(item.IsMainImage ? "gallery-main-badge" : null)">
+                                <i class="@(item.IsMainImage
+                                                                       ? "fa-solid fa-star"
+                                                                       : "fa-regular fa-images")"></i>
+
+                        @item.ImageTypeText
+                    </span>
+
+                    @if (item.IsDealOfTheDay)
+                            {
+                                <span class="gallery-deal-badge">
+                                    <i class="fa-solid fa-bolt"></i>
+                                    Deal
+                                </span>
+                            }
+
+                            <div class="gallery-overlay">
+                                <div class="gallery-actions">
+                                    <button type="button"
+                                            class="gallery-action gallery-view-image js-gallery-preview"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#galleryImageModal"
+                                            data-image-url="@item.ImageUrl"
+                                            data-image-alt="@altText"
+                                            data-product-title="@item.Title"
+                                            data-category="@item.CategoryNames"
+                                            data-product-url="@productUrl"
+                                            aria-label="Preview @item.Title image">
+                                        <i class="fa-solid fa-expand"></i>
+                                        Image
+                                    </button>
+
+                                    <a class="gallery-action gallery-view-product"
+                                       href="@productUrl"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       aria-label="Open @item.Title product page">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                        Product
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-card-body">
+                            <h2 class="gallery-product-title"
+                                title="@item.Title"
+                                itemprop="about">
+                                @item.Title
+                            </h2>
+
+                            <div class="gallery-card-meta">
+                                <span class="gallery-card-category"
+                                      title="@item.CategoryNames">
+                                    <i class="fa-regular fa-folder me-1"></i>
+                                    @item.PrimaryCategoryName
+                                </span>
+
+                                @if (item.Rating.HasValue)
+                                {
+                                    <span class="gallery-card-rating"
+                                          title="@($"{item.Rating:0.0} rating")">
+                                        <i class="fa-solid fa-star"></i>
+                                        @item.Rating.Value.ToString("0.0")
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </article>
+                }
+            </main>
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="gallery-pagination-shell"
+                     aria-label="Gallery pagination">
+
+                    <div class="gallery-pagination-info">
+                        Page <strong>@Model.CurrentPage</strong>
+                        of <strong>@Model.TotalPages</strong>
+                    </div>
+
+                    <ul class="gallery-pagination">
+                        <li>
+                            <a class="gallery-page-link @(Model.HasPreviousPage ? null : "disabled")"
+                               href="@(Model.HasPreviousPage
+                                                                  ? BuildGalleryPageUrl(Model.CurrentPage -1)
+                                                          : "#")"
+                       aria-label="Previous page">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </li>
+
+                @if (startPage > 1)
+                        {
+                            <li>
+                                <a class="gallery-page-link"
+                                   href="@BuildGalleryPageUrl(1)">
+                                    1
+                                </a>
+                            </li>
+
+                            @if (startPage > 2)
+                            {
+                                <li>
+                                    <span class="gallery-page-dots">…</span>
+                                </li>
+                            }
+                        }
+
+                        @for (var pageNumber = startPage;
+                                        pageNumber <= endPage;
+                                        pageNumber++)
+                        {
+                            <li>
+                                <a class="gallery-page-link @(pageNumber == Model.CurrentPage ? "active" : null)"
+                                   href="@BuildGalleryPageUrl(pageNumber)"
+                                   aria-current="@(pageNumber == Model.CurrentPage ? "page" : null)">
+                                    @pageNumber
+                                </a>
+                            </li>
+                        }
+
+                        @if (endPage < Model.TotalPages)
+                        {
+                            @if (endPage < Model.TotalPages - 1)
+                            {
+                                <li>
+                                    <span class="gallery-page-dots">…</span>
+                                </li>
+                            }
+
+                            <li>
+                                <a class="gallery-page-link"
+                                   href="@BuildGalleryPageUrl(Model.TotalPages)">
+                                    @Model.TotalPages
+                                </a>
+                            </li>
+                        }
+
+                        <li>
+                            <a class="gallery-page-link @(Model.HasNextPage ? null : "disabled")"
+                               href="@(Model.HasNextPage
+                                                                  ? BuildGalleryPageUrl(Model.CurrentPage +1)
+                                                          : "#")"
+                       aria-label="Next page">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+                }
+        }
+        else
+        {
+            <section class="gallery-empty">
+                <span class="gallery-empty-icon">
+                    <i class="fa-regular fa-images"></i>
+                </span>
+
+                <h2>No gallery images found</h2>
+
+                <p>
+                    No product images match the selected category or search filters.
+                    Clear the filters to display the complete gallery.
+                </p>
+
+                <a class="gallery-search-btn"
+                   asp-controller="Gallery"
+                   asp-action="Index">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Show All Images
+                </a>
+            </section>
+        }
+    </div>
+</div>
+
+<div class="modal fade gallery-modal"
+     id="galleryImageModal"
+     tabindex="-1"
+     aria-labelledby="galleryImageModalTitle"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="gallery-modal-title-wrap">
+                    <h2 class="gallery-modal-title"
+                        id="galleryImageModalTitle">
+                        Product image
+                    </h2>
+
+                    <span class="gallery-modal-hint">
+                        Click the image to open its original version in a new window.
+                    </span>
+                </div>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <a class="gallery-modal-image-link"
+                   id="galleryModalImageLink"
+                   href="#"
+                   target="_blank"
+                   rel="noopener noreferrer">
+
+                    <img class="gallery-modal-image"
+                         id="galleryModalImage"
+                         src=""
+                         alt=""
+                         referrerpolicy="no-referrer" />
+
+                    <span class="gallery-modal-open-label">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        Open original
+                    </span>
+                </a>
+            </div>
+
+            <div class="gallery-modal-footer">
+                <span class="gallery-modal-category"
+                      id="galleryModalCategory">
+                </span>
+
+                <a class="gallery-modal-product-link"
+                   id="galleryModalProductLink"
+                   href="#"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    View Product
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            "use strict";
+
+            const modalElement = document.getElementById("galleryImageModal");
+            const modalImage = document.getElementById("galleryModalImage");
+            const modalImageLink = document.getElementById("galleryModalImageLink");
+            const modalTitle = document.getElementById("galleryImageModalTitle");
+            const modalCategory = document.getElementById("galleryModalCategory");
+            const modalProductLink = document.getElementById("galleryModalProductLink");
+
+            if (!modalElement ||
+                !modalImage ||
+                !modalImageLink ||
+                !modalTitle ||
+                !modalCategory ||
+                !modalProductLink) {
+                return;
+            }
+
+            document.addEventListener("click", event => {
+                const previewButton = event.target.closest(".js-gallery-preview");
+
+                if (!previewButton) {
+                    return;
+                }
+
+                const imageUrl = previewButton.dataset.imageUrl || "";
+                const imageAlt = previewButton.dataset.imageAlt || "Product image";
+                const productTitle = previewButton.dataset.productTitle || "Product image";
+                const category = previewButton.dataset.category || "Uncategorized";
+                const productUrl = previewButton.dataset.productUrl || "#";
+
+                modalImage.src = imageUrl;
+                modalImage.alt = imageAlt;
+                modalImageLink.href = imageUrl;
+                modalTitle.textContent = productTitle;
+                modalCategory.textContent = category;
+                modalProductLink.href = productUrl;
+            });
+
+            modalElement.addEventListener("hidden.bs.modal", () => {
+                modalImage.removeAttribute("src");
+                modalImage.alt = "";
+                modalImageLink.href = "#";
+                modalTitle.textContent = "Product image";
+                modalCategory.textContent = "";
+                modalProductLink.href = "#";
+            });
+
+            /*
+             * Horizontal category scrolling with Shift + mouse wheel.
+             * Normal vertical scrolling remains unchanged.
+             */
+            const categoryScroller = document.querySelector(
+                ".gallery-category-scroller");
+
+            if (categoryScroller) {
+                categoryScroller.addEventListener(
+                    "wheel",
+                    event => {
+                        if (!event.shiftKey) {
+                            return;
+                        }
+
+                        event.preventDefault();
+                        categoryScroller.scrollLeft += event.deltaY;
+                    },
+                    { passive: false });
+            }
+        })();
+    </script>
+}

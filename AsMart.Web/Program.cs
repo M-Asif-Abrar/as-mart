@@ -1,16 +1,17 @@
-﻿using Asp.Versioning;
-using AsMart.Web.Data;
+﻿using AsMart.Web.Data;
 using AsMart.Web.Middleware;
 using AsMart.Web.Models.Api;
 using AsMart.Web.Models.Entities;
 using AsMart.Web.Models.Security;
 using AsMart.Web.Services;
 using AsMart.Web.Services.Email;
+using AsMart.Web.Services.Gallery;
 using AsMart.Web.Services.Marketing;
 using AsMart.Web.Services.Repositories;
 using AsMart.Web.Services.Repositories.ErrorPages;
 using AsMart.Web.Services.Repositories.Redirects;
 using AsMart.Web.Services.Security;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -174,6 +175,7 @@ builder.Services.AddScoped<SeoProductSelector>();
 builder.Services.AddScoped<RedirectRuleRepository>();
 builder.Services.AddScoped<ErrorLogRepository>();
 builder.Services.AddScoped<IUtmTrackingService, UtmTrackingService>();
+builder.Services.AddScoped<IGalleryService, GalleryService>();
 
 builder.Services.AddHttpClient();
 
