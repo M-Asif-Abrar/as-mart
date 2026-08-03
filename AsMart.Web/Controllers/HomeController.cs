@@ -1,71 +1,131 @@
-// Controllers/HomeController.cs
 using AsMart.Web.Data;
-using AsMart.Web.Models.ViewModels;
+using AsMart.Web.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
-namespace AsMart.Web.Controllers
+namespace AsMart.Web.Controllers;
+
+public sealed class HomeController : Controller
 {
-    public class HomeController : Controller
+    private const int DefaultProductCount = 24;
+
+    private readonly ApplicationDbContext _db;
+    private readonly ILogger<HomeController> _logger;
+
+    public HomeController(
+        ApplicationDbContext db,
+        ILogger<HomeController> logger)
     {
-        private readonly ApplicationDbContext _db;
+        _db = db;
+        _logger = logger;
+    }
 
-        public HomeController(ApplicationDbContext db)
-        {
-            _db = db;
-        }
+    /// <summary>
+    /// Landing page containing featured products only.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> Index(
+        CancellationToken cancellationToken)
+    {
+        ViewData["Title"] =
+            "Featured Amazon Products and Smart Picks | As-Mart";
 
-        public async Task<IActionResult> Index()
-        {
-            // SEO (Home Page)
-            ViewData["Title"] = "As-Mart – Best Amazon Deals on Electronics, Kids & Gadgets";
-            ViewData["MetaDescription"] =
-                "As-Mart is an Amazon affiliate store featuring top deals on electronics, kids products, gadgets, tablets, laptops, and daily essentials. Compare prices and buy smart.";
+        ViewData["MetaDescription"] =
+            "Browse featured Amazon products selected by As-Mart, including electronics, gadgets, home products and everyday essentials.";
 
-            var featured = await _db.Products
-                .Where(p => p.IsActive && p.IsFeatured)
-                .OrderByDescending(p => p.CreatedAt)
-                .Take(12)
-                .ToListAsync();
+        var products = await GetFeaturedProductsAsync(cancellationToken);
 
-            var deals = await _db.Products
-                .Where(p => p.IsActive && p.IsDealOfTheDay)
-                .OrderByDescending(p => p.UpdatedAt)
-                .Take(12)
-                .ToListAsync();
+        return View(products);
+    }
 
-            var model = new HomeIndexViewModel
-            {
-                Featured = featured,
-                Deals = deals
-            };
+    /// <summary>
+    /// Displays active Deals of the Day.
+    /// URL: /deals
+    /// </summary>
+    [HttpGet("/deals")]
+    public async Task<IActionResult> Deals(
+        CancellationToken cancellationToken)
+    {
+        ViewData["Title"] =
+            "Deals of the Day and Amazon Discounts | As-Mart";
 
-            return View(model);
-        }
+        ViewData["MetaDescription"] =
+            "Discover active Deals of the Day, discounted Amazon products and carefully selected offers on As-Mart.";
 
+        var products = await _db.Products
+            .AsNoTracking()
+            .Where(product =>
+                product.IsActive &&
+                product.IsDealOfTheDay)
+            .OrderByDescending(product => product.UpdatedAt)
+            .ThenByDescending(product => product.CreatedAt)
+            .Take(DefaultProductCount)
+            .ToListAsync(cancellationToken);
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+        return View(products);
+    }
 
-        public IActionResult About()
-        {
-            return View();
-        }
+    /// <summary>
+    /// Displays products ordered by recorded product-page visits.
+    /// URL: /top-visited
+    /// </summary>
+    [HttpGet("/top-visited")]
+    public async Task<IActionResult> TopVisited(
+        CancellationToken cancellationToken)
+    {
+        ViewData["Title"] =
+            "Most Visited Products | As-Mart";
 
-        public IActionResult Artical()
-        {
-            return View();
-        }
+        ViewData["MetaDescription"] =
+            "Browse the most visited and popular products on As-Mart, ranked by customer interest and product-page visits.";
 
-        [HttpGet("/api-documentation")]
-        public IActionResult ApiDocumentation()
-        {
-            ViewData["Title"] = "As-Mart Public Product API Documentation";
-            return View();
-        }
+        var products = await _db.Products
+            .AsNoTracking()
+            .Where(product => product.IsActive)
+            .OrderByDescending(product => product.ClickCount)
+            .ThenByDescending(product => product.UpdatedAt)
+            .Take(DefaultProductCount)
+            .ToListAsync(cancellationToken);
 
+        return View(products);
+    }
+
+    private async Task<List<Product>> GetFeaturedProductsAsync(
+        CancellationToken cancellationToken)
+    {
+        return await _db.Products
+            .AsNoTracking()
+            .Where(product =>
+                product.IsActive &&
+                product.IsFeatured)
+            .OrderByDescending(product => product.UpdatedAt)
+            .ThenByDescending(product => product.CreatedAt)
+            .Take(DefaultProductCount)
+            .ToListAsync(cancellationToken);
+    }
+
+    [HttpGet]
+    public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult About()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult Artical()
+    {
+        return View();
+    }
+
+    [HttpGet("/api-documentation")]
+    public IActionResult ApiDocumentation()
+    {
+        ViewData["Title"] = "As-Mart Public Product API Documentation";
+        return View();
     }
 }

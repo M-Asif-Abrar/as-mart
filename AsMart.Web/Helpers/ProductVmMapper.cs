@@ -18,6 +18,7 @@ public static class ProductVmMapper
             Currency = string.IsNullOrWhiteSpace(p.Currency) ? "USD" : p.Currency,
             Rating = p.Rating ?? 0,              // adjust if your entity uses nullable
             RatingCount = p.RatingCount ?? 0,    // adjust if your entity uses nullable
+            ClickCount = p.ClickCount,
             CategoryNameForTracking = categoryNameForTracking
         };
     }

@@ -1,0 +1,152 @@
+﻿@using AsMart.Web.Helpers
+@using AsMart.Web.Models.Entities
+@using AsMart.Web.Models.ViewModels
+
+@model IReadOnlyCollection<Product>
+
+@{
+    var products = Model?.ToList() ?? new List<Product>();
+
+    var grid = new ProductGridVm
+    {
+        Title = "Deals of the Day",
+        Actions = ProductGridActions.DetailsOnly,
+        HighlightDeals = true,
+        Products = products
+            .Select(product => product.ToCardVm())
+            .ToList()
+    };
+}
+
+@section Styles {
+    <style>
+        .listing-page {
+            min-height: calc(100vh - 90px);
+            padding: 28px 0 50px;
+            background: radial-gradient( circle at 10% 0%, rgba(245, 158, 11, .10), transparent 30%), linear-gradient( 180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .listing-shell {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        .listing-hero {
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 28px;
+            background: linear-gradient( 135deg, rgba(255, 255, 255, .98), rgba(255, 251, 235, .95));
+            box-shadow: 0 22px 60px rgba(15, 23, 42, .08);
+        }
+
+        .listing-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            margin-bottom: 12px;
+            border-radius: 999px;
+            color: #b45309;
+            background: rgba(245, 158, 11, .12);
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .listing-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(30px, 4vw, 48px);
+            font-weight: 950;
+            letter-spacing: -.04em;
+        }
+
+        .listing-description {
+            max-width: 760px;
+            margin: 12px 0 0;
+            color: #64748b;
+            font-size: 15px;
+            font-weight: 650;
+            line-height: 1.7;
+        }
+
+        .listing-navigation {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+            .listing-navigation .btn {
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 0 17px;
+                border-radius: 14px;
+                font-size: 13px;
+                font-weight: 900;
+            }
+
+        @@media (max-width: 575.98px) {
+            .listing-page {
+                padding: 16px 0 35px;
+            }
+
+            .listing-hero {
+                padding: 20px;
+                border-radius: 22px;
+            }
+
+            .listing-navigation {
+                flex-direction: column;
+            }
+
+                .listing-navigation .btn {
+                    width: 100%;
+                }
+        }
+    </style>
+}
+
+<section class="listing-page">
+    <div class="container-fluid listing-shell">
+        <header class="listing-hero">
+            <div class="listing-kicker">
+                <i class="fa-solid fa-bolt"></i>
+                Limited-Time Offers
+            </div>
+
+            <h1 class="listing-title">
+                Deals of the Day
+            </h1>
+
+            <p class="listing-description">
+                Browse active discounted products and selected daily offers.
+                Open a product page to view complete details before purchasing.
+            </p>
+
+            <nav class="listing-navigation"
+                 aria-label="Product page navigation">
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn btn-outline-primary">
+                    <i class="fa-solid fa-star"></i>
+                    Featured Products
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="TopVisited"
+                   class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-chart-line"></i>
+                    Top Visited
+                </a>
+            </nav>
+        </header>
+
+        <partial name="~/Views/Shared/Products/_ProductGrid.cshtml"
+                 model="grid" />
+    </div>
+</section>

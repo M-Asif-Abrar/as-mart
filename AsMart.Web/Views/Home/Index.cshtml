@@ -1,256 +1,373 @@
 ﻿@using AsMart.Web.Helpers
+@using AsMart.Web.Models.Entities
 @using AsMart.Web.Models.ViewModels
-@model AsMart.Web.Models.ViewModels.HomeIndexViewModel
+
+@model IReadOnlyCollection<Product>
 
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Featured Products";
 
-    var featured = Model.Featured?.ToList() ?? new List<AsMart.Web.Models.Entities.Product>();
-    var deals = Model.Deals?.ToList() ?? new List<AsMart.Web.Models.Entities.Product>();
-    var totalProducts = featured.Count + deals.Count;
+    var featuredProducts = Model?.ToList() ?? new List<Product>();
+
+    var featuredGrid = new ProductGridVm
+    {
+        Title = string.Empty,
+        Actions = ProductGridActions.DetailsOnly,
+        HighlightDeals = false,
+        Products = featuredProducts
+            .Select(product => product.ToCardVm())
+            .ToList()
+    };
 }
 
 @section Styles {
     <style>
         .home-page {
             min-height: calc(100vh - 90px);
-            padding: 24px 0 42px;
-            background: radial-gradient(circle at 10% 8%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+            padding: 20px 0 42px;
+            background: radial-gradient( circle at 8% 5%, rgba(37, 99, 235, .08), transparent 28%), radial-gradient( circle at 92% 3%, rgba(168, 85, 247, .07), transparent 27%), linear-gradient( 180deg, #f8fafc 0%, #ffffff 50%, #f8fafc 100%);
         }
 
         .home-shell {
+            width: 100%;
             max-width: 1500px;
             margin: 0 auto;
         }
 
-        .home-hero {
+        /* Compact featured header card */
+
+        .featured-header-card {
             position: relative;
             overflow: hidden;
-            border-radius: 30px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.93)), radial-gradient(circle at top right, rgba(37,99,235,.17), transparent 36%);
-            box-shadow: 0 24px 70px rgba(15,23,42,.08);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+            padding: 24px 26px;
+            border: 1px solid rgba(37, 99, 235, .12);
+            border-radius: 26px;
+            background: linear-gradient( 120deg, rgba(255, 255, 255, .98) 0%, rgba(239, 246, 255, .96) 48%, rgba(245, 243, 255, .93) 100%);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
         }
 
-            .home-hero::before {
-                content: "";
+            .featured-header-card::before {
                 position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 16% 20%, rgba(37,99,235,.10), transparent 28%), radial-gradient(circle at 85% 80%, rgba(14,165,233,.13), transparent 30%);
+                top: -75px;
+                right: -55px;
+                width: 210px;
+                height: 210px;
+                border-radius: 50%;
+                background: rgba(37, 99, 235, .09);
+                content: "";
                 pointer-events: none;
             }
 
-        .home-hero-body {
+            .featured-header-card::after {
+                position: absolute;
+                bottom: -95px;
+                left: 35%;
+                width: 240px;
+                height: 240px;
+                border-radius: 50%;
+                background: rgba(168, 85, 247, .06);
+                content: "";
+                pointer-events: none;
+            }
+
+        .featured-header-content {
             position: relative;
-            z-index: 1;
-            padding: 30px;
+            z-index: 2;
         }
 
-        .home-kicker {
+        .featured-header-main {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .featured-header-icon {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            width: 66px;
+            height: 66px;
+            border: 1px solid rgba(37, 99, 235, .16);
+            border-radius: 21px;
+            background: linear-gradient( 145deg, rgba(37, 99, 235, .15), rgba(59, 130, 246, .07));
+            color: #2563eb;
+            box-shadow: 0 12px 30px rgba(37, 99, 235, .12);
+            font-size: 27px;
+        }
+
+        .featured-header-text {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .featured-header-label {
             display: inline-flex;
             align-items: center;
-            gap: 9px;
-            padding: 8px 13px;
-            border-radius: 999px;
-            background: rgba(37,99,235,.09);
-            border: 1px solid rgba(37,99,235,.14);
-            color: #1d4ed8;
-            font-size: 12px;
+            gap: 7px;
+            margin-bottom: 5px;
+            color: #2563eb;
+            font-size: 11px;
             font-weight: 900;
+            letter-spacing: .07em;
             text-transform: uppercase;
-            letter-spacing: .04em;
-            margin-bottom: 13px;
         }
 
-        .home-title {
+        .featured-header-title {
             margin: 0;
             color: #0f172a;
-            font-size: clamp(32px, 4vw, 58px);
-            line-height: 1.04;
-            letter-spacing: -.045em;
+            font-size: clamp(27px, 3vw, 40px);
             font-weight: 950;
+            line-height: 1.08;
+            letter-spacing: -.035em;
         }
 
-        .home-sub {
-            margin: 14px 0 0;
-            max-width: 860px;
-            color: #475569;
-            font-size: 15px;
-            line-height: 1.75;
+        .featured-header-description {
+            max-width: 760px;
+            margin: 7px 0 0;
+            color: #64748b;
+            font-size: 14px;
             font-weight: 650;
+            line-height: 1.55;
         }
 
-        .home-actions {
+        .featured-header-actions {
             display: flex;
-            flex-wrap: wrap;
+            flex: 0 0 auto;
+            align-items: center;
             gap: 10px;
-            margin-top: 18px;
         }
 
-        .home-btn,
-        .home-empty-btn {
-            min-height: 44px;
-            border-radius: 15px;
+        .featured-count {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 48px;
+            padding: 7px 14px;
+            border: 1px solid rgba(37, 99, 235, .13);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .76);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, .05);
+        }
+
+        .featured-count-number {
+            color: #0f172a;
+            font-size: 25px;
+            font-weight: 950;
+            line-height: 1;
+        }
+
+        .featured-count-label {
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 900;
+            line-height: 1.2;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .featured-nav {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
+        }
+
+        .featured-nav-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 9px;
-            font-size: 13px;
-            font-weight: 950;
-            padding: 0 18px;
+            gap: 8px;
+            min-height: 40px;
+            padding: 0 15px;
+            border-radius: 13px;
+            font-size: 12px;
+            font-weight: 900;
             white-space: nowrap;
         }
 
-        .home-actions .btn-light {
-            border: 1px solid rgba(15,23,42,.10);
-            background: rgba(255,255,255,.80);
+        .featured-nav .btn-primary {
+            border-color: #2563eb;
+            background: linear-gradient( 135deg, #2563eb, #1677ff);
+            box-shadow: 0 9px 20px rgba(37, 99, 235, .20);
+        }
+
+        .featured-nav .btn-light {
+            border: 1px solid rgba(15, 23, 42, .10);
+            background: rgba(255, 255, 255, .78);
             color: #334155;
         }
 
-        .home-stat-card {
-            width: 100%;
-            max-width: 380px;
-            margin-left: auto;
-            padding: 19px;
-            border-radius: 26px;
-            background: rgba(255,255,255,.78);
-            border: 1px solid rgba(15,23,42,.08);
-            box-shadow: 0 18px 44px rgba(15,23,42,.07);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            .featured-nav .btn-light:hover,
+            .featured-nav .btn-light:focus {
+                border-color: rgba(37, 99, 235, .25);
+                background: #ffffff;
+                color: #1d4ed8;
+            }
+
+        /* Product grid container */
+
+        .home-products-section {
+            position: relative;
         }
 
-        .home-stat-row {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-        }
-
-        .home-stat-label {
-            color: #64748b;
-            font-size: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-        }
-
-        .home-stat-value {
-            color: #0f172a;
-            font-size: 34px;
-            font-weight: 950;
-            line-height: 1.1;
-            margin-top: 5px;
-        }
-
-        .home-stat-footer {
-            margin-top: 15px;
-            padding: 11px 12px;
-            border-radius: 16px;
-            background: rgba(37,99,235,.07);
-            border: 1px solid rgba(37,99,235,.13);
-            color: #1d4ed8;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 900;
-        }
-
-        .home-section {
-            margin-top: 22px;
-        }
+        /* Empty state */
 
         .home-empty {
-            border-radius: 28px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: rgba(255,255,255,.94);
-            box-shadow: 0 20px 60px rgba(15,23,42,.08);
-            padding: 42px 22px;
+            padding: 38px 22px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .95);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, .07);
             text-align: center;
         }
 
         .home-empty-icon {
-            width: 76px;
-            height: 76px;
-            margin: 0 auto 16px;
-            border-radius: 26px;
-            background: rgba(37,99,235,.09);
-            color: #2563eb;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 29px;
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 15px;
+            border-radius: 22px;
+            background: linear-gradient( 145deg, rgba(37, 99, 235, .13), rgba(168, 85, 247, .08));
+            color: #2563eb;
+            font-size: 26px;
         }
 
         .home-empty h2 {
             margin: 0;
             color: #0f172a;
-            font-size: 25px;
+            font-size: 24px;
             font-weight: 950;
             letter-spacing: -.03em;
         }
 
         .home-empty p {
+            max-width: 610px;
             margin: 9px auto 18px;
-            max-width: 620px;
             color: #64748b;
             font-size: 14px;
-            line-height: 1.7;
             font-weight: 650;
+            line-height: 1.65;
         }
 
-        @@media (max-width: 1199.98px) {
-            .home-page {
-                padding: 18px 0 34px;
-            }
-
-            .home-stat-card {
-                max-width: none;
-                margin-left: 0;
-            }
+        .home-empty-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 43px;
+            padding: 0 17px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 900;
         }
 
         @@media (max-width: 991.98px) {
-            .home-hero-body {
-                padding: 24px;
+            .featured-header-main {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .featured-header-actions {
+                width: 100%;
+                padding-left: 84px;
+            }
+
+            .featured-count {
+                width: auto;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .home-page {
+                padding: 14px 0 32px;
+            }
+
+            .featured-header-card {
+                padding: 20px;
+                border-radius: 22px;
+            }
+
+            .featured-header-main {
+                gap: 14px;
+            }
+
+            .featured-header-icon {
+                width: 56px;
+                height: 56px;
+                border-radius: 18px;
+                font-size: 23px;
+            }
+
+            .featured-header-actions {
+                padding-left: 70px;
+            }
+
+            .featured-nav {
+                flex-wrap: wrap;
             }
         }
 
         @@media (max-width: 575.98px) {
-            .home-page {
-                padding: 14px 0 28px;
+            .featured-header-card {
+                padding: 17px;
+                border-radius: 20px;
             }
 
-            .home-hero {
-                border-radius: 22px;
+            .featured-header-main {
+                display: grid;
+                grid-template-columns: 48px minmax(0, 1fr);
+                gap: 12px;
             }
 
-            .home-hero-body {
-                padding: 18px;
+            .featured-header-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 16px;
+                font-size: 20px;
             }
 
-            .home-actions {
-                flex-direction: column;
+            .featured-header-title {
+                font-size: 27px;
             }
 
-            .home-btn,
-            .home-empty-btn {
+            .featured-header-description {
+                grid-column: 1 / -1;
+                margin-top: 10px;
+                font-size: 13px;
+            }
+
+            .featured-header-actions {
+                grid-column: 1 / -1;
                 width: 100%;
-                min-height: 46px;
+                padding-left: 0;
             }
 
-            .home-stat-card {
-                border-radius: 21px;
+            .featured-count {
+                width: 100%;
+                justify-content: center;
             }
 
-            .home-stat-row {
+            .featured-nav {
+                display: grid;
                 grid-template-columns: 1fr;
+                gap: 8px;
+                margin-top: 13px;
+                padding-top: 13px;
+            }
+
+            .featured-nav-btn {
+                width: 100%;
+                min-height: 43px;
             }
 
             .home-empty {
-                border-radius: 22px;
-                padding: 34px 18px;
+                padding: 32px 17px;
+                border-radius: 21px;
             }
         }
     </style>
@@ -260,119 +377,128 @@
     <div class="container-fluid home-shell">
 
         <h1 class="visually-hidden">
-            As-Mart – Amazon Affiliate Store for Electronics, Kids Products & Smart Deals
+            Featured Amazon Products and Smart Shopping Picks | As-Mart
         </h1>
 
-        <header class="home-hero">
-            <div class="home-hero-body">
-                <div class="row align-items-center g-3">
-                    <div class="col-12 col-lg-8">
-                        <div class="home-kicker">
-                            <i class="fa-solid fa-bag-shopping"></i>
-                            Amazon Affiliate Store
+        <header class="featured-header-card">
+            <div class="featured-header-content">
+
+                <div class="featured-header-main">
+
+                    <div class="featured-header-icon"
+                         aria-hidden="true">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+
+                    <div class="featured-header-text">
+                        <div class="featured-header-label">
+                            <i class="fa-solid fa-sparkles"></i>
+                            Smart Shopping Picks
                         </div>
 
-                        <h2 class="home-title">
-                            Smart Deals, Featured Picks & Buyer-Friendly Product Guides
+                        <h2 class="featured-header-title">
+                            Featured Products
                         </h2>
 
-                        <p class="home-sub">
-                            Browse curated products from As-Mart, compare smart picks, and discover useful buying guides for electronics, home products, kids items, and everyday deals.
+                        <p class="featured-header-description">
+                            Explore handpicked electronics, gadgets, home products
+                            and useful everyday items selected by As-Mart.
                         </p>
+                    </div>
 
-                        <div class="home-actions">
-                            <a asp-controller="Catalog"
-                               asp-action="Index"
-                               class="btn btn-primary home-btn">
-                                <i class="fa-solid fa-store"></i>
-                                Shop Catalog
-                            </a>
+                    <div class="featured-header-actions">
+                        <div class="featured-count">
+                            <span class="featured-count-number">
+                                @featuredProducts.Count
+                            </span>
 
-                            <a asp-controller="Collections"
-                               asp-action="Index"
-                               class="btn btn-light home-btn">
-                                <i class="fa-solid fa-layer-group"></i>
-                                View Collections
-                            </a>
+                            <span class="featured-count-label">
+                                Products<br />
+                                Available
+                            </span>
                         </div>
                     </div>
 
-                    <div class="col-12 col-lg-4">
-                        <div class="home-stat-card">
-                            <div class="home-stat-row">
-                                <div>
-                                    <div class="home-stat-label">Featured</div>
-                                    <div class="home-stat-value">@featured.Count</div>
-                                </div>
-
-                                <div>
-                                    <div class="home-stat-label">Deals</div>
-                                    <div class="home-stat-value">@deals.Count</div>
-                                </div>
-                            </div>
-
-                            <div class="home-stat-footer">
-                                <i class="fa-solid fa-boxes-stacked"></i>
-                                @totalProducts products showing
-                            </div>
-                        </div>
-                    </div>
                 </div>
+
+                <nav class="featured-nav"
+                     aria-label="Product collection navigation">
+
+                    <a asp-controller="Home"
+                       asp-action="Deals"
+                       class="btn btn-primary featured-nav-btn">
+                        <i class="fa-solid fa-bolt"></i>
+                        Deals of the Day
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="TopVisited"
+                       class="btn btn-light featured-nav-btn">
+                        <i class="fa-solid fa-chart-line"></i>
+                        Top Visited Products
+                    </a>
+
+                    <a asp-controller="Catalog"
+                       asp-action="Index"
+                       class="btn btn-light featured-nav-btn">
+                        <i class="fa-solid fa-store"></i>
+                        Browse Catalog
+                    </a>
+
+                </nav>
+
             </div>
         </header>
 
-        @if (!featured.Any() && !deals.Any())
+        @if (!featuredProducts.Any())
         {
             <div class="home-empty">
                 <div class="home-empty-icon">
-                    <i class="fa-solid fa-box-open"></i>
+                    <i class="fa-solid fa-star"></i>
                 </div>
 
-                <h2>No products yet</h2>
+                <h2>No featured products found</h2>
 
                 <p>
-                    Go to <strong>/Admin/Products</strong> and add products. Featured products and deals will appear here automatically.
+                    Products marked as active and featured will appear on this page.
+                    Select featured products from the product management area.
                 </p>
 
-                <a asp-area="Admin"
-                   asp-controller="Products"
-                   asp-action="Index"
-                   class="btn btn-primary home-empty-btn">
-                    <i class="fa-solid fa-screwdriver-wrench"></i>
-                    Manage Products
-                </a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-area="Admin"
+                       asp-controller="Products"
+                       asp-action="Index"
+                       class="btn btn-primary home-empty-btn">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                        Manage Products
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Catalog"
+                       asp-action="Index"
+                       class="btn btn-primary home-empty-btn">
+                        <i class="fa-solid fa-store"></i>
+                        Browse Catalog
+                    </a>
+                }
             </div>
         }
         else
         {
-            if (featured.Any())
-            {
-                var grid = new ProductGridVm
-                {
-                    Title = "Featured Products",
-                    Actions = ProductGridActions.DetailsOnly,
-                    Products = featured.Select(p => p.ToCardVm()).ToList()
-                };
+            <section class="home-products-section"
+                     aria-labelledby="featured-products-heading">
 
-                <section class="home-section">
-                    <partial name="~/Views/Shared/Products/_ProductGrid.cshtml" model="grid" />
-                </section>
-            }
+                <h2 id="featured-products-heading"
+                    class="visually-hidden">
+                    Featured Products
+                </h2>
 
-            if (deals.Any())
-            {
-                var grid = new ProductGridVm
-                {
-                    Title = "Deals of the Day",
-                    Actions = ProductGridActions.DetailsAndBuy,
-                    HighlightDeals = true,
-                    Products = deals.Select(p => p.ToCardVm()).ToList()
-                };
+                <partial name="~/Views/Shared/Products/_ProductGrid.cshtml"
+                         model="featuredGrid" />
 
-                <section class="home-section">
-                    <partial name="~/Views/Shared/Products/_ProductGrid.cshtml" model="grid" />
-                </section>
-            }
+            </section>
         }
 
     </div>

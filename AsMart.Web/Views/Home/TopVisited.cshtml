@@ -1,0 +1,511 @@
+﻿@using AsMart.Web.Helpers
+@using AsMart.Web.Models.Entities
+@using AsMart.Web.Models.ViewModels
+
+@model IReadOnlyCollection<Product>
+
+@{
+    ViewData["Title"] = "Top Visited Products";
+
+
+    var products = Model?
+        .OrderByDescending(product => product.ClickCount)
+        .ToList()
+        ?? new List<Product>();
+
+    var totalViews = products.Sum(product => (long)product.ClickCount);
+
+    var grid = new ProductGridVm
+    {
+        Title = string.Empty,
+        Actions = ProductGridActions.DetailsOnly,
+        HighlightDeals = false,
+        Products = products
+            .Select(product => product.ToCardVm())
+            .ToList()
+    };
+}
+
+@section Styles {
+    <style>
+        .listing-page {
+            min-height: calc(100vh - 90px);
+            padding: 20px 0 45px;
+            background: radial-gradient( circle at 92% 0%, rgba(37, 99, 235, .11), transparent 30%), radial-gradient( circle at 8% 5%, rgba(14, 165, 233, .07), transparent 27%), linear-gradient( 180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+        }
+
+        .listing-shell {
+            width: 100%;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        .listing-hero {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            padding: 24px 26px;
+            border: 1px solid rgba(37, 99, 235, .12);
+            border-radius: 26px;
+            background: linear-gradient( 125deg, rgba(255, 255, 255, .98) 0%, rgba(239, 246, 255, .96) 55%, rgba(240, 249, 255, .94) 100%);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
+        }
+
+            .listing-hero::before {
+                position: absolute;
+                top: -85px;
+                right: -60px;
+                width: 230px;
+                height: 230px;
+                border-radius: 50%;
+                background: rgba(37, 99, 235, .08);
+                content: "";
+                pointer-events: none;
+            }
+
+            .listing-hero::after {
+                position: absolute;
+                bottom: -120px;
+                left: 38%;
+                width: 250px;
+                height: 250px;
+                border-radius: 50%;
+                background: rgba(14, 165, 233, .06);
+                content: "";
+                pointer-events: none;
+            }
+
+        .listing-hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .listing-main {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .listing-icon {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            width: 66px;
+            height: 66px;
+            border: 1px solid rgba(37, 99, 235, .15);
+            border-radius: 21px;
+            background: linear-gradient( 145deg, rgba(37, 99, 235, .15), rgba(14, 165, 233, .07));
+            color: #2563eb;
+            box-shadow: 0 12px 30px rgba(37, 99, 235, .12);
+            font-size: 27px;
+        }
+
+        .listing-text {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .listing-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 5px;
+            color: #2563eb;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+        }
+
+        .listing-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(27px, 3vw, 40px);
+            font-weight: 950;
+            line-height: 1.08;
+            letter-spacing: -.035em;
+        }
+
+        .listing-description {
+            max-width: 790px;
+            margin: 7px 0 0;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 650;
+            line-height: 1.55;
+        }
+
+        .listing-stats {
+            display: flex;
+            flex: 0 0 auto;
+            gap: 10px;
+        }
+
+        .listing-stat-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 52px;
+            padding: 8px 14px;
+            border: 1px solid rgba(37, 99, 235, .13);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .78);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, .05);
+        }
+
+        .listing-stat-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            background: rgba(37, 99, 235, .09);
+            color: #2563eb;
+            font-size: 14px;
+        }
+
+        .listing-stat-content {
+            min-width: 0;
+        }
+
+        .listing-stat-value {
+            color: #0f172a;
+            font-size: 22px;
+            font-weight: 950;
+            line-height: 1;
+        }
+
+        .listing-stat-label {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .listing-navigation {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
+        }
+
+            .listing-navigation .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                min-height: 40px;
+                padding: 0 15px;
+                border-radius: 13px;
+                font-size: 12px;
+                font-weight: 900;
+                white-space: nowrap;
+            }
+
+            .listing-navigation .btn-primary {
+                border-color: #2563eb;
+                background: linear-gradient( 135deg, #2563eb, #1677ff);
+                box-shadow: 0 9px 20px rgba(37, 99, 235, .18);
+            }
+
+            .listing-navigation .btn-light {
+                border: 1px solid rgba(15, 23, 42, .10);
+                background: rgba(255, 255, 255, .78);
+                color: #334155;
+            }
+
+                .listing-navigation .btn-light:hover,
+                .listing-navigation .btn-light:focus {
+                    border-color: rgba(37, 99, 235, .25);
+                    background: #ffffff;
+                    color: #1d4ed8;
+                }
+
+        .top-products-section {
+            position: relative;
+        }
+
+        .listing-empty {
+            padding: 38px 22px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .95);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, .07);
+            text-align: center;
+        }
+
+        .listing-empty-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 15px;
+            border-radius: 22px;
+            background: linear-gradient( 145deg, rgba(37, 99, 235, .13), rgba(14, 165, 233, .08));
+            color: #2563eb;
+            font-size: 26px;
+        }
+
+        .listing-empty h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 24px;
+            font-weight: 950;
+            letter-spacing: -.03em;
+        }
+
+        .listing-empty p {
+            max-width: 610px;
+            margin: 9px auto 0;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 650;
+            line-height: 1.65;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .listing-main {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .listing-stats {
+                width: 100%;
+                padding-left: 84px;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .listing-page {
+                padding: 14px 0 34px;
+            }
+
+            .listing-hero {
+                padding: 20px;
+                border-radius: 22px;
+            }
+
+            .listing-main {
+                gap: 14px;
+            }
+
+            .listing-icon {
+                width: 56px;
+                height: 56px;
+                border-radius: 18px;
+                font-size: 23px;
+            }
+
+            .listing-stats {
+                padding-left: 70px;
+                flex-wrap: wrap;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .listing-hero {
+                padding: 17px;
+                border-radius: 20px;
+            }
+
+            .listing-main {
+                display: grid;
+                grid-template-columns: 48px minmax(0, 1fr);
+                gap: 12px;
+            }
+
+            .listing-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 16px;
+                font-size: 20px;
+            }
+
+            .listing-title {
+                font-size: 27px;
+            }
+
+            .listing-description {
+                grid-column: 1 / -1;
+                margin-top: 9px;
+                font-size: 13px;
+            }
+
+            .listing-stats {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                width: 100%;
+                padding-left: 0;
+            }
+
+            .listing-stat-card {
+                min-width: 0;
+                padding: 8px 10px;
+            }
+
+            .listing-stat-value {
+                font-size: 19px;
+            }
+
+            .listing-navigation {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 8px;
+                margin-top: 13px;
+                padding-top: 13px;
+            }
+
+                .listing-navigation .btn {
+                    width: 100%;
+                    min-height: 43px;
+                }
+
+            .listing-empty {
+                padding: 32px 17px;
+                border-radius: 21px;
+            }
+        }
+    </style>
+}
+
+<section class="listing-page">
+    <div class="container-fluid listing-shell">
+
+        <header class="listing-hero">
+            <div class="listing-hero-content">
+
+                <div class="listing-main">
+
+                    <div class="listing-icon"
+                         aria-hidden="true">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+
+                    <div class="listing-text">
+                        <div class="listing-kicker">
+                            <i class="fa-solid fa-fire"></i>
+                            Popular on As-Mart
+                        </div>
+
+                        <h1 class="listing-title">
+                            Top Visited Products
+                        </h1>
+
+                        <p class="listing-description">
+                            Explore active products ranked by recorded product-page
+                            views. Products with the highest number of visits appear
+                            first.
+                        </p>
+                    </div>
+
+                    <div class="listing-stats">
+
+                        <div class="listing-stat-card">
+                            <div class="listing-stat-icon"
+                                 aria-hidden="true">
+                                <i class="fa-solid fa-box"></i>
+                            </div>
+
+                            <div class="listing-stat-content">
+                                <div class="listing-stat-value">
+                                    @products.Count.ToString("N0")
+                                </div>
+
+                                <div class="listing-stat-label">
+                                    Products
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="listing-stat-card">
+                            <div class="listing-stat-icon"
+                                 aria-hidden="true">
+                                <i class="fa-solid fa-eye"></i>
+                            </div>
+
+                            <div class="listing-stat-content">
+                                <div class="listing-stat-value">
+                                    @totalViews.ToString("N0")
+                                </div>
+
+                                <div class="listing-stat-label">
+                                    Total Views
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <nav class="listing-navigation"
+                     aria-label="Product page navigation">
+
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="btn btn-primary">
+                        <i class="fa-solid fa-star"></i>
+                        Featured Products
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Deals"
+                       class="btn btn-light">
+                        <i class="fa-solid fa-bolt"></i>
+                        Deals of the Day
+                    </a>
+
+                    <a asp-controller="Catalog"
+                       asp-action="Index"
+                       class="btn btn-light">
+                        <i class="fa-solid fa-store"></i>
+                        Browse Catalog
+                    </a>
+
+                </nav>
+
+            </div>
+        </header>
+
+        @if (!products.Any())
+        {
+            <div class="listing-empty">
+                <div class="listing-empty-icon">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+
+                <h2>No visited products found</h2>
+
+                <p>
+                    Products will appear on this page after their product pages
+                    receive recorded visits.
+                </p>
+            </div>
+        }
+        else
+        {
+            <section class="top-products-section"
+                     aria-labelledby="top-products-heading">
+
+                <h2 id="top-products-heading"
+                    class="visually-hidden">
+                    Top Visited Products
+                </h2>
+
+                <partial name="~/Views/Shared/Products/_ProductGrid.cshtml"
+                         model="grid" />
+
+            </section>
+        }
+
+    </div>
+</section>

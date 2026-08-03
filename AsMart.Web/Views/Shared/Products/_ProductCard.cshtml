@@ -1,101 +1,101 @@
-﻿@* ===========================
-   Views/Shared/Products/_ProductCard.cshtml
-   Model: ProductCardVm
-   =========================== *@
+﻿@*
+    Views/Shared/Products/_ProductCard.cshtml
+    Model: ProductCardVm
+*@
+
 @model AsMart.Web.Models.ViewModels.ProductCardVm
 
 @{
-    var img = string.IsNullOrWhiteSpace(Model.ImageUrl)
+    var imageUrl = string.IsNullOrWhiteSpace(Model.ImageUrl)
         ? Url.Content("~/images/no-image.png")
         : Model.ImageUrl;
 
-    var hasRating = Model.Rating > 0 && Model.RatingCount > 0;
-
+    var hasRating = Model.Rating > 0;
     var ratingValue = (double)Model.Rating;
-    var stars = (int)Math.Round(ratingValue, MidpointRounding.AwayFromZero);
-    stars = Math.Clamp(stars, 0, 5);
+
+    var filledStars = (int)Math.Round(
+        ratingValue,
+        MidpointRounding.AwayFromZero);
+
+    filledStars = Math.Clamp(filledStars, 0, 5);
 }
 
 <style>
     .pc-card {
-        height: 100%;
-        overflow: hidden;
-        border-radius: 24px;
-        border: 1px solid rgba(15,23,42,.08);
-        background: rgba(255,255,255,.96);
-        box-shadow: 0 18px 48px rgba(15,23,42,.07);
         display: flex;
         flex-direction: column;
-        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        height: 100%;
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, .08);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, .97);
+        box-shadow: 0 16px 45px rgba(15, 23, 42, .07);
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
     }
 
         .pc-card:hover {
             transform: translateY(-4px);
-            border-color: rgba(37,99,235,.22);
-            box-shadow: 0 26px 70px rgba(15,23,42,.12);
+            border-color: rgba(37, 99, 235, .20);
+            box-shadow: 0 24px 64px rgba(15, 23, 42, .11);
         }
 
     .pc-media {
         position: relative;
-        min-height: 230px;
-        padding: 15px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-        border-bottom: 1px solid rgba(15,23,42,.07);
+        min-height: 230px;
+        padding: 15px;
+        border-bottom: 1px solid rgba(15, 23, 42, .07);
+        background: linear-gradient( 180deg, #f8fafc 0%, #ffffff 100%);
         text-decoration: none;
     }
 
     .pc-img {
+        display: block;
         width: 100%;
         height: 210px;
         object-fit: contain;
-        display: block;
     }
 
     .pc-badge {
         position: absolute;
         top: 13px;
         left: 13px;
-        border-radius: 999px;
         padding: 7px 11px;
-        font-weight: 950;
+        border: 1px solid rgba(255, 255, 255, .35);
+        border-radius: 999px;
+        color: #ffffff;
+        background: linear-gradient( 135deg, #ef4444, #dc2626);
+        box-shadow: 0 9px 22px rgba(220, 38, 38, .22);
         font-size: 12px;
+        font-weight: 950;
         line-height: 1;
-        border: 1px solid rgba(255,255,255,.35);
-        box-shadow: 0 10px 24px rgba(15,23,42,.15);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-    }
-
-    .pc-badge-discount {
-        color: #fff;
-        background: linear-gradient(135deg, #ef4444, #b91c1c);
     }
 
     .pc-body {
-        padding: 15px;
-        flex: 1;
         display: flex;
+        flex: 1;
         flex-direction: column;
         gap: 12px;
+        padding: 16px;
     }
 
     .pc-title {
+        display: -webkit-box;
+        min-height: calc(1.35em * 3);
+        overflow: hidden;
         color: #0f172a;
         font-size: 15px;
         font-weight: 950;
         line-height: 1.35;
         text-decoration: none;
-        display: -webkit-box;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 3;
-        overflow: hidden;
-        min-height: calc(1.35em * 3);
     }
 
-        .pc-title:hover {
+        .pc-title:hover,
+        .pc-title:focus {
             color: #2563eb;
             text-decoration: none;
         }
@@ -103,159 +103,254 @@
     .pc-meta {
         display: flex;
         flex-direction: column;
-        gap: 9px;
+        gap: 10px;
     }
 
-    .pc-rating {
+    .pc-rating-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 34px;
+    }
+
+    .pc-rating-left {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        gap: 7px;
+    }
+
+    .pc-rating-number {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
-        flex-wrap: wrap;
-        font-size: 12px;
-    }
-
-    .pc-rating-num {
+        justify-content: center;
+        min-width: 38px;
+        height: 34px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, .09);
         color: #1d4ed8;
         font-size: 12px;
         font-weight: 950;
-        padding: 5px 8px;
-        border-radius: 999px;
-        background: rgba(37,99,235,.09);
+        line-height: 1;
     }
 
     .pc-stars {
         display: inline-flex;
         align-items: center;
         gap: 1px;
-        color: #f59f00;
+        color: #f59e0b;
         font-size: 13px;
         line-height: 1;
+        white-space: nowrap;
     }
 
-    .pc-star-dim {
-        opacity: .35;
+    .pc-star-empty {
+        color: #fcd99a;
     }
 
-    .pc-revs {
-        color: #64748b;
-        font-size: 12px;
-        font-weight: 800;
-    }
-
-    .pc-muted {
+    .pc-no-rating {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        width: fit-content;
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid rgba(15, 23, 42, .07);
+        border-radius: 999px;
+        background: #f8fafc;
         color: #64748b;
         font-size: 12px;
         font-weight: 850;
-        padding: 6px 9px;
-        border-radius: 999px;
-        background: #f8fafc;
-        border: 1px solid rgba(15,23,42,.07);
     }
+
+    .pc-click-count {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 0 9px;
+        border: 1px solid rgba(37, 99, 235, .10);
+        border-radius: 10px;
+        background: linear-gradient( 135deg, rgba(37, 99, 235, .08), rgba(14, 165, 233, .06));
+        color: #0f172a;
+        font-size: 12px;
+        font-weight: 950;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+        .pc-click-count i {
+            color: #2563eb;
+            font-size: 12px;
+        }
 
     .pc-price-row {
         display: flex;
         align-items: center;
-        gap: 8px;
         flex-wrap: wrap;
+        gap: 8px;
     }
 
     .pc-price {
-        padding: 7px 11px;
+        padding: 8px 12px;
+        border: 1px solid rgba(16, 185, 129, .17);
         border-radius: 999px;
-        background: rgba(16,185,129,.10);
+        background: rgba(16, 185, 129, .10);
         color: #047857;
-        border: 1px solid rgba(16,185,129,.16);
         font-size: 13px;
         font-weight: 950;
         white-space: nowrap;
     }
 
-    .pc-list {
+    .pc-list-price {
         color: #94a3b8;
-        text-decoration: line-through;
         font-size: 12px;
-        font-weight: 800;
+        font-weight: 850;
+        text-decoration: line-through;
         white-space: nowrap;
     }
 
     .pc-action {
-        margin-top: auto;
-        min-height: 42px;
-        border-radius: 14px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        color: #2563eb;
-        background: rgba(37,99,235,.07);
-        border: 1px solid rgba(37,99,235,.16);
-        font-size: 13px;
-        font-weight: 950;
+        min-height: 42px;
+        margin-top: auto;
+        padding: 0 14px;
+        border: 1px solid #2563eb;
+        border-radius: 13px;
+        background: linear-gradient( 135deg, #1677ff 0%, #2563eb 100%);
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, .20);
+        font-size: 14px;
+        font-weight: 900;
         text-decoration: none;
-        transition: background .18s ease, color .18s ease, border-color .18s ease;
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
     }
 
-        .pc-action:hover {
-            color: #fff;
-            background: #2563eb;
-            border-color: #2563eb;
+        .pc-action:hover,
+        .pc-action:focus {
+            transform: translateY(-1px);
+            border-color: #1d4ed8;
+            background: linear-gradient( 135deg, #0f6fe8 0%, #1d4ed8 100%);
+            color: #ffffff;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, .26);
             text-decoration: none;
+        }
+
+        .pc-action:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, .22);
+            outline-offset: 2px;
+        }
+
+        .pc-action i {
+            font-size: 13px;
         }
 
     @@media (max-width: 575.98px) {
         .pc-card {
-            border-radius: 22px;
+            border-radius: 21px;
         }
 
         .pc-media {
-            min-height: 300px;
-            padding: 16px;
-        }
-
-        .pc-img {
-            height: 270px;
-        }
-
-        .pc-title {
-            font-size: 15.5px;
-            -webkit-line-clamp: 4;
-            min-height: auto;
-        }
-
-        .pc-body {
+            min-height: 280px;
             padding: 15px;
         }
 
+        .pc-img {
+            height: 250px;
+        }
+
+        .pc-body {
+            padding: 14px;
+        }
+
+        .pc-title {
+            min-height: auto;
+            font-size: 15px;
+            -webkit-line-clamp: 4;
+        }
+
+        .pc-rating-row {
+            gap: 7px;
+        }
+
+        .pc-rating-left {
+            gap: 5px;
+        }
+
+        .pc-rating-number {
+            min-width: 36px;
+            height: 32px;
+            padding: 0 8px;
+        }
+
+        .pc-stars {
+            font-size: 12px;
+        }
+
+        .pc-click-count {
+            min-height: 29px;
+            padding: 0 8px;
+            font-size: 11px;
+        }
+
         .pc-action {
-            min-height: 44px;
+            min-height: 40px;
+            padding: 0 12px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+
+            .pc-action i {
+                font-size: 12px;
+            }
+    }
+
+    @@media (max-width: 370px) {
+        .pc-rating-row {
+            align-items: flex-start;
+        }
+
+        .pc-stars {
+            gap: 0;
+        }
+
+        .pc-click-count {
+            padding: 0 7px;
         }
     }
 </style>
 
 <article class="pc-card">
+
     <a asp-controller="Product"
        asp-action="Details"
        asp-route-slug="@Model.Slug"
        class="pc-media"
-       aria-label="@Model.Title">
-        <img src="@img"
+       aria-label="View @Model.Title">
+
+        <img src="@imageUrl"
              class="pc-img"
              alt="@Model.Title"
              loading="lazy" />
 
-        @if (Model.DiscountPercent.HasValue && Model.DiscountPercent.Value > 0)
+        @if (Model.DiscountPercent.HasValue &&
+                Model.DiscountPercent.Value > 0)
         {
-            <span class="pc-badge pc-badge-discount">
+            <span class="pc-badge">
                 -@Model.DiscountPercent.Value%
             </span>
         }
+
     </a>
 
     <div class="pc-body">
+
         <a asp-controller="Product"
            asp-action="Details"
            asp-route-slug="@Model.Slug"
@@ -264,59 +359,104 @@
         </a>
 
         <div class="pc-meta">
-            @if (hasRating)
-            {
-                <div class="pc-rating" aria-label="Rating @ratingValue.ToString("0.0") out of 5">
-                    <span class="pc-rating-num">@ratingValue.ToString("0.0")</span>
 
-                    <span class="pc-stars">
-                        @for (int i = 1; i <= 5; i++)
-                        {
-                            if (i <= stars)
-                            {
-                                <span>&#9733;</span>
-                            }
-                            else
-                            {
-                                <span class="pc-star-dim">&#9733;</span>
-                            }
-                        }
-                    </span>
+            <div class="pc-rating-row">
 
-                    <span class="pc-revs">@Model.RatingCount.ToString("N0")</span>
+                <div class="pc-rating-left">
+
+                    @if (hasRating)
+                    {
+                        <span class="pc-rating-number">
+                            @ratingValue.ToString("0.0")
+                        </span>
+
+                        <span class="pc-stars"
+                              aria-label="Rating @ratingValue.ToString("0.0") out of 5">
+
+                            @for (var star = 1; star <= 5; star++)
+                            {
+                                if (star <= filledStars)
+                                {
+                                    <span aria-hidden="true">
+                                        &#9733;
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="pc-star-empty"
+                                          aria-hidden="true">
+                                        &#9733;
+                                    </span>
+                                }
+                            }
+
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="pc-no-rating">
+                            <i class="fa-regular fa-star"></i>
+                            No rating
+                        </span>
+                    }
+
                 </div>
-            }
-            else
-            {
-                <span class="pc-muted">
-                    <i class="fa-regular fa-star"></i>
-                    No rating
-                </span>
-            }
+
+                @if (User.Identity?.IsAuthenticated == true &&
+                                User.IsInRole("Admin"))
+                {
+                    <span class="pc-click-count"
+                          title="@Model.ClickCount.ToString("N0") product views"
+                          aria-label="@Model.ClickCount.ToString("N0") product views">
+
+                        <i class="fa-solid fa-eye"
+                           aria-hidden="true"></i>
+
+                        <span>
+                            @Model.ClickCount.ToString("N0")
+                        </span>
+
+                    </span>
+                }
+
+            </div>
 
             @if (Model.Price.HasValue)
             {
                 <div class="pc-price-row">
+
                     <span class="pc-price">
-                        @Model.Price.Value.ToString("0.00") @Model.Currency
+                        @Model.Price.Value.ToString("0.00")
+                        @Model.Currency
                     </span>
 
-                    @if (Model.ListPrice.HasValue && Model.ListPrice.Value > Model.Price.Value)
+                    @if (Model.ListPrice.HasValue &&
+                                    Model.ListPrice.Value > Model.Price.Value)
                     {
-                        <span class="pc-list">
-                            @Model.ListPrice.Value.ToString("0.00") @Model.Currency
+                        <span class="pc-list-price">
+                            @Model.ListPrice.Value.ToString("0.00")
+                            @Model.Currency
                         </span>
                     }
+
                 </div>
             }
+
         </div>
 
         <a asp-controller="Product"
            asp-action="Details"
            asp-route-slug="@Model.Slug"
-           class="pc-action">
-            <span>View Product</span>
-            <i class="fa-solid fa-arrow-right"></i>
+           class="pc-action"
+           aria-label="View @Model.Title">
+
+            <i class="fa-solid fa-eye"
+               aria-hidden="true"></i>
+
+            <span>View</span>
+
         </a>
+
     </div>
+
 </article>

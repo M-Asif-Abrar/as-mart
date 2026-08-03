@@ -640,48 +640,11 @@ else
         {
             <div class="pg-item">
                 <div class="pg-card @(Model.HighlightDeals ? "pg-card-deal" : "")">
-
-                    @await Html.PartialAsync("~/Views/Shared/Products/_ProductCard.cshtml", p)
-
-                    <div class="pg-actions">
-                        @if (Model.Actions == ProductGridActions.DetailsOnly)
-                        {
-                            <a asp-controller="Product"
-                               asp-action="Details"
-                               asp-route-slug="@p.Slug"
-                               class="btn btn-primary pg-btn">
-                                <i class="fa-solid fa-eye"></i>
-                                <span>View</span>
-                            </a>
-                        }
-                        else
-                        {
-                            @* <a asp-controller="Product"
-                               asp-action="Details"
-                               asp-route-slug="@p.Slug"
-                               class="btn btn-outline-primary pg-btn">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <span>Details</span>
-                            </a> *@
-
-                            <a asp-controller="Product"
-                               asp-action="Go"
-                               asp-route-id="@p.Id"
-                               target="_blank"
-                               rel="nofollow noopener sponsored"
-                               class="btn btn-warning pg-btn js-affiliate-click"
-                               data-product-id="@p.Id"
-                               data-product-title="@p.Title"
-                               data-category="@p.CategoryNameForTracking"
-                               data-price="@(p.Price.HasValue? p.Price.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")">
-                                <i class="fa-brands fa-amazon"></i>
-                                <span>Buy</span>
-                            </a>
-                        }
-                    </div>
-
+                    @await Html.PartialAsync(
+                    "~/Views/Shared/Products/_ProductCard.cshtml",
+                        p)
                 </div>
-            </div>
+                    </div>
         }
     </div>
 }

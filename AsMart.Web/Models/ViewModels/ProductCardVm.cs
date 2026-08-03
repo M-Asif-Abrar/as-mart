@@ -11,6 +11,7 @@ public sealed class ProductCardVm
     public string Currency { get; set; } = "USD";
     public decimal Rating { get; set; }
     public int RatingCount { get; set; }
+    public int ClickCount { get; init; }
 
     // Optional for tracking
     public string? CategoryNameForTracking { get; set; }
