@@ -46,6 +46,21 @@
     var publishedCount = items.Count(x => x.Status == 1);
     var draftCount = items.Count(x => x.Status == 0);
     var archivedCount = items.Count(x => x.Status == 2);
+    var categoryCount = items
+        .Where(x => !string.IsNullOrWhiteSpace(x.CategoryName))
+        .Select(x => x.CategoryName)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Count();
+
+    var activeFilterCount = 0;
+    if (!string.IsNullOrWhiteSpace(meta.Q)) activeFilterCount++;
+    if (meta.Status.HasValue) activeFilterCount++;
+    if (meta.CategoryId.HasValue) activeFilterCount++;
+    if (!string.IsNullOrWhiteSpace(meta.Brand)) activeFilterCount++;
+    if (!string.IsNullOrWhiteSpace(meta.TemplateKey)) activeFilterCount++;
+    if (!string.IsNullOrWhiteSpace(meta.SortMode)) activeFilterCount++;
+    if (meta.PriceMin.HasValue) activeFilterCount++;
+    if (meta.PriceMax.HasValue) activeFilterCount++;
 }
 
 @section Styles {
@@ -695,6 +710,302 @@
                     width: 100%;
                 }
         }
+
+        /* Compact modern dashboard overrides */
+        .as-seo-index-page {
+            padding: 12px 0 34px;
+            background: radial-gradient(circle at 6% 0%, rgba(37,99,235,.09), transparent 28%), radial-gradient(circle at 94% 2%, rgba(139,92,246,.07), transparent 27%), linear-gradient(180deg,#f8fafc 0%,#fff 48%,#f1f5f9 100%);
+        }
+
+        .as-seo-index-shell {
+            max-width: 1640px;
+            padding: 0 14px;
+        }
+
+        .as-seo-hero {
+            position: relative;
+            overflow: hidden;
+            display: block;
+            margin-bottom: 14px;
+            padding: 18px 20px;
+            border-radius: 22px;
+            background: radial-gradient(430px 180px at 2% 0%,rgba(37,99,235,.15),transparent 65%), radial-gradient(390px 170px at 98% 0%,rgba(139,92,246,.11),transparent 65%), linear-gradient(125deg,rgba(255,255,255,.98),rgba(239,246,255,.95) 55%,rgba(245,243,255,.92));
+            box-shadow: 0 15px 38px rgba(15,23,42,.07);
+        }
+
+            .as-seo-hero::before {
+                position: absolute;
+                top: -74px;
+                right: -44px;
+                width: 168px;
+                height: 168px;
+                border-radius: 999px;
+                background: rgba(37,99,235,.06);
+                content: "";
+                pointer-events: none;
+            }
+
+        .as-seo-dashboard-main {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 54px minmax(0,1fr) auto;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .as-seo-dashboard-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            border: 1px solid rgba(37,99,235,.16);
+            border-radius: 17px;
+            background: linear-gradient(145deg,rgba(37,99,235,.15),rgba(139,92,246,.08));
+            color: #2563eb;
+            font-size: 20px;
+        }
+
+        .as-seo-kicker {
+            padding: 0;
+            margin-bottom: 4px;
+            background: transparent;
+            font-size: 9.5px;
+        }
+
+        .as-seo-title {
+            font-size: clamp(24px,3vw,38px);
+        }
+
+        .as-seo-title-accent {
+            background: linear-gradient(100deg,#2563eb,#7c3aed);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .as-seo-subtitle {
+            margin-top: 7px;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .as-stats-grid {
+            grid-template-columns: repeat(6,minmax(104px,1fr));
+            gap: 7px;
+            margin: 12px 0 0;
+        }
+
+        .as-stat-card {
+            min-height: 46px;
+            gap: 8px;
+            padding: 7px 9px;
+            border-radius: 13px;
+            box-shadow: 0 7px 18px rgba(15,23,42,.045);
+        }
+
+        .as-stat-icon {
+            width: 29px;
+            height: 29px;
+            min-width: 29px;
+            border-radius: 9px;
+            font-size: 11px;
+        }
+
+        .as-stat-label {
+            font-size: 8.5px;
+        }
+
+        .as-stat-value {
+            font-size: 14px;
+        }
+
+        .as-hero-actions {
+            position: relative;
+            z-index: 2;
+            justify-content: flex-start;
+            gap: 7px;
+            margin-top: 12px;
+            padding-top: 11px;
+            border-top: 1px solid rgba(15,23,42,.07);
+        }
+
+        .as-action-btn {
+            min-height: 35px;
+            padding: 0 11px;
+            border-radius: 10px;
+            font-size: 10.5px;
+        }
+
+        .as-filter-card,
+        .as-table-card {
+            margin-bottom: 14px;
+            border-radius: 20px;
+        }
+
+        .as-filter-card {
+            padding: 15px;
+        }
+
+        .as-filter-head,
+        .as-table-head {
+            gap: 12px;
+        }
+
+        .as-filter-head {
+            margin-bottom: 12px;
+        }
+
+            .as-filter-head h2,
+            .as-table-head h2 {
+                font-size: 15px;
+            }
+
+            .as-filter-head p,
+            .as-table-head p {
+                margin-top: 4px;
+                font-size: 11px;
+            }
+
+        .as-filter-grid {
+            grid-template-columns: 2fr repeat(4,minmax(130px,1fr));
+            gap: 9px;
+        }
+
+        .as-field label {
+            margin-bottom: 5px;
+            font-size: 9.5px;
+        }
+
+        .as-field .form-control {
+            min-height: 39px;
+            border-radius: 11px;
+            font-size: 11.5px;
+        }
+
+        .as-table-head {
+            padding: 14px 16px;
+        }
+
+        .as-record-pill {
+            padding: 6px 9px;
+            font-size: 10px;
+        }
+
+        .as-table-wrap {
+            padding: 8px;
+        }
+
+        .as-seo-table {
+            min-width: 1120px;
+            border-spacing: 0 8px;
+        }
+
+            .as-seo-table thead th {
+                padding: 8px 10px;
+                font-size: 10px;
+            }
+
+            .as-seo-table tbody td {
+                padding: 10px;
+                font-size: 11.5px;
+            }
+
+        .as-id-chip,
+        .as-category-chip,
+        .as-status-chip,
+        .as-date-chip {
+            font-size: 10px;
+        }
+
+        .as-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .as-pager-footer {
+            padding: 14px 16px;
+        }
+
+        .as-page-btn {
+            min-width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            font-size: 10px;
+        }
+
+        @@media (max-width: 1399.98px) {
+            .as-seo-dashboard-main {
+                grid-template-columns: 54px minmax(0,1fr);
+            }
+
+            .as-stats-grid {
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(3,minmax(0,1fr));
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .as-seo-index-page {
+                padding: 10px 0 28px;
+            }
+
+            .as-seo-index-shell {
+                padding: 0 10px;
+            }
+
+            .as-seo-hero {
+                padding: 15px;
+                border-radius: 19px;
+            }
+
+            .as-seo-dashboard-main {
+                grid-template-columns: 44px minmax(0,1fr);
+                gap: 10px;
+            }
+
+            .as-seo-dashboard-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+                font-size: 17px;
+            }
+
+            .as-seo-title {
+                font-size: 26px;
+            }
+
+            .as-seo-subtitle,
+            .as-stats-grid {
+                grid-column: 1 / -1;
+            }
+
+            .as-stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .as-hero-actions,
+            .as-filter-actions-top {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .as-filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 390px) {
+            .as-stats-grid,
+            .as-hero-actions,
+            .as-filter-actions-top {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 }
 
@@ -702,66 +1013,118 @@
     <div class="as-seo-index-shell">
 
         <div class="as-seo-hero">
-            <div>
-                <div class="as-seo-kicker">
-                    <i class="fas fa-search"></i>
-                    Programmatic SEO
+            <div class="as-seo-dashboard-main">
+
+                <div class="as-seo-dashboard-icon" aria-hidden="true">
+                    <i class="fas fa-magnifying-glass-chart"></i>
                 </div>
 
-                <h1 class="as-seo-title">SEO Pages</h1>
+                <div>
+                    <div class="as-seo-kicker">
+                        <i class="fas fa-sparkles"></i>
+                        Programmatic SEO Management
+                    </div>
 
-                <p class="as-seo-subtitle">
-                    Manage programmatic SEO guide pages, filters, publishing status, public URLs, and page lifecycle actions.
-                </p>
+                    <h1 class="as-seo-title">
+                        Manage
+                        <span class="as-seo-title-accent">SEO pages</span>
+                    </h1>
+
+                    <p class="as-seo-subtitle">
+                        Review programmatic guides, publishing status, categories,
+                        filters, public URLs and lifecycle actions from one
+                        responsive dashboard.
+                    </p>
+                </div>
+
+                <div class="as-stats-grid" aria-label="SEO page statistics">
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-blue">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-label">Total Results</div>
+                            <div class="as-stat-value">@meta.Total.ToString("N0")</div>
+                        </div>
+                    </div>
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-green">
+                            <i class="fas fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-label">Published</div>
+                            <div class="as-stat-value">@publishedCount.ToString("N0")</div>
+                        </div>
+                    </div>
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-amber">
+                            <i class="fas fa-pen"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-label">Drafts</div>
+                            <div class="as-stat-value">@draftCount.ToString("N0")</div>
+                        </div>
+                    </div>
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-slate">
+                            <i class="fas fa-box-archive"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-label">Archived</div>
+                            <div class="as-stat-value">@archivedCount.ToString("N0")</div>
+                        </div>
+                    </div>
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-blue">
+                            <i class="fas fa-folder-tree"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-label">Categories</div>
+                            <div class="as-stat-value">@categoryCount.ToString("N0")</div>
+                        </div>
+                    </div>
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-green">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-label">Active Filters</div>
+                            <div class="as-stat-value">@activeFilterCount.ToString("N0")</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="as-hero-actions">
-                <a class="btn btn-primary as-action-btn" href="/Admin/SeoPages/Create">
+                <a class="btn btn-primary as-action-btn"
+                   href="/Admin/SeoPages/Create">
                     <i class="fas fa-plus"></i>
                     New SEO Page
                 </a>
-            </div>
-        </div>
 
-        <div class="as-stats-grid">
-            <div class="as-stat-card">
-                <div class="as-stat-icon as-blue">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div>
-                    <div class="as-stat-label">Total Results</div>
-                    <div class="as-stat-value">@meta.Total</div>
-                </div>
-            </div>
+                <a class="btn btn-outline-primary as-action-btn"
+                   href="/Admin/SeoPages">
+                    <i class="fas fa-list"></i>
+                    All SEO Pages
+                </a>
 
-            <div class="as-stat-card">
-                <div class="as-stat-icon as-green">
-                    <i class="fas fa-circle-check"></i>
-                </div>
-                <div>
-                    <div class="as-stat-label">Published</div>
-                    <div class="as-stat-value">@publishedCount</div>
-                </div>
-            </div>
+                <a class="btn btn-outline-primary as-action-btn"
+                   href="/guides"
+                   target="_blank"
+                   rel="noopener">
+                    <i class="fas fa-eye"></i>
+                    Public Guides
+                </a>
 
-            <div class="as-stat-card">
-                <div class="as-stat-icon as-amber">
-                    <i class="fas fa-pen"></i>
-                </div>
-                <div>
-                    <div class="as-stat-label">Drafts</div>
-                    <div class="as-stat-value">@draftCount</div>
-                </div>
-            </div>
-
-            <div class="as-stat-card">
-                <div class="as-stat-icon as-slate">
-                    <i class="fas fa-box-archive"></i>
-                </div>
-                <div>
-                    <div class="as-stat-label">Archived</div>
-                    <div class="as-stat-value">@archivedCount</div>
-                </div>
+                <span class="btn btn-light as-action-btn disabled">
+                    <i class="fas fa-file-lines"></i>
+                    Page @meta.Page of @meta.TotalPages
+                </span>
             </div>
         </div>
 

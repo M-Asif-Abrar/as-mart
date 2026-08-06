@@ -2,378 +2,856 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var hasParent = !string.IsNullOrWhiteSpace(Model.ParentCategoryName);
+    var hasDescription = !string.IsNullOrWhiteSpace(Model.Description);
+    var hasLinks = Model.Links != null && Model.Links.Count > 0;
+    var hasProducts = Model.Products != null && Model.Products.Count > 0;
 }
 
 @section Styles {
     <style>
-        .category-details-page {
-            min-height: calc(100vh - 80px);
-            background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 45%, #ffffff 100%);
+        .asm-category-details {
+            --asm-blue: #146cff;
+            --asm-indigo: #5b4bff;
+            --asm-green: #159447;
+            --asm-orange: #b76312;
+            --asm-red: #d93a3a;
+            --asm-ink: #111a2e;
+            --asm-text: #33415c;
+            --asm-muted: #71809d;
+            --asm-line: #dfe6f1;
+            min-height: calc(100vh - 70px);
+            padding: 1.25rem;
+            background: radial-gradient(circle at 8% 2%, rgba(37, 99, 235, .10), transparent 30rem), radial-gradient(circle at 96% 10%, rgba(124, 58, 237, .10), transparent 28rem), linear-gradient(135deg, #eef5ff 0%, #f8fbff 50%, #f3f1ff 100%);
         }
 
-        .details-hero {
-            border-radius: 30px;
-            padding: 2rem;
-            background: linear-gradient(135deg, #0f172a, #2563eb);
+        .asm-details-command,
+        .asm-details-main-card,
+        .asm-details-side-card {
+            border: 1px solid rgba(99, 116, 150, .15);
+            border-radius: 26px;
+            background: rgba(255, 255, 255, .90);
+            box-shadow: 0 16px 42px rgba(33, 54, 92, .09);
+            backdrop-filter: blur(14px);
+        }
+
+        .asm-details-command {
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 1.5rem 1.25rem;
+        }
+
+            .asm-details-command::after {
+                position: absolute;
+                top: -100px;
+                right: -45px;
+                width: 245px;
+                height: 245px;
+                content: "";
+                border-radius: 50%;
+                background: rgba(91, 75, 255, .08);
+            }
+
+        .asm-details-command-main {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(340px, 1.2fr) minmax(560px, 1.6fr);
+            gap: 1.4rem;
+            align-items: center;
+        }
+
+        .asm-details-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .asm-details-icon {
+            display: inline-flex;
+            flex: 0 0 68px;
+            width: 68px;
+            height: 68px;
+            align-items: center;
+            justify-content: center;
+            color: #2f63dd;
+            font-size: 1.55rem;
+            border: 1px solid #bdd0ff;
+            border-radius: 22px;
+            background: linear-gradient(145deg, #dce8ff, #eef2ff);
+        }
+
+        .asm-details-eyebrow {
+            display: block;
+            margin-bottom: .35rem;
+            color: #2459d8;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .asm-details-title h1 {
+            margin: 0;
+            color: var(--asm-ink);
+            font-size: clamp(2rem, 3vw, 3rem);
+            font-weight: 950;
+            line-height: 1;
+            letter-spacing: -.045em;
+        }
+
+            .asm-details-title h1 span {
+                color: var(--asm-indigo);
+            }
+
+        .asm-details-title p {
+            max-width: 650px;
+            margin: .55rem 0 0;
+            color: var(--asm-muted);
+            font-size: .92rem;
+            line-height: 1.65;
+        }
+
+        .asm-details-kpis {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(110px, 1fr));
+            gap: .55rem;
+        }
+
+        .asm-details-kpi {
+            display: flex;
+            align-items: center;
+            gap: .62rem;
+            min-height: 58px;
+            padding: .62rem .7rem;
+            border: 1px solid rgba(99, 116, 150, .15);
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .asm-details-kpi-icon {
+            display: inline-flex;
+            flex: 0 0 35px;
+            width: 35px;
+            height: 35px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+            font-size: .85rem;
+        }
+
+            .asm-details-kpi-icon.blue {
+                color: #2e62dc;
+                background: #e8efff;
+            }
+
+            .asm-details-kpi-icon.green {
+                color: #148645;
+                background: #e5f5ec;
+            }
+
+            .asm-details-kpi-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-details-kpi-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+            .asm-details-kpi-icon.gray {
+                color: #526079;
+                background: #edf0f5;
+            }
+
+        .asm-details-kpi small {
+            display: block;
+            color: #697895;
+            font-size: .60rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .asm-details-kpi strong {
+            display: block;
+            margin-top: .05rem;
+            overflow: hidden;
+            color: var(--asm-ink);
+            font-size: .9rem;
+            font-weight: 950;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .asm-details-command-actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            flex-wrap: wrap;
+            margin-top: 1.15rem;
+            padding-top: .9rem;
+            border-top: 1px solid #e3e9f2;
+        }
+
+        .asm-details-btn {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .65rem 1rem;
+            font-size: .78rem;
+            font-weight: 900;
+            border-radius: 13px;
+            transition: .2s ease;
+        }
+
+            .asm-details-btn:hover {
+                transform: translateY(-2px);
+            }
+
+        .asm-details-btn-primary {
             color: #fff;
-            box-shadow: 0 18px 45px rgba(15,23,42,.16);
+            border: 1px solid var(--asm-blue);
+            background: linear-gradient(135deg, var(--asm-blue), #2463eb);
+            box-shadow: 0 9px 20px rgba(20, 108, 255, .22);
+        }
+
+            .asm-details-btn-primary:hover {
+                color: #fff;
+            }
+
+        .asm-details-btn-outline {
+            color: var(--asm-blue);
+            border: 1px solid var(--asm-blue);
+            background: #fff;
+        }
+
+        .asm-details-btn-success {
+            color: #fff;
+            border: 1px solid var(--asm-green);
+            background: linear-gradient(135deg, #159447, #16a34a);
+            box-shadow: 0 9px 20px rgba(21, 148, 71, .20);
+        }
+
+            .asm-details-btn-success:hover {
+                color: #fff;
+            }
+
+        .asm-details-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: start;
+        }
+
+        .asm-details-main-card {
+            overflow: hidden;
+        }
+
+        .asm-details-card-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            flex-wrap: wrap;
+            padding: 1rem 1.15rem;
+            border-bottom: 1px solid #e5eaf2;
         }
 
-        .details-kicker {
-            text-transform: uppercase;
-            letter-spacing: .14em;
-            color: #bfdbfe;
-            font-size: .78rem;
-            font-weight: 900;
-        }
-
-        .details-hero h1 {
-            font-size: clamp(1.9rem, 4vw, 2.9rem);
-            font-weight: 900;
-            margin: .35rem 0;
-            line-height: 1.1;
-        }
-
-        .details-hero p {
-            margin: 0;
-            max-width: 760px;
-            color: rgba(255,255,255,.78);
-            font-weight: 500;
-            line-height: 1.6;
-        }
-
-        .hero-actions {
+        .asm-details-card-title {
             display: flex;
             align-items: center;
-            gap: .75rem;
-            flex-wrap: wrap;
-        }
-
-        .details-btn {
-            border-radius: 16px;
-            padding: .82rem 1.15rem;
-            font-weight: 900;
-            transition: .2s ease;
-        }
-
-            .details-btn:hover {
-                transform: translateY(-2px);
-            }
-
-        .details-btn-primary {
-            color: #fff;
-            background: linear-gradient(135deg,#2563eb,#1d4ed8);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(37,99,235,.24);
-        }
-
-            .details-btn-primary:hover,
-            .details-btn-success:hover {
-                color: #fff;
-            }
-
-        .details-btn-success {
-            color: #fff;
-            background: linear-gradient(135deg,#059669,#16a34a);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(5,150,105,.20);
-        }
-
-        .details-btn-light {
-            background: #fff;
-            color: #0f172a;
-        }
-
-        .details-card,
-        .side-card {
-            border-radius: 28px;
-            background: rgba(255,255,255,.96);
-            border: 1px solid rgba(15,23,42,.08);
-            box-shadow: 0 18px 45px rgba(15,23,42,.08);
-            overflow: hidden;
-        }
-
-        .details-card-body,
-        .side-card {
-            padding: 1.5rem;
-        }
-
-        .details-meta-label,
-        .metric-label {
-            font-size: .78rem;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            color: #64748b;
-            font-weight: 900;
-        }
-
-        .details-title {
-            font-size: clamp(1.5rem,3vw,2.1rem);
-            font-weight: 900;
-            color: #0f172a;
-            margin: .35rem 0;
-            overflow-wrap: anywhere;
-        }
-
-        .details-slug {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: .45rem .85rem;
-            background: rgba(37,99,235,.08);
-            border: 1px solid rgba(37,99,235,.18);
-            color: #2563eb;
-            font-weight: 800;
-            overflow-wrap: anywhere;
-        }
-
-        .status-badge,
-        .id-badge,
-        .count-badge {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: .5rem .9rem;
-            font-size: .78rem;
-            font-weight: 900;
-        }
-
-            .status-badge.active {
-                color: #166534;
-                background: rgba(22,101,52,.08);
-                border: 1px solid rgba(22,101,52,.18);
-            }
-
-            .status-badge.inactive {
-                color: #dc2626;
-                background: rgba(220,38,38,.08);
-                border: 1px solid rgba(220,38,38,.16);
-            }
-
-        .id-badge,
-        .count-badge {
-            color: #475569;
-            background: #f1f5f9;
-            border: 1px solid rgba(15,23,42,.08);
-        }
-
-        .metric-card {
-            height: 100%;
-            border-radius: 22px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: #fff;
-            padding: 1rem;
-        }
-
-        .metric-value {
-            color: #0f172a;
-            font-size: 1.05rem;
-            font-weight: 900;
-            margin-top: .35rem;
-            overflow-wrap: anywhere;
-        }
-
-            .metric-value.blue {
-                color: #2563eb;
-            }
-
-            .metric-value.purple {
-                color: #7c3aed;
-            }
-
-        .section-card {
-            border-top: 1px solid rgba(15,23,42,.08);
-            padding-top: 1.5rem;
-        }
-
-        .section-title,
-        .side-title {
+            gap: .65rem;
+            color: var(--asm-ink);
             font-size: 1rem;
-            font-weight: 900;
-            color: #0f172a;
-            margin-bottom: 1rem;
+            font-weight: 950;
         }
 
-        .description-box {
-            border-radius: 20px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: #fff;
+            .asm-details-card-title i {
+                color: #2463eb;
+            }
+
+        .asm-details-status {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .38rem .65rem;
+            font-size: .7rem;
+            font-weight: 900;
+            border-radius: 999px;
+        }
+
+            .asm-details-status.active {
+                color: #147a3f;
+                border: 1px solid #cce8d7;
+                background: #e4f5eb;
+            }
+
+            .asm-details-status.inactive {
+                color: #b22f2f;
+                border: 1px solid #f2caca;
+                background: #fdeaea;
+            }
+
+        .asm-details-body {
+            padding: 1.15rem;
+        }
+
+        .asm-details-summary {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
             padding: 1rem;
-            line-height: 1.8;
-            color: #0f172a;
+            border: 1px solid #e3e9f2;
+            border-radius: 16px;
+            background: #f8faff;
+        }
+
+        .asm-details-summary-label {
+            display: block;
+            color: #71809d;
+            font-size: .66rem;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .asm-details-summary h2 {
+            margin: .25rem 0 .35rem;
+            color: var(--asm-ink);
+            font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+            font-weight: 950;
             overflow-wrap: anywhere;
         }
 
-        .guide-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .75rem;
-        }
-
-        .guide-badge {
+        .asm-details-slug {
             display: inline-flex;
             align-items: center;
+            max-width: 100%;
+            gap: .4rem;
+            color: #2459d8;
+            font-size: .78rem;
+            font-weight: 850;
+            overflow-wrap: anywhere;
+        }
+
+        .asm-details-id {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .38rem .65rem;
+            color: #536079;
+            font-size: .72rem;
+            font-weight: 900;
+            border: 1px solid #dde4ee;
             border-radius: 999px;
-            padding: .55rem .9rem;
-            background: rgba(37,99,235,.08);
-            border: 1px solid rgba(37,99,235,.18);
-            color: #2563eb;
-            font-size: .82rem;
+            background: #fff;
+            white-space: nowrap;
+        }
+
+        .asm-details-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: .75rem;
+            margin-top: .9rem;
+        }
+
+        .asm-details-meta-card {
+            display: flex;
+            align-items: center;
+            gap: .72rem;
+            min-height: 82px;
+            padding: .9rem;
+            border: 1px solid #e4e9f1;
+            border-radius: 15px;
+            background: #fff;
+        }
+
+            .asm-details-meta-card.parent {
+                grid-column: span 2;
+            }
+
+        .asm-details-meta-icon {
+            display: inline-flex;
+            flex: 0 0 42px;
+            width: 42px;
+            height: 42px;
+            align-items: center;
+            justify-content: center;
+            color: #2e62dc;
+            border-radius: 13px;
+            background: #e8efff;
+        }
+
+            .asm-details-meta-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-details-meta-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+            .asm-details-meta-icon.green {
+                color: #148645;
+                background: #e5f5ec;
+            }
+
+        .asm-details-meta-card small {
+            display: block;
+            color: #71809d;
+            font-size: .64rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .asm-details-meta-card strong {
+            display: block;
+            margin-top: .08rem;
+            color: var(--asm-ink);
+            font-size: .86rem;
+            font-weight: 950;
+            overflow-wrap: anywhere;
+        }
+
+        .asm-details-section {
+            margin-top: .9rem;
+            padding: 1rem;
+            border: 1px solid #e4e9f1;
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .asm-details-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: .8rem;
+        }
+
+        .asm-details-section-title {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            color: var(--asm-ink);
+            font-size: .9rem;
+            font-weight: 950;
+        }
+
+            .asm-details-section-title i {
+                color: #2463eb;
+            }
+
+        .asm-details-count {
+            display: inline-flex;
+            min-width: 32px;
+            align-items: center;
+            justify-content: center;
+            padding: .3rem .5rem;
+            color: #536079;
+            font-size: .68rem;
+            font-weight: 900;
+            border-radius: 999px;
+            background: #edf1f6;
+        }
+
+        .asm-details-description {
+            color: var(--asm-text);
+            font-size: .84rem;
+            line-height: 1.75;
+            overflow-wrap: anywhere;
+        }
+
+        .asm-details-empty {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .8rem;
+            color: #71809d;
+            font-size: .78rem;
             font-weight: 800;
+            border: 1px dashed #d7deea;
+            border-radius: 13px;
+            background: #f8faff;
+        }
+
+        .asm-guide-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .55rem;
+        }
+
+        .asm-guide-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .5rem .75rem;
+            color: #2459d8;
+            font-size: .74rem;
+            font-weight: 900;
             text-decoration: none;
+            border: 1px solid #d9e5fb;
+            border-radius: 999px;
+            background: #f7faff;
             transition: .2s ease;
         }
 
-            .guide-badge:hover {
-                background: rgba(37,99,235,.14);
+            .asm-guide-badge:hover {
+                color: #1f4fc0;
                 transform: translateY(-2px);
-                color: #1d4ed8;
+                background: #eef4ff;
             }
 
-        .empty-box {
-            border-radius: 18px;
-            background: #f8fafc;
-            border: 1px dashed rgba(15,23,42,.12);
+        .asm-details-sidebar {
+            position: sticky;
+            top: 1rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .asm-details-side-card {
             padding: 1rem;
-            color: #64748b;
-            font-weight: 600;
         }
 
-        .tips-list {
-            padding-left: 1.1rem;
-            margin-bottom: 0;
-            color: #64748b;
-        }
-
-            .tips-list li {
-                margin-bottom: .75rem;
-                line-height: 1.6;
-            }
-
-        .public-url-box {
-            border-radius: 18px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: #f8fafc;
-            padding: .85rem;
+        .asm-details-side-title {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: .75rem;
+            margin-bottom: .8rem;
+            color: var(--asm-ink);
+            font-size: .9rem;
+            font-weight: 950;
         }
 
-            .public-url-box code {
+            .asm-details-side-title span:first-child {
+                display: inline-flex;
+                align-items: center;
+                gap: .55rem;
+            }
+
+            .asm-details-side-title i {
+                color: #6846d8;
+            }
+
+        .asm-public-url {
+            display: grid;
+            gap: .65rem;
+        }
+
+            .asm-public-url code {
+                display: block;
+                padding: .75rem;
+                color: #22304a;
+                font-size: .72rem;
+                border: 1px solid #e1e7f0;
+                border-radius: 12px;
+                background: #f8faff;
                 overflow-wrap: anywhere;
                 white-space: normal;
-                color: #0f172a;
             }
 
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(3,minmax(0,1fr));
-            gap: 14px;
-        }
-
-        .product-item {
-            border-radius: 18px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: #fff;
-            padding: .75rem;
-            transition: .2s ease;
-            display: block;
-        }
-
-            .product-item:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 12px 24px rgba(15,23,42,.08);
-            }
-
-        .product-image {
-            width: 100%;
-            height: 140px;
-            object-fit: contain;
-            display: block;
-        }
-
-        @@media (max-width: 991.98px) {
-
-            .details-hero {
-                padding: 1.5rem;
-            }
-
-            .hero-actions .btn {
+            .asm-public-url .btn {
                 width: 100%;
             }
 
-            .products-grid {
-                grid-template-columns: repeat(4,minmax(0,1fr));
+        .asm-details-tip-list {
+            display: grid;
+            gap: .7rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+            .asm-details-tip-list li {
+                display: flex;
+                gap: .55rem;
+                color: #56637b;
+                font-size: .75rem;
+                line-height: 1.5;
+            }
+
+            .asm-details-tip-list i {
+                margin-top: .15rem;
+                color: #2463eb;
+            }
+
+        .asm-product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .65rem;
+        }
+
+        .asm-product-card {
+            position: relative;
+            overflow: hidden;
+            display: block;
+            padding: .55rem;
+            color: inherit;
+            text-decoration: none;
+            border: 1px solid #e1e7f0;
+            border-radius: 14px;
+            background: #fff;
+            transition: .2s ease;
+        }
+
+            .asm-product-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 22px rgba(33, 54, 92, .10);
+            }
+
+        .asm-product-image {
+            display: block;
+            width: 100%;
+            height: 115px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: #f9fbff;
+        }
+
+        .asm-product-title {
+            display: -webkit-box;
+            margin-top: .45rem;
+            overflow: hidden;
+            color: #243049;
+            font-size: .7rem;
+            font-weight: 850;
+            line-height: 1.4;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        @@media (max-width: 1399.98px) {
+            .asm-details-command-main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .asm-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-details-sidebar {
+                position: static;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .asm-details-side-card.products-card {
+                grid-column: 1 / -1;
+            }
+
+            .asm-product-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .asm-details-kpis {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .asm-details-meta-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .asm-details-meta-card.parent {
+                grid-column: span 2;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .asm-category-details {
+                padding: .85rem;
+            }
+
+            .asm-details-command,
+            .asm-details-main-card,
+            .asm-details-side-card {
+                border-radius: 20px;
+            }
+
+            .asm-details-command {
+                padding: 1.25rem 1rem 1rem;
+            }
+
+            .asm-details-title {
+                align-items: flex-start;
+            }
+
+            .asm-details-icon {
+                width: 56px;
+                height: 56px;
+                flex-basis: 56px;
+                border-radius: 17px;
+            }
+
+            .asm-details-kpis {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .asm-details-card-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .asm-details-sidebar {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-product-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
 
         @@media (max-width: 575.98px) {
-
-            .details-hero,
-            .details-card,
-            .side-card {
-                border-radius: 22px;
-            }
-
-            .details-card-body,
-            .side-card {
-                padding: 1rem;
-            }
-
-            .products-grid {
-                grid-template-columns: repeat(3,minmax(0,1fr));
-                gap: 10px;
-            }
-
-            .product-image {
-                height: 95px;
-            }
-
-            .public-url-box {
+            .asm-details-title {
                 flex-direction: column;
-                align-items: stretch;
+            }
+
+            .asm-details-kpis {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-details-command-actions .btn {
+                width: 100%;
+            }
+
+            .asm-details-command-actions .ms-auto {
+                width: 100%;
+                margin-left: 0 !important;
+                text-align: center;
+            }
+
+            .asm-details-summary {
+                flex-direction: column;
+            }
+
+            .asm-details-meta-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-details-meta-card.parent {
+                grid-column: auto;
+            }
+
+            .asm-details-section-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .asm-product-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .asm-product-image {
+                height: 95px;
             }
         }
     </style>
 }
 
-<div class="container-fluid py-4 category-details-page">
+<div class="asm-category-details">
+    <section class="asm-details-command">
+        <div class="asm-details-command-main">
+            <div class="asm-details-title">
+                <div class="asm-details-icon">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
 
-    <div class="details-hero mb-4">
+                <div>
+                    <span class="asm-details-eyebrow">
+                        Catalog Management
+                    </span>
 
-        <div>
-            <span class="details-kicker">
-                Admin Panel
-            </span>
+                    <h1>Category <span>Details</span></h1>
 
-            <h1>Category Details</h1>
+                    <p>
+                        Review category metadata, hierarchy, storefront visibility,
+                        SEO links, assigned products, and public navigation information.
+                    </p>
+                </div>
+            </div>
 
-            <p>
-                View category metadata, SEO structure, storefront visibility,
-                hierarchy, products, and public navigation details.
-            </p>
+            <div class="asm-details-kpis">
+                <div class="asm-details-kpi">
+                    <span class="asm-details-kpi-icon blue">
+                        <i class="fa-solid fa-hashtag"></i>
+                    </span>
+
+                    <div>
+                        <small>Category ID</small>
+                        <strong>@Model.Id</strong>
+                    </div>
+                </div>
+
+                <div class="asm-details-kpi">
+                    <span class="asm-details-kpi-icon green">
+                        <i class="fa-solid @(Model.IsActive ? "fa-circle-check" : "fa-circle-xmark")"></i>
+                    </span>
+
+                    <div>
+                        <small>Status</small>
+                        <strong>@(Model.IsActive ? "Active" : "Inactive")</strong>
+                    </div>
+                </div>
+
+                <div class="asm-details-kpi">
+                    <span class="asm-details-kpi-icon orange">
+                        <i class="fa-solid fa-arrow-down-1-9"></i>
+                    </span>
+
+                    <div>
+                        <small>Display Order</small>
+                        <strong>@Model.DisplayOrder</strong>
+                    </div>
+                </div>
+
+                <div class="asm-details-kpi">
+                    <span class="asm-details-kpi-icon purple">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </span>
+
+                    <div>
+                        <small>Products</small>
+                        <strong>@Model.ProductCount</strong>
+                    </div>
+                </div>
+
+                <div class="asm-details-kpi">
+                    <span class="asm-details-kpi-icon gray">
+                        <i class="fa-solid fa-link"></i>
+                    </span>
+
+                    <div>
+                        <small>SEO Links</small>
+                        <strong>@Model.LinksCount</strong>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="hero-actions">
-
+        <div class="asm-details-command-actions">
             <a asp-action="Index"
-               class="btn details-btn details-btn-light">
-                <i class="fa-solid fa-arrow-left me-2"></i>
-                Back
+               class="btn asm-details-btn asm-details-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Categories
             </a>
 
             <a asp-action="Edit"
                asp-route-id="@Model.Id"
-               class="btn details-btn details-btn-primary">
-                <i class="fa-solid fa-pen-to-square me-2"></i>
-                Edit
+               class="btn asm-details-btn asm-details-btn-primary">
+                <i class="fa-solid fa-pen-to-square"></i>
+                Edit Category
             </a>
 
             <a asp-area=""
@@ -382,248 +860,186 @@
                asp-route-slug="@Model.Slug"
                target="_blank"
                rel="noopener"
-               class="btn details-btn details-btn-success">
-                <i class="fa-solid fa-eye me-2"></i>
-                View Public
+               class="btn asm-details-btn asm-details-btn-success">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                View Public Page
             </a>
 
+            <span class="ms-auto text-muted small fw-bold">
+                <i class="fa-solid fa-circle-info me-1"></i>
+                Read-only category overview
+            </span>
         </div>
+    </section>
 
-    </div>
+    <div class="asm-details-grid">
+        <section class="asm-details-main-card">
+            <div class="asm-details-card-head">
+                <div class="asm-details-card-title">
+                    <i class="fa-solid fa-folder-tree"></i>
+                    Category Overview
+                </div>
 
-    <div class="row g-4">
+                <span class="asm-details-status @(Model.IsActive ? "active" : "inactive")">
+                    <i class="fa-solid @(Model.IsActive ? "fa-circle-check" : "fa-circle-xmark")"></i>
+                    @(Model.IsActive ? "Active" : "Inactive")
+                </span>
+            </div>
 
-        <div class="col-12 col-xl-8">
+            <div class="asm-details-body">
+                <div class="asm-details-summary">
+                    <div>
+                        <span class="asm-details-summary-label">
+                            Category
+                        </span>
 
-            <div class="details-card">
+                        <h2>@Model.Name</h2>
 
-                <div class="details-card-body">
+                        <div class="asm-details-slug">
+                            <i class="fa-solid fa-link"></i>
+                            @Model.Slug
+                        </div>
+                    </div>
 
-                    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
+                    <span class="asm-details-id">
+                        <i class="fa-solid fa-hashtag"></i>
+                        @Model.Id
+                    </span>
+                </div>
+
+                <div class="asm-details-meta-grid">
+                    <div class="asm-details-meta-card parent">
+                        <span class="asm-details-meta-icon">
+                            <i class="fa-solid fa-sitemap"></i>
+                        </span>
 
                         <div>
-
-                            <div class="details-meta-label">
-                                Category
-                            </div>
-
-                            <h2 class="details-title">
-                                @Model.Name
-                            </h2>
-
-                            <div class="details-slug">
-                                <i class="fa-solid fa-link me-2"></i>
-                                @Model.Slug
-                            </div>
-
+                            <small>Parent Category</small>
+                            <strong>@(hasParent? Model.ParentCategoryName: "None")</strong>
                         </div>
-
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-
-                            @if (Model.IsActive)
-                            {
-                                <span class="status-badge active">
-                                    <i class="fa-solid fa-circle-check me-1"></i>
-                                    Active
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="status-badge inactive">
-                                    <i class="fa-solid fa-circle-xmark me-1"></i>
-                                    Inactive
-                                </span>
-                            }
-
-                            <span class="id-badge">
-                                <i class="fa-solid fa-hashtag me-1"></i>
-                                @Model.Id
-                            </span>
-
-                        </div>
-
                     </div>
 
-                    <div class="row g-3 mb-4">
+                    <div class="asm-details-meta-card">
+                        <span class="asm-details-meta-icon orange">
+                            <i class="fa-solid fa-folder-tree"></i>
+                        </span>
 
-                        <div class="col-12 col-md-6">
-                            <div class="metric-card">
-
-                                <div class="metric-label">
-                                    Parent Category
-                                </div>
-
-                                <div class="metric-value">
-                                    @(string.IsNullOrWhiteSpace(Model.ParentCategoryName)
-                                                                        ? "None"
-                                                                        : Model.ParentCategoryName)
-                                </div>
-
-                            </div>
+                        <div>
+                            <small>Child Categories</small>
+                            <strong>@Model.ChildCount</strong>
                         </div>
-
-                        <div class="col-6 col-md-3">
-                            <div class="metric-card">
-
-                                <div class="metric-label">
-                                    Display Order
-                                </div>
-
-                                <div class="metric-value">
-                                    @Model.DisplayOrder
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div class="col-6 col-md-3">
-                            <div class="metric-card">
-
-                                <div class="metric-label">
-                                    Child Categories
-                                </div>
-
-                                <div class="metric-value">
-                                    @Model.ChildCount
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div class="col-6 col-md-3">
-                            <div class="metric-card">
-
-                                <div class="metric-label">
-                                    Products
-                                </div>
-
-                                <div class="metric-value blue">
-                                    @Model.ProductCount
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div class="col-6 col-md-3">
-                            <div class="metric-card">
-
-                                <div class="metric-label">
-                                    SEO Links
-                                </div>
-
-                                <div class="metric-value purple">
-                                    @Model.LinksCount
-                                </div>
-
-                            </div>
-                        </div>
-
                     </div>
 
-                    <div class="section-card mb-4">
+                    <div class="asm-details-meta-card">
+                        <span class="asm-details-meta-icon purple">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </span>
 
-                        <div class="section-title">
+                        <div>
+                            <small>Assigned Products</small>
+                            <strong>@Model.ProductCount</strong>
+                        </div>
+                    </div>
+
+                    <div class="asm-details-meta-card">
+                        <span class="asm-details-meta-icon green">
+                            <i class="fa-solid fa-arrow-down-1-9"></i>
+                        </span>
+
+                        <div>
+                            <small>Display Order</small>
+                            <strong>@Model.DisplayOrder</strong>
+                        </div>
+                    </div>
+
+                    <div class="asm-details-meta-card">
+                        <span class="asm-details-meta-icon">
+                            <i class="fa-solid fa-link"></i>
+                        </span>
+
+                        <div>
+                            <small>SEO Links</small>
+                            <strong>@Model.LinksCount</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="asm-details-section">
+                    <div class="asm-details-section-head">
+                        <div class="asm-details-section-title">
+                            <i class="fa-solid fa-align-left"></i>
                             Description
                         </div>
 
-                        @if (!string.IsNullOrWhiteSpace(Model.Description))
-                        {
-                            <div class="description-box">
-                                @Html.Raw(Model.Description)
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="empty-box">
-                                <i class="fa-regular fa-note-sticky me-2"></i>
-                                No description available.
-                            </div>
-                        }
-
+                        <span class="asm-details-count">
+                            @(hasDescription ? "Available" : "Empty")
+                        </span>
                     </div>
 
-                    <div class="section-card">
+                    @if (hasDescription)
+                    {
+                        <div class="asm-details-description">
+                            @Html.Raw(Model.Description)
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="asm-details-empty">
+                            <i class="fa-regular fa-note-sticky"></i>
+                            No description is currently available for this category.
+                        </div>
+                    }
+                </section>
 
-                        <div class="section-title">
-                            Guide Badges
+                <section class="asm-details-section">
+                    <div class="asm-details-section-head">
+                        <div class="asm-details-section-title">
+                            <i class="fa-solid fa-tags"></i>
+                            SEO Guide Links
                         </div>
 
-                        @if (Model.Links != null && Model.Links.Count > 0)
-                        {
-                            <div class="guide-badges">
-
-                                @foreach (var b in Model.Links)
-                                {
-                                    <a href="@b.Url"
-                                       class="guide-badge"
-                                       target="_blank"
-                                       rel="noopener">
-
-                                        @b.Text
-
-                                    </a>
-                                }
-
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="empty-box">
-                                <i class="fa-solid fa-tags me-2"></i>
-                                No SEO guide badges added.
-                            </div>
-                        }
-
+                        <span class="asm-details-count">
+                            @Model.LinksCount
+                        </span>
                     </div>
 
-                </div>
-
+                    @if (hasLinks)
+                    {
+                        <div class="asm-guide-list">
+                            @foreach (var link in Model.Links)
+                            {
+                                <a href="@link.Url"
+                                   target="_blank"
+                                   rel="noopener"
+                                   class="asm-guide-badge">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    @link.Text
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="asm-details-empty">
+                            <i class="fa-solid fa-tags"></i>
+                            No SEO guide links have been added.
+                        </div>
+                    }
+                </section>
             </div>
+        </section>
 
-        </div>
-
-        <div class="col-12 col-xl-4">
-
-            <div class="side-card mb-4">
-
-                <div class="side-title">
-                    Quick Tips
+        <aside class="asm-details-sidebar">
+            <section class="asm-details-side-card">
+                <div class="asm-details-side-title">
+                    <span>
+                        <i class="fa-solid fa-globe"></i>
+                        Public URL
+                    </span>
                 </div>
 
-                <ul class="tips-list">
-
-                    <li>
-                        Keep slug stable for SEO indexing.
-                    </li>
-
-                    <li>
-                        Add guide links in format:
-                        <strong>Text | URL</strong>
-                    </li>
-
-                    <li>
-                        Use child categories for hierarchy structure.
-                    </li>
-
-                    <li>
-                        Category badges improve internal linking.
-                    </li>
-
-                </ul>
-
-            </div>
-
-            <div class="side-card mb-4">
-
-                <div class="side-title">
-                    Public URL
-                </div>
-
-                <div class="public-url-box">
-
-                    <code>
-                        /Catalog/Category?slug=@Model.Slug
-                    </code>
+                <div class="asm-public-url">
+                    <code>/Catalog/Category?slug=@Model.Slug</code>
 
                     <a asp-area=""
                        asp-controller="Catalog"
@@ -631,62 +1047,87 @@
                        asp-route-slug="@Model.Slug"
                        target="_blank"
                        rel="noopener"
-                       class="btn btn-sm btn-outline-success">
+                       class="btn asm-details-btn asm-details-btn-success">
                         <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        Open Public Category
                     </a>
+                </div>
+            </section>
 
+            <section class="asm-details-side-card">
+                <div class="asm-details-side-title">
+                    <span>
+                        <i class="fa-solid fa-lightbulb"></i>
+                        Quick Guidance
+                    </span>
                 </div>
 
-            </div>
+                <ul class="asm-details-tip-list">
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>Keep the slug stable to protect SEO indexing.</span>
+                    </li>
 
-            <div class="side-card">
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>Use child categories for clear catalog hierarchy.</span>
+                    </li>
 
-                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>Guide links improve internal linking and discovery.</span>
+                    </li>
 
-                    <div class="side-title mb-0">
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>Review the public page after significant edits.</span>
+                    </li>
+                </ul>
+            </section>
+
+            <section class="asm-details-side-card products-card">
+                <div class="asm-details-side-title">
+                    <span>
+                        <i class="fa-solid fa-boxes-stacked"></i>
                         Products
-                    </div>
-
-                    <span class="count-badge">
-                        @Model.ProductCount
                     </span>
 
+                    <span class="asm-details-count">
+                        @Model.ProductCount
+                    </span>
                 </div>
 
-                @if (Model.Products != null && Model.Products.Count > 0)
+                @if (hasProducts)
                 {
-                    <div class="products-grid">
-
-                        @foreach (var p in Model.Products)
+                    <div class="asm-product-grid">
+                        @foreach (var product in Model.Products)
                         {
-                            <a href="/product/@p.Slug"
+                            <a href="/product/@product.Slug"
                                target="_blank"
                                rel="noopener"
-                               class="product-item"
-                               title="@p.Title">
+                               class="asm-product-card"
+                               title="@product.Title">
 
-                                <img src="@p.MainImageUrl"
-                                     alt="@p.Title"
-                                     class="product-image"
+                                <img src="@product.MainImageUrl"
+                                     alt="@product.Title"
+                                     class="asm-product-image"
                                      loading="lazy" />
 
+                                <span class="asm-product-title">
+                                    @product.Title
+                                </span>
                             </a>
                         }
-
                     </div>
                 }
                 else
                 {
-                    <div class="empty-box">
-                        <i class="fa-solid fa-box-open me-2"></i>
-                        No products assigned to this category.
+                    <div class="asm-details-empty">
+                        <i class="fa-solid fa-box-open"></i>
+                        No products are assigned to this category.
                     </div>
                 }
-
-            </div>
-
-        </div>
-
+            </section>
+        </aside>
     </div>
-
 </div>

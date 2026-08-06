@@ -7,7 +7,23 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var posts = Model?.ToList() ?? new List<AsMart.Web.Models.DTOs.BlogPostSummaryDto>();
+
     var totalPosts = posts.Count;
+    var totalViews = posts.Sum(post => (long)post.ViewCount);
+    var ratedPosts = posts.Count(post => post.RatingCount > 0);
+    var totalCategories = posts
+        .Where(post => post.CategoryNames != null)
+        .SelectMany(post => post.CategoryNames!)
+        .Where(name => !string.IsNullOrWhiteSpace(name))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Count();
+
+    var totalTags = posts
+        .Where(post => post.TagNames != null)
+        .SelectMany(post => post.TagNames!)
+        .Where(name => !string.IsNullOrWhiteSpace(name))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Count();
 }
 
 @section Styles {
@@ -26,119 +42,198 @@
         .blog-hero {
             position: relative;
             overflow: hidden;
-            border-radius: 28px;
-            border: 1px solid rgba(15, 23, 42, .08);
-            background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(239,246,255,.92)), radial-gradient(circle at top right, rgba(59,130,246,.18), transparent 34%);
-            box-shadow: 0 24px 70px rgba(15, 23, 42, .08);
+            margin-bottom: 16px;
+            padding: 20px 22px;
+            border: 1px solid rgba(37, 99, 235, .12);
+            border-radius: 24px;
+            background: radial-gradient(440px 180px at 3% 0%, rgba(37, 99, 235, .15), transparent 65%), radial-gradient(390px 170px at 98% 0%, rgba(139, 92, 246, .11), transparent 65%), linear-gradient(125deg, rgba(255, 255, 255, .98), rgba(239, 246, 255, .95) 55%, rgba(245, 243, 255, .92));
+            box-shadow: 0 16px 42px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
         }
 
-            .blog-hero::before {
-                content: "";
+            .blog-hero::before,
+            .blog-hero::after {
                 position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 18% 20%, rgba(37,99,235,.10), transparent 26%), radial-gradient(circle at 84% 80%, rgba(14,165,233,.13), transparent 30%);
+                content: "";
+                border-radius: 999px;
                 pointer-events: none;
             }
 
-        .blog-hero-body {
+            .blog-hero::before {
+                top: -78px;
+                right: -48px;
+                width: 180px;
+                height: 180px;
+                background: rgba(37, 99, 235, .07);
+            }
+
+            .blog-hero::after {
+                bottom: -105px;
+                left: 38%;
+                width: 220px;
+                height: 220px;
+                background: rgba(139, 92, 246, .055);
+            }
+
+        .blog-dashboard {
             position: relative;
-            z-index: 1;
-            padding: 28px;
+            z-index: 2;
+        }
+
+        .blog-dashboard-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .blog-dashboard-icon {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            border: 1px solid rgba(37, 99, 235, .16);
+            border-radius: 19px;
+            background: linear-gradient(145deg, rgba(37, 99, 235, .15), rgba(139, 92, 246, .08));
+            color: #2563eb;
+            box-shadow: 0 11px 26px rgba(37, 99, 235, .11);
+            font-size: 23px;
+        }
+
+        .blog-dashboard-copy {
+            min-width: 0;
+            flex: 1;
         }
 
         .blog-kicker {
             display: inline-flex;
             align-items: center;
-            gap: 9px;
-            padding: 8px 13px;
-            border-radius: 999px;
-            background: rgba(37, 99, 235, .09);
-            border: 1px solid rgba(37, 99, 235, .14);
-            color: #1d4ed8;
-            font-size: 12px;
+            gap: 7px;
+            margin-bottom: 4px;
+            color: #2563eb;
+            font-size: 10px;
             font-weight: 900;
+            letter-spacing: .07em;
             text-transform: uppercase;
-            letter-spacing: .04em;
-            margin-bottom: 13px;
         }
 
         .blog-title {
             margin: 0;
             color: #0f172a;
-            font-size: clamp(30px, 4vw, 52px);
-            line-height: 1.02;
-            letter-spacing: -.045em;
+            font-size: clamp(28px, 3vw, 42px);
             font-weight: 950;
+            line-height: 1.04;
+            letter-spacing: -.045em;
+        }
+
+        .blog-title-accent {
+            background: linear-gradient(100deg, #2563eb, #7c3aed);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
         }
 
         .blog-sub {
-            margin: 13px 0 0;
-            max-width: 850px;
-            color: #475569;
-            font-size: 15px;
-            line-height: 1.75;
-            font-weight: 600;
+            max-width: 780px;
+            margin: 7px 0 0;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 650;
+            line-height: 1.55;
         }
 
-        .blog-actions {
+        .blog-dashboard-stats {
+            display: grid;
+            flex: 0 0 auto;
+            grid-template-columns: repeat(2, minmax(138px, 1fr));
+            gap: 8px;
+        }
+
+        .blog-stat-card {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .blog-count-card {
-            min-width: 190px;
-            padding: 16px 18px;
-            border-radius: 22px;
-            background: rgba(255, 255, 255, .72);
+            gap: 9px;
+            min-height: 54px;
+            padding: 8px 11px;
             border: 1px solid rgba(15, 23, 42, .08);
-            box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, .80);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, .045);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
 
-        .blog-count-label {
-            color: #64748b;
-            font-size: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .05em;
+        .blog-stat-icon {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(37, 99, 235, .10);
+            color: #2563eb;
+            font-size: 13px;
         }
 
-        .blog-count-value {
+        .blog-stat-card:nth-child(2) .blog-stat-icon {
+            background: rgba(139, 92, 246, .10);
+            color: #7c3aed;
+        }
+
+        .blog-stat-card:nth-child(3) .blog-stat-icon {
+            background: rgba(245, 158, 11, .12);
+            color: #d97706;
+        }
+
+        .blog-stat-card:nth-child(4) .blog-stat-icon {
+            background: rgba(14, 165, 233, .10);
+            color: #0284c7;
+        }
+
+        .blog-stat-content {
+            min-width: 0;
+        }
+
+        .blog-stat-value {
             color: #0f172a;
-            font-size: 26px;
+            font-size: 18px;
             font-weight: 950;
-            line-height: 1.1;
-            margin-top: 5px;
+            line-height: 1;
         }
 
-        .blog-stats {
+        .blog-stat-label {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 9px;
+            font-weight: 900;
+            line-height: 1.15;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .blog-dashboard-nav {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 18px;
+            gap: 7px;
+            margin-top: 14px;
+            padding-top: 13px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
         }
 
-        .blog-pill {
+        .blog-dashboard-btn {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 9px 12px;
-            border-radius: 999px;
-            background: rgba(255,255,255,.75);
-            border: 1px solid rgba(15,23,42,.09);
-            color: #0f172a;
-            font-size: 12px;
+            justify-content: center;
+            gap: 7px;
+            min-height: 38px;
+            padding: 0 13px;
+            border-radius: 11px;
+            font-size: 11.5px;
             font-weight: 900;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, .04);
+            white-space: nowrap;
         }
-
-            .blog-pill i {
-                color: #2563eb;
-            }
 
         .blog-grid {
             margin-top: 22px;
@@ -356,22 +451,26 @@
             font-weight: 600;
         }
 
+        @@media (max-width: 1199.98px) {
+            .blog-dashboard-main {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .blog-dashboard-stats {
+                width: 100%;
+                padding-left: 76px;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
         @@media (max-width: 991.98px) {
             .blog-page {
                 padding-top: 18px;
             }
 
-            .blog-hero-body {
-                padding: 22px;
-            }
-
-            .blog-actions {
-                justify-content: flex-start;
-                margin-top: 18px;
-            }
-
-            .blog-count-card {
-                width: 100%;
+            .blog-dashboard-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .blog-img-wrap {
@@ -385,20 +484,58 @@
             }
 
             .blog-hero {
-                border-radius: 22px;
+                padding: 15px;
+                border-radius: 20px;
             }
 
-            .blog-hero-body {
-                padding: 18px;
+            .blog-dashboard-main {
+                display: grid;
+                grid-template-columns: 46px minmax(0, 1fr);
+                gap: 11px;
+            }
+
+            .blog-dashboard-icon {
+                width: 46px;
+                height: 46px;
+                border-radius: 15px;
+                font-size: 18px;
+            }
+
+            .blog-title {
+                font-size: 27px;
             }
 
             .blog-sub {
-                font-size: 14px;
+                grid-column: 1 / -1;
+                font-size: 12.5px;
             }
 
-            .blog-pill {
+            .blog-dashboard-stats {
+                grid-column: 1 / -1;
                 width: 100%;
-                justify-content: center;
+                padding-left: 0;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .blog-stat-card {
+                min-width: 0;
+                min-height: 51px;
+                padding: 7px 8px;
+                border-radius: 14px;
+            }
+
+            .blog-stat-value {
+                font-size: 16px;
+            }
+
+            .blog-dashboard-nav {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .blog-dashboard-btn {
+                width: 100%;
+                min-height: 40px;
             }
 
             .blog-img-wrap {
@@ -422,54 +559,160 @@
                 height: 46px;
             }
         }
+
+        @@media (max-width: 390px) {
+            .blog-dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 }
 
 <section class="blog-page">
     <div class="container-fluid blog-shell">
 
-        <div class="blog-hero">
-            <div class="blog-hero-body">
-                <div class="row align-items-center g-3">
-                    <div class="col-12 col-lg-8">
+        <header class="blog-hero">
+            <div class="blog-dashboard">
+
+                <div class="blog-dashboard-main">
+
+                    <div class="blog-dashboard-icon"
+                         aria-hidden="true">
+                        <i class="fa-solid fa-newspaper"></i>
+                    </div>
+
+                    <div class="blog-dashboard-copy">
                         <div class="blog-kicker">
-                            <i class="fa-solid fa-newspaper"></i>
-                            As-Mart Blog
+                            <i class="fa-solid fa-sparkles"></i>
+                            As-Mart Content Hub
                         </div>
 
-                        <h1 class="blog-title">Latest Buying Guides & Product Insights</h1>
+                        <h1 class="blog-title">
+                            Buying guides &
+                            <span class="blog-title-accent">
+                                product insights
+                            </span>
+                        </h1>
 
                         <p class="blog-sub">
-                            Explore fresh product guides, comparisons, ratings, and affiliate picks curated to help shoppers make better buying decisions.
+                            Explore product guides, comparisons, ratings and curated
+                            affiliate recommendations designed to support smarter
+                            buying decisions.
                         </p>
-
-                        <div class="blog-stats">
-                            <span class="blog-pill">
-                                <i class="fa-solid fa-bolt"></i>
-                                Fresh posts
-                            </span>
-                            <span class="blog-pill">
-                                <i class="fa-solid fa-tags"></i>
-                                Categories + tags
-                            </span>
-                            <span class="blog-pill">
-                                <i class="fa-solid fa-star"></i>
-                                Ratings included
-                            </span>
-                        </div>
                     </div>
 
-                    <div class="col-12 col-lg-4">
-                        <div class="blog-actions">
-                            <div class="blog-count-card">
-                                <div class="blog-count-label">Showing</div>
-                                <div class="blog-count-value">@totalPosts Posts</div>
+                    <div class="blog-dashboard-stats"
+                         aria-label="Blog statistics">
+
+                        <div class="blog-stat-card">
+                            <div class="blog-stat-icon">
+                                <i class="fa-solid fa-newspaper"></i>
+                            </div>
+
+                            <div class="blog-stat-content">
+                                <div class="blog-stat-value">
+                                    @totalPosts.ToString("N0")
+                                </div>
+
+                                <div class="blog-stat-label">
+                                    Published Posts
+                                </div>
                             </div>
                         </div>
+
+                        <div class="blog-stat-card">
+                            <div class="blog-stat-icon">
+                                <i class="fa-solid fa-eye"></i>
+                            </div>
+
+                            <div class="blog-stat-content">
+                                <div class="blog-stat-value">
+                                    @totalViews.ToString("N0")
+                                </div>
+
+                                <div class="blog-stat-label">
+                                    Total Views
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="blog-stat-card">
+                            <div class="blog-stat-icon">
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+
+                            <div class="blog-stat-content">
+                                <div class="blog-stat-value">
+                                    @ratedPosts.ToString("N0")
+                                </div>
+
+                                <div class="blog-stat-label">
+                                    Rated Posts
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="blog-stat-card">
+                            <div class="blog-stat-icon">
+                                <i class="fa-solid fa-tags"></i>
+                            </div>
+
+                            <div class="blog-stat-content">
+                                <div class="blog-stat-value">
+                                    @((totalCategories + totalTags).ToString("N0"))
+                                </div>
+
+                                <div class="blog-stat-label">
+                                    Topics & Tags
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+
+                <nav class="blog-dashboard-nav"
+                     aria-label="Blog dashboard navigation">
+
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="btn btn-outline-primary blog-dashboard-btn">
+                        <i class="fa-solid fa-star"></i>
+                        Featured Products
+                    </a>
+
+                    <a asp-controller="Catalog"
+                       asp-action="Index"
+                       class="btn btn-outline-primary blog-dashboard-btn">
+                        <i class="fa-solid fa-store"></i>
+                        Browse Catalog
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Deals"
+                       class="btn btn-outline-primary blog-dashboard-btn">
+                        <i class="fa-solid fa-bolt"></i>
+                        Deals of the Day
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="TopVisited"
+                       class="btn btn-outline-primary blog-dashboard-btn">
+                        <i class="fa-solid fa-chart-line"></i>
+                        Top Visited
+                    </a>
+
+                    <a asp-controller="Gallery"
+                       asp-action="Index"
+                       class="btn btn-outline-primary blog-dashboard-btn">
+                        <i class="fa-regular fa-images"></i>
+                        Product Gallery
+                    </a>
+
+                </nav>
+
             </div>
-        </div>
+        </header>
 
         @if (!posts.Any())
         {

@@ -640,13 +640,13 @@
             color: #fff !important;
         }
 
-        @@media (max-width: 768px) {
+        @@@@media (max-width: 768px) {
             .api-rate-grid {
                 grid-template-columns: 1fr;
             }
         }
 
-        @@media(max-width:1199px) {
+        @@@@media(max-width:1199px) {
             .api-layout {
                 grid-template-columns: 215px minmax(0,1fr)
             }
@@ -675,7 +675,7 @@
             }
         }
 
-        @@media(max-width:991px) {
+        @@@@media(max-width:991px) {
             .api-layout {
                 grid-template-columns: 1fr
             }
@@ -709,7 +709,7 @@
             }
         }
 
-        @@media(max-width:767px) {
+        @@@@media(max-width:767px) {
             .api-doc-page {
                 padding: .85rem 0 3rem
             }
@@ -780,7 +780,7 @@
             }
         }
 
-        @@media(max-width:420px) {
+        @@@@media(max-width:420px) {
             .api-shell {
                 padding: 0 .55rem
             }
@@ -970,13 +970,13 @@
             scroll-margin-top: 100px
         }
 
-        @@media(max-width:991px) {
+        @@@@media(max-width:991px) {
             .api-status-grid, .api-auth-grid {
                 grid-template-columns: 1fr
             }
         }
 
-        @@media(max-width:767px) {
+        @@@@media(max-width:767px) {
             .api-sidebar {
                 display: flex;
                 gap: .55rem;
@@ -1005,7 +1005,509 @@
                 min-height: auto
             }
         }
-    </style>
+
+        /* =========================================================
+                   Compact responsive documentation UI overrides
+                   ========================================================= */
+
+        .api-doc-page {
+            padding: .9rem 0 2.5rem;
+            background: radial-gradient(700px 280px at 3% 0%, rgba(37, 99, 235, .08), transparent 65%), radial-gradient(620px 260px at 97% 0%, rgba(168, 85, 247, .07), transparent 65%), linear-gradient(180deg, #f8fafc, #ffffff 52%, #f8fafc);
+            color: #172033;
+        }
+
+        .api-shell {
+            width: min(100%, 1540px);
+            padding: 0 .8rem;
+        }
+
+        .api-layout {
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: .85rem;
+        }
+
+        .api-sidebar {
+            top: 78px;
+            padding: .5rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .82);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, .06);
+        }
+
+        .api-side-heading {
+            margin: .28rem .55rem .42rem;
+            font-size: .61rem;
+        }
+
+        .api-side-link {
+            gap: .52rem;
+            min-height: 36px;
+            margin-bottom: .35rem;
+            padding: .55rem .65rem;
+            border-radius: 10px;
+            font-size: .76rem;
+            font-weight: 850;
+        }
+
+            .api-side-link i {
+                width: 15px;
+                font-size: .72rem;
+            }
+
+        .api-info-card {
+            margin-top: .7rem;
+            padding: .75rem;
+            border-radius: 13px;
+        }
+
+        .api-info-icon,
+        .api-dev-icon {
+            width: 35px;
+            height: 35px;
+            margin-bottom: .5rem;
+            border-radius: 11px;
+            font-size: .86rem;
+        }
+
+        .api-info-card h5 {
+            margin-bottom: .35rem;
+            font-size: .78rem;
+        }
+
+        .api-info-card ul {
+            font-size: .69rem !important;
+            line-height: 1.55;
+        }
+
+        .api-hero {
+            min-height: auto;
+            grid-template-columns: minmax(0, 1fr) 185px;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: .8rem;
+            padding: 1.15rem 1.25rem;
+            border-radius: 19px;
+            background: radial-gradient(360px 160px at 4% 0%, rgba(37, 99, 235, .13), transparent 65%), radial-gradient(330px 155px at 98% 0%, rgba(219, 39, 119, .10), transparent 65%), linear-gradient(135deg, rgba(255,255,255,.98), rgba(245,247,255,.95));
+            box-shadow: 0 14px 34px rgba(15, 23, 42, .07);
+        }
+
+        .api-hero-badge {
+            margin-bottom: .42rem;
+            padding: .34rem .55rem;
+            font-size: .61rem;
+        }
+
+        .api-hero h1 {
+            margin-bottom: .45rem;
+            font-size: clamp(1.55rem, 3.1vw, 2.75rem);
+            line-height: 1.02;
+            letter-spacing: -.035em;
+        }
+
+        .api-hero p {
+            max-width: 830px;
+            font-size: .82rem;
+            line-height: 1.55;
+        }
+
+        .api-hero-facts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .38rem;
+            margin-top: .7rem;
+        }
+
+            .api-hero-facts span,
+            .api-hero-facts a {
+                display: inline-flex;
+                align-items: center;
+                gap: .35rem;
+                min-height: 29px;
+                padding: .3rem .52rem;
+                border: 1px solid rgba(99, 102, 241, .12);
+                border-radius: 9px;
+                background: rgba(255, 255, 255, .76);
+                color: #475569;
+                font-size: .66rem;
+                font-weight: 850;
+                text-decoration: none;
+                white-space: nowrap;
+            }
+
+            .api-hero-facts i {
+                color: #4f46e5;
+                font-size: .64rem;
+            }
+
+            .api-hero-facts a {
+                color: #4338ca;
+                background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+            }
+
+        .api-hero-actions {
+            gap: .45rem;
+            margin-top: .75rem;
+        }
+
+        .api-btn-primary,
+        .api-btn-light,
+        .api-btn-danger-soft {
+            min-height: 36px;
+            padding: .5rem .75rem;
+            border-radius: 10px;
+            font-size: .72rem;
+            font-weight: 900;
+        }
+
+        .api-hero-art {
+            max-width: 185px;
+            min-height: 96px;
+            padding: .8rem;
+            border-radius: 15px;
+        }
+
+        .api-label {
+            width: 42px;
+            height: 42px;
+            margin-right: .7rem;
+            border-radius: 11px;
+            font-size: .95rem;
+        }
+
+        .api-hero-lines span {
+            height: 7px;
+            margin: .46rem 0;
+        }
+
+            .api-hero-lines span:first-child {
+                width: 92px;
+            }
+
+        .api-card,
+        .api-dev-card,
+        .api-doc-card {
+            margin-bottom: .7rem;
+            padding: .88rem 1rem;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, .055);
+        }
+
+            .api-card h2,
+            .api-section-title,
+            .api-code-title {
+                gap: .42rem;
+                margin-bottom: .5rem;
+                font-size: clamp(1rem, 1.8vw, 1.35rem);
+            }
+
+            .api-card p,
+            .api-dev-card li {
+                margin-bottom: .48rem;
+                font-size: .78rem;
+                line-height: 1.58;
+            }
+
+        .api-soft-icon {
+            right: .85rem;
+            width: 54px;
+            height: 54px;
+            font-size: 1.25rem;
+        }
+
+        .has-soft-icon {
+            padding-right: 76px;
+        }
+
+        .api-grid-3 {
+            gap: .65rem;
+            margin-bottom: .7rem;
+        }
+
+        .api-mini-card {
+            padding: .75rem;
+            border-radius: 13px;
+        }
+
+            .api-mini-card i {
+                width: 33px;
+                height: 33px;
+                margin-bottom: .48rem;
+                border-radius: 10px;
+                font-size: .78rem;
+            }
+
+            .api-mini-card h4 {
+                margin-bottom: .3rem;
+                font-size: .84rem;
+            }
+
+            .api-mini-card p {
+                font-size: .72rem;
+                line-height: 1.45;
+            }
+
+        .api-base-box {
+            gap: .55rem;
+            padding: .62rem .75rem;
+            border-radius: 10px;
+            font-size: .73rem;
+        }
+
+        .api-endpoint-table {
+            min-width: 820px;
+            font-size: .73rem;
+        }
+
+        .api-model-table {
+            min-width: 520px;
+            font-size: .74rem;
+        }
+
+            .api-endpoint-table thead th,
+            .api-endpoint-table td,
+            .api-model-table th,
+            .api-model-table td {
+                padding: .52rem .58rem;
+            }
+
+        .api-method {
+            min-width: 48px;
+            padding: .2rem .42rem;
+            border-radius: 7px;
+            font-size: .67rem;
+        }
+
+        .api-path {
+            font-size: .7rem;
+        }
+
+        .api-tag,
+        .api-field,
+        .api-inline-code {
+            font-size: .67rem;
+        }
+
+        .api-note,
+        .api-request-note {
+            margin-top: .65rem;
+            padding: .62rem .75rem;
+            border-radius: 10px;
+            font-size: .73rem;
+            line-height: 1.5;
+        }
+
+        .api-auth-grid,
+        .api-response-grid,
+        .api-rate-grid {
+            gap: .65rem;
+        }
+
+        .api-auth-card,
+        .api-rate-box,
+        .api-status-card {
+            padding: .72rem;
+            border-radius: 12px;
+        }
+
+            .api-auth-card h3,
+            .api-rate-box h3 {
+                font-size: .8rem;
+            }
+
+        .api-status-grid {
+            gap: .55rem;
+        }
+
+        .api-status-code {
+            min-width: 46px;
+            padding: .24rem .45rem;
+            font-size: .66rem;
+        }
+
+        .api-status-card h4 {
+            margin: .5rem 0 .25rem;
+            font-size: .76rem;
+        }
+
+        .api-status-card p {
+            font-size: .68rem;
+        }
+
+        .api-code-title {
+            margin: .75rem 0 .45rem;
+            padding: .65rem .8rem;
+            border-radius: 11px;
+        }
+
+        .api-code-card {
+            margin-bottom: .65rem;
+            padding: .7rem;
+            border-radius: 13px;
+        }
+
+        pre.api-code {
+            padding: 2rem .05rem .1rem;
+            font-size: .72rem;
+            line-height: 1.55;
+        }
+
+        .api-copy-btn {
+            top: .65rem;
+            right: .65rem;
+            padding: .28rem .55rem;
+            border-radius: 8px;
+            font-size: .68rem;
+        }
+
+        .api-dev-card h3 {
+            margin: .65rem 0;
+            font-size: 1.15rem;
+        }
+
+        .api-rate-limit-section {
+            margin-top: 1rem;
+        }
+
+        @@media (max-width: 1199px) {
+            .api-layout
+
+        {
+            grid-template-columns: 200px minmax(0, 1fr);
+        }
+
+        .api-hero {
+            grid-template-columns: minmax(0, 1fr) 160px;
+        }
+
+        .api-hero-art {
+            max-width: 160px;
+        }
+
+        }
+
+        @@media (max-width: 991px) {
+            .api-layout
+
+        {
+            grid-template-columns: 1fr;
+        }
+
+        .api-sidebar {
+            position: static;
+            display: flex;
+            gap: .4rem;
+            overflow-x: auto;
+            padding: .45rem;
+            border-radius: 14px;
+            scrollbar-width: thin;
+        }
+
+        .api-side-heading,
+        .api-info-card {
+            display: none;
+        }
+
+        .api-side-link {
+            flex: 0 0 auto;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .api-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .api-hero-art {
+            display: none;
+        }
+
+        }
+
+        @@media (max-width: 767px) {
+            .api-doc-page
+
+        {
+            padding: .55rem 0 2rem;
+        }
+
+        .api-shell {
+            padding: 0 .5rem;
+        }
+
+        .api-hero {
+            padding: .9rem;
+            border-radius: 15px;
+        }
+
+            .api-hero h1 {
+                font-size: clamp(1.45rem, 8vw, 2rem);
+            }
+
+        .api-hero-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .api-btn-primary,
+        .api-btn-light,
+        .api-btn-danger-soft {
+            width: 100%;
+        }
+
+        .api-card,
+        .api-dev-card,
+        .api-doc-card,
+        .api-code-card {
+            padding: .75rem;
+            border-radius: 12px;
+        }
+
+        .has-soft-icon {
+            padding-right: .75rem;
+        }
+
+        .api-soft-icon {
+            display: none !important;
+        }
+
+        .api-grid-3,
+        .api-status-grid,
+        .api-auth-grid,
+        .api-response-grid,
+        .api-rate-grid {
+            grid-template-columns: 1fr;
+        }
+
+        }
+
+        @@media (max-width: 480px) {
+            .api-hero-actions
+
+        {
+            grid-template-columns: 1fr;
+        }
+
+        .api-hero-facts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+            .api-hero-facts span,
+            .api-hero-facts a {
+                white-space: normal;
+            }
+
+        .api-card h2,
+        .api-section-title,
+        .api-code-title {
+            font-size: 1rem;
+        }
+
+        pre.api-code {
+            font-size: .68rem;
+        }
+
+        }</style>
 }
 
 <section class="api-doc-page">
@@ -1018,7 +1520,7 @@
                 <a href="#base-url" class="api-side-link"><i class="fa-solid fa-globe"></i><span>Base URLs</span></a>
                 <a href="#versioning" class="api-side-link"><i class="fa-solid fa-code-branch"></i><span>Versioning</span></a>
                 <a href="#authentication" class="api-side-link"><i class="fa-solid fa-key"></i><span>Authentication</span></a>
-                <a href="https://as-mart.com/swagger" target="_blank" rel="noopener" class="api-side-link api-swagger-link"><i class="fa-solid fa-code"></i><span>Swagger UI</span></a>
+                <a href="https://as-mart.com/swagger/index.html" target="_blank" rel="noopener" class="api-side-link api-swagger-link"><i class="fa-solid fa-code"></i><span>Swagger UI</span></a>
                 <div class="api-side-heading">API resources</div>
                 <a href="#products" class="api-side-link"><i class="fa-solid fa-box"></i><span>Products</span></a>
                 <a href="#categories" class="api-side-link"><i class="fa-solid fa-layer-group"></i><span>Categories</span></a>
@@ -1042,6 +1544,18 @@
                         <span class="api-hero-badge"><i class="fa-solid fa-code-branch"></i>Public REST API • v1</span>
                         <h1>Build with the <span>AS-Mart API</span></h1>
                         <p>Integrate products, categories, collections, blogs, combined widgets, and more than 2,000 public buying guides into ASP.NET Core applications, affiliate websites, dashboards, and partner platforms.</p>
+                        <div class="api-hero-facts" aria-label="API quick facts">
+                            <span><i class="fa-solid fa-lock"></i> HTTPS + JSON</span>
+                            <span><i class="fa-solid fa-code-branch"></i> Version 1</span>
+                            <span><i class="fa-solid fa-key"></i> Optional API key</span>
+                            <span><i class="fa-solid fa-arrow-down-1-9"></i> Maximum count 50</span>
+                            <a href="https://as-mart.com/swagger/index.html"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                <i class="fa-solid fa-bolt"></i>
+                                Interactive Swagger
+                            </a>
+                        </div>
                         <div class="api-hero-actions">
                             <a href="#products" class="api-btn-primary">
                                 Get Started <i class="fa-solid fa-rocket"></i>
@@ -1062,7 +1576,7 @@
                                 Developer Portal
                             </a>
 
-                            <a href="https://as-mart.com/swagger" target="_blank" rel="noopener" class="api-btn-light"><i class="fa-solid fa-code"></i>Open Swagger</a>
+                            <a href="https://as-mart.com/swagger/index.html" target="_blank" rel="noopener" class="api-btn-light"><i class="fa-solid fa-code"></i>Open Swagger</a>
                             <a href="/api/v1/products/home-widget?count=6" target="_blank" rel="noopener" class="api-btn-light"><i class="fa-solid fa-flask"></i>Test API</a>
                         </div>
                     </div>
@@ -1111,7 +1625,7 @@
 
                     <p>
                         New integrations should use version 1 endpoints beginning with
-                        <code>/api/v1/v1</code>.
+                        <code>/api/v1</code>.
                     </p>
 
                     <div class="alert alert-warning">

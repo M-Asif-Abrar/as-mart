@@ -1,13 +1,14 @@
 ﻿@using AsMart.Web.Helpers
-@using AsMart.Web.Models.Entities
 @using AsMart.Web.Models.ViewModels
 
-@model IReadOnlyCollection<Product>
+@model HomeDashboardViewModel
 
 @{
     ViewData["Title"] = "Featured Products";
 
-    var featuredProducts = Model?.ToList() ?? new List<Product>();
+    var featuredProducts =
+        Model.FeaturedProducts?.ToList()
+        ?? new List<AsMart.Web.Models.Entities.Product>();
 
     var featuredGrid = new ProductGridVm
     {
@@ -22,160 +23,210 @@
 
 @section Styles {
     <style>
-        .home-page {
+        .home-dashboard {
             min-height: calc(100vh - 90px);
-            padding: 20px 0 42px;
-            background: radial-gradient( circle at 8% 5%, rgba(37, 99, 235, .08), transparent 28%), radial-gradient( circle at 92% 3%, rgba(168, 85, 247, .07), transparent 27%), linear-gradient( 180deg, #f8fafc 0%, #ffffff 50%, #f8fafc 100%);
+            padding: 18px 0 44px;
+            background: radial-gradient( circle at 6% 2%, rgba(37, 99, 235, .08), transparent 27%), radial-gradient( circle at 94% 2%, rgba(139, 92, 246, .07), transparent 26%), linear-gradient( 180deg, #f8fafc 0%, #ffffff 48%, #f8fafc 100%);
         }
 
-        .home-shell {
+        .home-dashboard-shell {
             width: 100%;
             max-width: 1500px;
             margin: 0 auto;
         }
 
-        /* Compact featured header card */
+        /* Dashboard hero */
 
-        .featured-header-card {
+        .dashboard-hero {
             position: relative;
             overflow: hidden;
-            margin-bottom: 20px;
-            padding: 24px 26px;
+            margin-bottom: 18px;
+            padding: 22px 24px;
             border: 1px solid rgba(37, 99, 235, .12);
             border-radius: 26px;
-            background: linear-gradient( 120deg, rgba(255, 255, 255, .98) 0%, rgba(239, 246, 255, .96) 48%, rgba(245, 243, 255, .93) 100%);
-            box-shadow: 0 18px 45px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
+            background: radial-gradient( 460px 190px at 0% 0%, rgba(37, 99, 235, .15), transparent 65%), radial-gradient( 430px 190px at 100% 0%, rgba(139, 92, 246, .12), transparent 65%), linear-gradient( 125deg, rgba(255, 255, 255, .98), rgba(239, 246, 255, .95) 55%, rgba(245, 243, 255, .92));
+            box-shadow: 0 18px 48px rgba(15, 23, 42, .08), inset 0 1px 0 rgba(255, 255, 255, .90);
         }
 
-            .featured-header-card::before {
+            .dashboard-hero::before {
                 position: absolute;
-                top: -75px;
+                top: -80px;
                 right: -55px;
                 width: 210px;
                 height: 210px;
                 border-radius: 50%;
-                background: rgba(37, 99, 235, .09);
+                background: rgba(37, 99, 235, .07);
                 content: "";
                 pointer-events: none;
             }
 
-            .featured-header-card::after {
+            .dashboard-hero::after {
                 position: absolute;
-                bottom: -95px;
-                left: 35%;
+                bottom: -115px;
+                left: 38%;
                 width: 240px;
                 height: 240px;
                 border-radius: 50%;
-                background: rgba(168, 85, 247, .06);
+                background: rgba(139, 92, 246, .06);
                 content: "";
                 pointer-events: none;
             }
 
-        .featured-header-content {
+        .dashboard-hero-content {
             position: relative;
             z-index: 2;
         }
 
-        .featured-header-main {
+        .dashboard-main-row {
             display: flex;
             align-items: center;
             gap: 18px;
         }
 
-        .featured-header-icon {
+        .dashboard-main-icon {
             display: flex;
             flex: 0 0 auto;
             align-items: center;
             justify-content: center;
-            width: 66px;
-            height: 66px;
+            width: 64px;
+            height: 64px;
             border: 1px solid rgba(37, 99, 235, .16);
-            border-radius: 21px;
-            background: linear-gradient( 145deg, rgba(37, 99, 235, .15), rgba(59, 130, 246, .07));
+            border-radius: 20px;
+            background: linear-gradient( 145deg, rgba(37, 99, 235, .16), rgba(139, 92, 246, .08));
             color: #2563eb;
-            box-shadow: 0 12px 30px rgba(37, 99, 235, .12);
-            font-size: 27px;
+            box-shadow: 0 12px 28px rgba(37, 99, 235, .12);
+            font-size: 25px;
         }
 
-        .featured-header-text {
+        .dashboard-heading {
             min-width: 0;
             flex: 1;
         }
 
-        .featured-header-label {
+        .dashboard-kicker {
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             color: #2563eb;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 900;
-            letter-spacing: .07em;
+            letter-spacing: .075em;
             text-transform: uppercase;
         }
 
-        .featured-header-title {
+        .dashboard-title {
             margin: 0;
             color: #0f172a;
-            font-size: clamp(27px, 3vw, 40px);
+            font-size: clamp(28px, 3vw, 42px);
             font-weight: 950;
-            line-height: 1.08;
-            letter-spacing: -.035em;
+            line-height: 1.04;
+            letter-spacing: -.045em;
         }
 
-        .featured-header-description {
+        .dashboard-title-accent {
+            background: linear-gradient( 100deg, #2563eb, #7c3aed);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dashboard-description {
             max-width: 760px;
             margin: 7px 0 0;
             color: #64748b;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 650;
             line-height: 1.55;
         }
 
-        .featured-header-actions {
+        /* Stats */
+
+        .dashboard-stats {
+            display: grid;
+            flex: 0 0 auto;
+            grid-template-columns: repeat(2, minmax(145px, 1fr));
+            gap: 9px;
+        }
+
+        .dashboard-stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 58px;
+            padding: 9px 12px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .80);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, .05);
+            backdrop-filter: blur(12px);
+        }
+
+        .dashboard-stat-icon {
             display: flex;
             flex: 0 0 auto;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            font-size: 14px;
         }
 
-        .featured-count {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-height: 48px;
-            padding: 7px 14px;
-            border: 1px solid rgba(37, 99, 235, .13);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, .76);
-            box-shadow: 0 8px 22px rgba(15, 23, 42, .05);
+        .dashboard-stat-primary .dashboard-stat-icon {
+            background: rgba(37, 99, 235, .10);
+            color: #2563eb;
         }
 
-        .featured-count-number {
+        .dashboard-stat-featured .dashboard-stat-icon {
+            background: rgba(139, 92, 246, .10);
+            color: #7c3aed;
+        }
+
+        .dashboard-stat-deals .dashboard-stat-icon {
+            background: rgba(245, 158, 11, .12);
+            color: #d97706;
+        }
+
+        .dashboard-stat-views .dashboard-stat-icon {
+            background: rgba(14, 165, 233, .10);
+            color: #0284c7;
+        }
+
+        .dashboard-stat-body {
+            min-width: 0;
+        }
+
+        .dashboard-stat-value {
             color: #0f172a;
-            font-size: 25px;
+            font-size: 20px;
             font-weight: 950;
             line-height: 1;
         }
 
-        .featured-count-label {
+        .dashboard-stat-label {
+            margin-top: 4px;
             color: #64748b;
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 900;
-            line-height: 1.2;
+            line-height: 1.15;
             letter-spacing: .04em;
             text-transform: uppercase;
         }
 
-        .featured-nav {
+        /* Navigation */
+
+        .dashboard-navigation {
             display: flex;
+            flex-wrap: wrap;
             gap: 8px;
             margin-top: 16px;
-            padding-top: 15px;
+            padding-top: 14px;
             border-top: 1px solid rgba(15, 23, 42, .07);
         }
 
-        .featured-nav-btn {
+        .dashboard-nav-button {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -188,26 +239,85 @@
             white-space: nowrap;
         }
 
-        .featured-nav .btn-primary {
+        .dashboard-navigation .btn-primary {
             border-color: #2563eb;
             background: linear-gradient( 135deg, #2563eb, #1677ff);
-            box-shadow: 0 9px 20px rgba(37, 99, 235, .20);
+            color: #ffffff;
+            box-shadow: 0 9px 20px rgba(37, 99, 235, .18);
         }
 
-        .featured-nav .btn-light {
+        .dashboard-navigation .btn-light {
             border: 1px solid rgba(15, 23, 42, .10);
-            background: rgba(255, 255, 255, .78);
+            background: rgba(255, 255, 255, .80);
             color: #334155;
         }
 
-            .featured-nav .btn-light:hover,
-            .featured-nav .btn-light:focus {
+            .dashboard-navigation .btn-light:hover,
+            .dashboard-navigation .btn-light:focus {
                 border-color: rgba(37, 99, 235, .25);
                 background: #ffffff;
                 color: #1d4ed8;
             }
 
-        /* Product grid container */
+        .dashboard-navigation .btn-warning {
+            border-color: #f59e0b;
+            background: linear-gradient( 135deg, #f59e0b, #d97706);
+            color: #ffffff;
+            box-shadow: 0 9px 20px rgba(245, 158, 11, .18);
+        }
+
+        /* Summary strip */
+
+        .dashboard-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .dashboard-summary-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 72px;
+            padding: 13px 15px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .93);
+            box-shadow: 0 12px 32px rgba(15, 23, 42, .055);
+        }
+
+        .dashboard-summary-icon {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            background: linear-gradient( 145deg, rgba(37, 99, 235, .12), rgba(139, 92, 246, .07));
+            color: #2563eb;
+            font-size: 16px;
+        }
+
+        .dashboard-summary-content {
+            min-width: 0;
+        }
+
+        .dashboard-summary-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+        .dashboard-summary-text {
+            margin: 3px 0 0;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 650;
+            line-height: 1.4;
+        }
 
         .home-products-section {
             position: relative;
@@ -232,7 +342,7 @@
             height: 68px;
             margin: 0 auto 15px;
             border-radius: 22px;
-            background: linear-gradient( 145deg, rgba(37, 99, 235, .13), rgba(168, 85, 247, .08));
+            background: linear-gradient( 145deg, rgba(37, 99, 235, .13), rgba(139, 92, 246, .08));
             color: #2563eb;
             font-size: 26px;
         }
@@ -242,7 +352,6 @@
             color: #0f172a;
             font-size: 24px;
             font-weight: 950;
-            letter-spacing: -.03em;
         }
 
         .home-empty p {
@@ -259,110 +368,115 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            min-height: 43px;
-            padding: 0 17px;
-            border-radius: 14px;
+            min-height: 42px;
+            padding: 0 16px;
+            border-radius: 13px;
             font-size: 13px;
             font-weight: 900;
         }
 
-        @@media (max-width: 991.98px) {
-            .featured-header-main {
+        @@media (max-width: 1199.98px) {
+            .dashboard-main-row {
                 align-items: flex-start;
                 flex-wrap: wrap;
             }
 
-            .featured-header-actions {
+            .dashboard-stats {
                 width: 100%;
-                padding-left: 84px;
+                padding-left: 82px;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .dashboard-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
-            .featured-count {
-                width: auto;
+            .dashboard-summary {
+                grid-template-columns: 1fr;
             }
         }
 
         @@media (max-width: 767.98px) {
-            .home-page {
-                padding: 14px 0 32px;
+            .home-dashboard {
+                padding: 14px 0 34px;
             }
 
-            .featured-header-card {
-                padding: 20px;
+            .dashboard-hero {
+                padding: 18px;
                 border-radius: 22px;
             }
 
-            .featured-header-main {
-                gap: 14px;
+            .dashboard-main-icon {
+                width: 54px;
+                height: 54px;
+                border-radius: 17px;
+                font-size: 22px;
             }
 
-            .featured-header-icon {
-                width: 56px;
-                height: 56px;
-                border-radius: 18px;
-                font-size: 23px;
-            }
-
-            .featured-header-actions {
-                padding-left: 70px;
-            }
-
-            .featured-nav {
-                flex-wrap: wrap;
+            .dashboard-stats {
+                padding-left: 72px;
             }
         }
 
         @@media (max-width: 575.98px) {
-            .featured-header-card {
-                padding: 17px;
+            .dashboard-hero {
+                padding: 15px;
                 border-radius: 20px;
             }
 
-            .featured-header-main {
+            .dashboard-main-row {
                 display: grid;
-                grid-template-columns: 48px minmax(0, 1fr);
-                gap: 12px;
+                grid-template-columns: 46px minmax(0, 1fr);
+                gap: 11px;
             }
 
-            .featured-header-icon {
-                width: 48px;
-                height: 48px;
-                border-radius: 16px;
-                font-size: 20px;
+            .dashboard-main-icon {
+                width: 46px;
+                height: 46px;
+                border-radius: 15px;
+                font-size: 19px;
             }
 
-            .featured-header-title {
+            .dashboard-title {
                 font-size: 27px;
             }
 
-            .featured-header-description {
+            .dashboard-description {
                 grid-column: 1 / -1;
-                margin-top: 10px;
-                font-size: 13px;
+                font-size: 12.5px;
             }
 
-            .featured-header-actions {
+            .dashboard-stats {
                 grid-column: 1 / -1;
+                grid-template-columns: 1fr 1fr;
                 width: 100%;
                 padding-left: 0;
             }
 
-            .featured-count {
-                width: 100%;
-                justify-content: center;
+            .dashboard-stat {
+                min-width: 0;
+                min-height: 55px;
+                padding: 8px 9px;
             }
 
-            .featured-nav {
+            .dashboard-stat-value {
+                font-size: 18px;
+            }
+
+            .dashboard-navigation {
                 display: grid;
                 grid-template-columns: 1fr;
-                gap: 8px;
-                margin-top: 13px;
-                padding-top: 13px;
             }
 
-            .featured-nav-btn {
+            .dashboard-nav-button {
                 width: 100%;
-                min-height: 43px;
+                min-height: 42px;
+            }
+
+            .dashboard-summary-card {
+                min-height: 68px;
             }
 
             .home-empty {
@@ -370,85 +484,225 @@
                 border-radius: 21px;
             }
         }
+
+        @@media (max-width: 390px) {
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 }
 
-<section class="home-page">
-    <div class="container-fluid home-shell">
+<section class="home-dashboard">
+    <div class="container-fluid home-dashboard-shell">
 
         <h1 class="visually-hidden">
-            Featured Amazon Products and Smart Shopping Picks | As-Mart
+            As-Mart Featured Products and Shopping Dashboard
         </h1>
 
-        <header class="featured-header-card">
-            <div class="featured-header-content">
+        <header class="dashboard-hero">
+            <div class="dashboard-hero-content">
 
-                <div class="featured-header-main">
+                <div class="dashboard-main-row">
 
-                    <div class="featured-header-icon"
+                    <div class="dashboard-main-icon"
                          aria-hidden="true">
-                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-store"></i>
                     </div>
 
-                    <div class="featured-header-text">
-                        <div class="featured-header-label">
+                    <div class="dashboard-heading">
+                        <div class="dashboard-kicker">
                             <i class="fa-solid fa-sparkles"></i>
-                            Smart Shopping Picks
+                            As-Mart Shopping Dashboard
                         </div>
 
-                        <h2 class="featured-header-title">
-                            Featured Products
+                        <h2 class="dashboard-title">
+                            Discover our
+                            <span class="dashboard-title-accent">
+                                featured products
+                            </span>
                         </h2>
 
-                        <p class="featured-header-description">
-                            Explore handpicked electronics, gadgets, home products
-                            and useful everyday items selected by As-Mart.
+                        <p class="dashboard-description">
+                            Explore handpicked products, current deals and popular
+                            shopping choices selected for As-Mart visitors.
                         </p>
                     </div>
 
-                    <div class="featured-header-actions">
-                        <div class="featured-count">
-                            <span class="featured-count-number">
-                                @featuredProducts.Count
-                            </span>
+                    <div class="dashboard-stats"
+                         aria-label="As-Mart statistics">
 
-                            <span class="featured-count-label">
-                                Products<br />
-                                Available
-                            </span>
+                        <div class="dashboard-stat dashboard-stat-primary">
+                            <div class="dashboard-stat-icon">
+                                <i class="fa-solid fa-boxes-stacked"></i>
+                            </div>
+
+                            <div class="dashboard-stat-body">
+                                <div class="dashboard-stat-value">
+                                    @Model.TotalProducts.ToString("N0")
+                                </div>
+
+                                <div class="dashboard-stat-label">
+                                    Total Products
+                                </div>
+                            </div>
                         </div>
+
+                        <div class="dashboard-stat dashboard-stat-featured">
+                            <div class="dashboard-stat-icon">
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+
+                            <div class="dashboard-stat-body">
+                                <div class="dashboard-stat-value">
+                                    @Model.FeaturedProductsCount.ToString("N0")
+                                </div>
+
+                                <div class="dashboard-stat-label">
+                                    Featured
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-stat dashboard-stat-deals">
+                            <div class="dashboard-stat-icon">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+
+                            <div class="dashboard-stat-body">
+                                <div class="dashboard-stat-value">
+                                    @Model.DealsCount.ToString("N0")
+                                </div>
+
+                                <div class="dashboard-stat-label">
+                                    Active Deals
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-stat dashboard-stat-views">
+                            <div class="dashboard-stat-icon">
+                                <i class="fa-solid fa-eye"></i>
+                            </div>
+
+                            <div class="dashboard-stat-body">
+                                <div class="dashboard-stat-value">
+                                    @Model.TotalProductViews.ToString("N0")
+                                </div>
+
+                                <div class="dashboard-stat-label">
+                                    Product Views
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>
 
-                <nav class="featured-nav"
-                     aria-label="Product collection navigation">
+                <nav class="dashboard-navigation"
+                     aria-label="Shopping dashboard navigation">
 
                     <a asp-controller="Home"
                        asp-action="Deals"
-                       class="btn btn-primary featured-nav-btn">
+                       class="btn btn-primary dashboard-nav-button">
                         <i class="fa-solid fa-bolt"></i>
                         Deals of the Day
                     </a>
 
                     <a asp-controller="Home"
                        asp-action="TopVisited"
-                       class="btn btn-light featured-nav-btn">
+                       class="btn btn-light dashboard-nav-button">
                         <i class="fa-solid fa-chart-line"></i>
-                        Top Visited Products
+                        Top Visited
                     </a>
 
                     <a asp-controller="Catalog"
                        asp-action="Index"
-                       class="btn btn-light featured-nav-btn">
+                       class="btn btn-light dashboard-nav-button">
                         <i class="fa-solid fa-store"></i>
                         Browse Catalog
                     </a>
+
+                    <a asp-controller="Gallery"
+                       asp-action="Index"
+                       class="btn btn-light dashboard-nav-button">
+                        <i class="fa-regular fa-images"></i>
+                        Product Gallery
+                    </a>
+
+                    @if (User.Identity?.IsAuthenticated == true &&
+                                        User.IsInRole("Admin"))
+                    {
+                        <a asp-area="Admin"
+                           asp-controller="Products"
+                           asp-action="Index"
+                           class="btn btn-warning dashboard-nav-button">
+                            <i class="fa-solid fa-screwdriver-wrench"></i>
+                            Manage Products
+                        </a>
+                    }
 
                 </nav>
 
             </div>
         </header>
+
+        <section class="dashboard-summary"
+                 aria-label="Shopping summary">
+
+            <article class="dashboard-summary-card">
+                <div class="dashboard-summary-icon">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+
+                <div class="dashboard-summary-content">
+                    <h3 class="dashboard-summary-title">
+                        Featured Collection
+                    </h3>
+
+                    <p class="dashboard-summary-text">
+                        @Model.FeaturedProductsCount.ToString("N0")
+                        active products selected for the home page.
+                    </p>
+                </div>
+            </article>
+
+            <article class="dashboard-summary-card">
+                <div class="dashboard-summary-icon">
+                    <i class="fa-solid fa-tags"></i>
+                </div>
+
+                <div class="dashboard-summary-content">
+                    <h3 class="dashboard-summary-title">
+                        Current Offers
+                    </h3>
+
+                    <p class="dashboard-summary-text">
+                        @Model.DealsCount.ToString("N0")
+                        products are currently marked as Deals of the Day.
+                    </p>
+                </div>
+            </article>
+
+            <article class="dashboard-summary-card">
+                <div class="dashboard-summary-icon">
+                    <i class="fa-solid fa-star-half-stroke"></i>
+                </div>
+
+                <div class="dashboard-summary-content">
+                    <h3 class="dashboard-summary-title">
+                        Average Rating
+                    </h3>
+
+                    <p class="dashboard-summary-text">
+                        Current active-product average:
+                        @Model.AverageRating.ToString("0.0") out of 5.
+                    </p>
+                </div>
+            </article>
+
+        </section>
 
         @if (!featuredProducts.Any())
         {
@@ -460,11 +714,12 @@
                 <h2>No featured products found</h2>
 
                 <p>
-                    Products marked as active and featured will appear on this page.
-                    Select featured products from the product management area.
+                    Products marked as active and featured will appear on this
+                    page.
                 </p>
 
-                @if (User.Identity?.IsAuthenticated == true)
+                @if (User.Identity?.IsAuthenticated == true &&
+                            User.IsInRole("Admin"))
                 {
                     <a asp-area="Admin"
                        asp-controller="Products"

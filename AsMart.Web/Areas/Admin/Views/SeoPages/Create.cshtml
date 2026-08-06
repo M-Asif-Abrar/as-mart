@@ -4,6 +4,23 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var selectedStatusText = Model.Status switch
+    {
+        1 => "Published",
+        2 => "Archived",
+        _ => "Draft"
+    };
+
+    var completedSections = 0;
+
+    if (!string.IsNullOrWhiteSpace(Model.Slug)) completedSections++;
+    if (!string.IsNullOrWhiteSpace(Model.TargetKeyword)) completedSections++;
+    if (!string.IsNullOrWhiteSpace(Model.Title)) completedSections++;
+    if (!string.IsNullOrWhiteSpace(Model.MetaDescription)) completedSections++;
+    if (!string.IsNullOrWhiteSpace(Model.IntroHtml)) completedSections++;
+    if (!string.IsNullOrWhiteSpace(Model.BodyHtml)) completedSections++;
+    if (!string.IsNullOrWhiteSpace(Model.FaqJson)) completedSections++;
 }
 
 @section Styles {
@@ -377,43 +394,503 @@
                     width: 100%;
                 }
         }
+
+        /* =========================================================
+                   Compact modern responsive SEO editor overrides
+                   ========================================================= */
+
+        .as-seo-page {
+            padding: 12px 0 34px;
+            background: radial-gradient(circle at 6% 0%, rgba(37, 99, 235, .09), transparent 28%), radial-gradient(circle at 94% 2%, rgba(139, 92, 246, .07), transparent 27%), linear-gradient(180deg, #f8fafc 0%, #ffffff 48%, #f1f5f9 100%);
+        }
+
+        .as-seo-shell {
+            max-width: 1600px;
+            padding: 0 14px;
+        }
+
+        .as-seo-hero {
+            position: relative;
+            overflow: hidden;
+            display: block;
+            margin-bottom: 14px;
+            padding: 18px 20px;
+            border-radius: 22px;
+            background: radial-gradient(430px 180px at 2% 0%, rgba(37, 99, 235, .15), transparent 65%), radial-gradient(390px 170px at 98% 0%, rgba(139, 92, 246, .11), transparent 65%), linear-gradient(125deg, rgba(255, 255, 255, .98), rgba(239, 246, 255, .95) 55%, rgba(245, 243, 255, .92));
+            box-shadow: 0 15px 38px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
+        }
+
+            .as-seo-hero::before,
+            .as-seo-hero::after {
+                position: absolute;
+                content: "";
+                border-radius: 999px;
+                pointer-events: none;
+            }
+
+            .as-seo-hero::before {
+                top: -74px;
+                right: -44px;
+                width: 168px;
+                height: 168px;
+                background: rgba(37, 99, 235, .06);
+            }
+
+            .as-seo-hero::after {
+                bottom: -104px;
+                left: 38%;
+                width: 208px;
+                height: 208px;
+                background: rgba(139, 92, 246, .05);
+            }
+
+        .as-seo-dashboard-main,
+        .as-seo-hero-actions {
+            position: relative;
+            z-index: 2;
+        }
+
+        .as-seo-dashboard-main {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .as-seo-dashboard-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            border: 1px solid rgba(37, 99, 235, .16);
+            border-radius: 17px;
+            background: linear-gradient(145deg, rgba(37, 99, 235, .15), rgba(139, 92, 246, .08));
+            color: #2563eb;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, .11);
+            font-size: 20px;
+        }
+
+        .as-seo-kicker {
+            padding: 0;
+            margin-bottom: 4px;
+            background: transparent;
+            font-size: 9.5px;
+        }
+
+        .as-seo-title {
+            font-size: clamp(24px, 3vw, 38px);
+            line-height: 1.08;
+            letter-spacing: -.04em;
+        }
+
+        .as-seo-title-accent {
+            background: linear-gradient(100deg, #2563eb, #7c3aed);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .as-seo-subtitle {
+            margin-top: 7px;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .as-seo-dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(108px, 1fr));
+            gap: 7px;
+        }
+
+        .as-dashboard-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 46px;
+            padding: 7px 9px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .80);
+            box-shadow: 0 7px 18px rgba(15, 23, 42, .045);
+        }
+
+        .as-dashboard-stat-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 29px;
+            height: 29px;
+            min-width: 29px;
+            border-radius: 9px;
+            background: rgba(37, 99, 235, .09);
+            color: #2563eb;
+            font-size: 11px;
+        }
+
+        .as-dashboard-stat:nth-child(2) .as-dashboard-stat-icon {
+            background: rgba(139, 92, 246, .10);
+            color: #7c3aed;
+        }
+
+        .as-dashboard-stat:nth-child(3) .as-dashboard-stat-icon {
+            background: rgba(16, 185, 129, .10);
+            color: #047857;
+        }
+
+        .as-dashboard-stat-value {
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 950;
+            line-height: 1;
+        }
+
+        .as-dashboard-stat-label {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 8.5px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .as-seo-hero-actions {
+            justify-content: flex-start;
+            gap: 7px;
+            margin-top: 12px;
+            padding-top: 11px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
+        }
+
+        .as-action-btn {
+            min-height: 35px;
+            padding: 0 11px;
+            border-radius: 10px;
+            font-size: 10.5px;
+        }
+
+        .as-seo-grid {
+            grid-template-columns: minmax(0, 1fr) 310px;
+            gap: 14px;
+        }
+
+        .as-seo-main-card,
+        .as-side-card {
+            border-radius: 20px;
+            box-shadow: 0 14px 40px rgba(15, 23, 42, .065);
+        }
+
+        .as-seo-main-card {
+            padding: 16px;
+        }
+
+        .as-seo-side {
+            gap: 14px;
+            top: 86px;
+        }
+
+        .as-side-card {
+            padding: 14px;
+        }
+
+        .as-section-title,
+        .as-side-title {
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .as-section-title {
+            margin-bottom: 12px;
+        }
+
+            .as-section-title i,
+            .as-side-title i {
+                width: 31px;
+                height: 31px;
+                border-radius: 10px;
+                font-size: 11px;
+            }
+
+        .as-seo-form label {
+            margin-bottom: 5px;
+            font-size: 10.5px;
+        }
+
+        .as-seo-form .form-control {
+            min-height: 39px;
+            border-radius: 11px;
+            font-size: 11.5px;
+        }
+
+        .as-code-area,
+        .as-html-area {
+            font-size: 11.5px !important;
+        }
+
+        .as-help {
+            margin-top: 5px;
+            font-size: 10px;
+            line-height: 1.45;
+        }
+
+        .as-divider {
+            margin: 16px 0;
+        }
+
+        .as-bottom-actions {
+            gap: 12px;
+        }
+
+        .as-form-buttons {
+            gap: 7px;
+            padding-top: 24px;
+        }
+
+        .as-preview-list {
+            gap: 7px;
+            margin-top: 10px;
+        }
+
+            .as-preview-list div {
+                padding: 9px 10px;
+                border-radius: 11px;
+            }
+
+            .as-preview-list span {
+                margin-bottom: 3px;
+                font-size: 9px;
+            }
+
+            .as-preview-list strong {
+                font-size: 11px;
+            }
+
+        .as-tip-list {
+            margin-top: 10px;
+            padding-left: 16px;
+            font-size: 11px;
+            line-height: 1.55;
+        }
+
+            .as-tip-list li {
+                margin-bottom: 4px;
+            }
+
+        @@media (max-width: 1199.98px) {
+            .as-seo-dashboard-main {
+                grid-template-columns: 54px minmax(0, 1fr);
+            }
+
+            .as-seo-dashboard-stats {
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .as-seo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .as-seo-page {
+                padding: 10px 0 28px;
+            }
+
+            .as-seo-shell {
+                padding: 0 10px;
+            }
+
+            .as-seo-hero {
+                padding: 15px;
+                border-radius: 19px;
+            }
+
+            .as-seo-dashboard-main {
+                grid-template-columns: 44px minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .as-seo-dashboard-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+                font-size: 17px;
+            }
+
+            .as-seo-title {
+                font-size: 26px;
+            }
+
+            .as-seo-subtitle,
+            .as-seo-dashboard-stats {
+                grid-column: 1 / -1;
+            }
+
+            .as-seo-dashboard-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .as-seo-hero-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+                .as-seo-hero-actions .btn {
+                    width: 100%;
+                }
+
+            .as-seo-main-card,
+            .as-side-card {
+                padding: 13px;
+                border-radius: 18px;
+            }
+
+            .as-bottom-actions {
+                flex-direction: column;
+            }
+
+            .as-sort-box {
+                width: 100%;
+                max-width: none;
+            }
+
+            .as-form-buttons {
+                width: 100%;
+                padding-top: 0;
+                flex-direction: column-reverse;
+            }
+
+                .as-form-buttons .btn {
+                    width: 100%;
+                }
+        }
+
+        @@media (max-width: 390px) {
+            .as-seo-dashboard-stats,
+            .as-seo-hero-actions {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 }
 
 <div class="as-seo-page">
     <div class="as-seo-shell">
 
-        <div class="as-seo-hero">
-            <div>
-                <div class="as-seo-kicker">
-                    <i class="fas fa-search"></i>
-                    Programmatic SEO
+        <header class="as-seo-hero">
+
+            <div class="as-seo-dashboard-main">
+
+                <div class="as-seo-dashboard-icon"
+                     aria-hidden="true">
+                    <i class="fas fa-file-circle-plus"></i>
                 </div>
 
-                <h1 class="as-seo-title">Create SEO Page</h1>
+                <div>
+                    <div class="as-seo-kicker">
+                        <i class="fas fa-sparkles"></i>
+                        Programmatic SEO Editor
+                    </div>
 
-                <p class="as-seo-subtitle">
-                    Build SEO-ready guide pages with slug, template, filters, intro/body HTML, FAQ JSON, and publishing controls.
-                </p>
+                    <h1 class="as-seo-title">
+                        Create a
+                        <span class="as-seo-title-accent">
+                            new SEO page
+                        </span>
+                    </h1>
 
-                <div class="as-seo-badges">
-                    <span><i class="fas fa-bolt"></i> Fast publish</span>
-                    <span><i class="fas fa-table"></i> Auto picks</span>
-                    <span><i class="fas fa-chart-line"></i> Search intent</span>
+                    <p class="as-seo-subtitle">
+                        Build an SEO-ready guide with page identity, product
+                        filters, structured content, FAQ data and publishing
+                        controls.
+                    </p>
+                </div>
+
+                <div class="as-seo-dashboard-stats"
+                     aria-label="SEO editor information">
+
+                    <div class="as-dashboard-stat">
+                        <div class="as-dashboard-stat-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+
+                        <div>
+                            <div class="as-dashboard-stat-value">
+                                @(Model.TemplateKey ?? "best_of")
+                            </div>
+
+                            <div class="as-dashboard-stat-label">
+                                Template
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="as-dashboard-stat">
+                        <div class="as-dashboard-stat-icon">
+                            <i class="fas fa-circle-info"></i>
+                        </div>
+
+                        <div>
+                            <div class="as-dashboard-stat-value">
+                                @selectedStatusText
+                            </div>
+
+                            <div class="as-dashboard-stat-label">
+                                Status
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="as-dashboard-stat">
+                        <div class="as-dashboard-stat-icon">
+                            <i class="fas fa-list-check"></i>
+                        </div>
+
+                        <div>
+                            <div class="as-dashboard-stat-value">
+                                @completedSections / 7
+                            </div>
+
+                            <div class="as-dashboard-stat-label">
+                                Fields Ready
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            <div class="as-seo-hero-actions">
-                <a class="btn btn-light border as-action-btn" href="/Admin/SeoPages">
+            <nav class="as-seo-hero-actions"
+                 aria-label="SEO page editor navigation">
+
+                <button type="submit"
+                        form="seoCreateForm"
+                        class="btn btn-primary as-action-btn">
+                    <i class="fas fa-save"></i>
+                    Save Page
+                </button>
+
+                <a class="btn btn-outline-primary as-action-btn"
+                   href="/Admin/SeoPages">
                     <i class="fas fa-arrow-left"></i>
-                    Back
+                    SEO Pages
                 </a>
-            </div>
-        </div>
+
+                <a class="btn btn-outline-primary as-action-btn"
+                   href="/guides"
+                   target="_blank"
+                   rel="noopener">
+                    <i class="fas fa-eye"></i>
+                    Public Guides
+                </a>
+
+            </nav>
+        </header>
 
         <div class="as-seo-grid">
             <div class="as-seo-main-card">
-                <form class="as-seo-form" method="post" action="/Admin/SeoPages/Create">
+                <form id="seoCreateForm" class="as-seo-form" method="post" action="/Admin/SeoPages/Create">
                     @Html.AntiForgeryToken()
 
                     <div class="as-section-title">

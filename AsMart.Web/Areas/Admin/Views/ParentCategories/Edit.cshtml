@@ -6,148 +6,1145 @@
 
 @section Styles {
     <style>
-        .parent-category-page {
-            min-height: calc(100vh - 80px);
-            background: linear-gradient(135deg,#f8fafc 0%,#eef4ff 45%,#ffffff 100%);
+        .asm-parent-edit-page {
+            --pe-blue: #146cff;
+            --pe-blue-dark: #0d57d8;
+            --pe-indigo: #5b4bff;
+            --pe-green: #159447;
+            --pe-orange: #b76312;
+            --pe-red: #d93a3a;
+            --pe-ink: #111a2e;
+            --pe-text: #33415c;
+            --pe-muted: #71809d;
+            --pe-border: rgba(99, 116, 150, .15);
+            min-height: calc(100vh - 70px);
+            padding: 1.25rem;
+            background: radial-gradient( circle at 8% 2%, rgba(37, 99, 235, .10), transparent 30rem ), radial-gradient( circle at 96% 10%, rgba(124, 58, 237, .10), transparent 28rem ), linear-gradient( 135deg, #eef5ff 0%, #f8fbff 50%, #f3f1ff 100% );
         }
 
-        .parent-hero {
-            border-radius: 30px;
-            padding: 2rem;
-            background: linear-gradient(135deg,#0f172a,#2563eb);
+        .asm-parent-edit-command,
+        .asm-parent-edit-form-card,
+        .asm-parent-edit-side-card {
+            border: 1px solid var(--pe-border);
+            border-radius: 26px;
+            background: rgba(255, 255, 255, .92);
+            box-shadow: 0 16px 42px rgba(33, 54, 92, .09);
+            backdrop-filter: blur(14px);
+        }
+
+        .asm-parent-edit-command {
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 1.5rem 1.25rem;
+        }
+
+            .asm-parent-edit-command::after {
+                position: absolute;
+                top: -100px;
+                right: -45px;
+                width: 245px;
+                height: 245px;
+                content: "";
+                border-radius: 50%;
+                background: rgba(91, 75, 255, .08);
+                pointer-events: none;
+            }
+
+        .asm-parent-edit-command-main {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(340px, 1.2fr) minmax(540px, 1.6fr);
+            gap: 1.4rem;
+            align-items: center;
+        }
+
+        .asm-parent-edit-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 0;
+        }
+
+        .asm-parent-edit-title-icon {
+            display: inline-flex;
+            flex: 0 0 68px;
+            width: 68px;
+            height: 68px;
+            align-items: center;
+            justify-content: center;
+            color: #2f63dd;
+            font-size: 1.55rem;
+            border: 1px solid #bdd0ff;
+            border-radius: 22px;
+            background: linear-gradient( 145deg, #dce8ff, #eef2ff );
+        }
+
+        .asm-parent-edit-eyebrow {
+            display: block;
+            margin-bottom: .35rem;
+            color: #2459d8;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .asm-parent-edit-title h1 {
+            margin: 0;
+            color: var(--pe-ink);
+            font-size: clamp(2rem, 3vw, 3rem);
+            font-weight: 950;
+            line-height: 1;
+            letter-spacing: -.045em;
+        }
+
+            .asm-parent-edit-title h1 span {
+                color: var(--pe-indigo);
+            }
+
+        .asm-parent-edit-title p {
+            max-width: 680px;
+            margin: .55rem 0 0;
+            color: var(--pe-muted);
+            font-size: .92rem;
+            line-height: 1.65;
+        }
+
+        .asm-parent-edit-kpis {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(110px, 1fr));
+            gap: .55rem;
+        }
+
+        .asm-parent-edit-kpi {
+            display: flex;
+            min-width: 0;
+            min-height: 58px;
+            align-items: center;
+            gap: .62rem;
+            padding: .62rem .7rem;
+            border: 1px solid var(--pe-border);
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .asm-parent-edit-kpi-icon {
+            display: inline-flex;
+            flex: 0 0 35px;
+            width: 35px;
+            height: 35px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+            font-size: .85rem;
+        }
+
+            .asm-parent-edit-kpi-icon.blue {
+                color: #2e62dc;
+                background: #e8efff;
+            }
+
+            .asm-parent-edit-kpi-icon.green {
+                color: #148645;
+                background: #e5f5ec;
+            }
+
+            .asm-parent-edit-kpi-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-parent-edit-kpi-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+            .asm-parent-edit-kpi-icon.gray {
+                color: #526079;
+                background: #edf0f5;
+            }
+
+        .asm-parent-edit-kpi small {
+            display: block;
+            color: #697895;
+            font-size: .60rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .asm-parent-edit-kpi strong {
+            display: block;
+            max-width: 130px;
+            margin-top: .05rem;
+            overflow: hidden;
+            color: var(--pe-ink);
+            font-size: .9rem;
+            font-weight: 950;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .asm-parent-edit-command-actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            flex-wrap: wrap;
+            margin-top: 1.15rem;
+            padding-top: .9rem;
+            border-top: 1px solid #e3e9f2;
+        }
+
+        .asm-parent-edit-btn {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .65rem 1rem;
+            font-size: .78rem;
+            font-weight: 900;
+            border-radius: 13px;
+            transition: .2s ease;
+        }
+
+            .asm-parent-edit-btn:hover {
+                transform: translateY(-2px);
+            }
+
+        .asm-parent-edit-btn-primary {
             color: #fff;
-            box-shadow: 0 18px 45px rgba(15,23,42,.16);
+            border: 1px solid var(--pe-blue);
+            background: linear-gradient( 135deg, var(--pe-blue), #2463eb );
+            box-shadow: 0 9px 20px rgba(20, 108, 255, .22);
+        }
+
+            .asm-parent-edit-btn-primary:hover {
+                color: #fff;
+            }
+
+        .asm-parent-edit-btn-outline {
+            color: var(--pe-blue);
+            border: 1px solid var(--pe-blue);
+            background: #fff;
+        }
+
+        .asm-parent-edit-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: start;
+        }
+
+        .asm-parent-edit-form-card {
+            overflow: hidden;
+        }
+
+        .asm-parent-edit-card-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            flex-wrap: wrap;
+            padding: 1rem 1.15rem;
+            border-bottom: 1px solid #e5eaf2;
         }
 
-        .parent-kicker {
-            text-transform: uppercase;
-            letter-spacing: .14em;
-            color: #bfdbfe;
-            font-size: .78rem;
-            font-weight: 900;
-        }
-
-        .parent-hero h1 {
-            font-size: clamp(1.9rem,4vw,2.9rem);
-            font-weight: 900;
-            margin: .35rem 0;
-            line-height: 1.1;
-        }
-
-        .parent-hero p {
-            margin: 0;
-            max-width: 760px;
-            color: rgba(255,255,255,.78);
-            font-weight: 500;
-            line-height: 1.6;
-        }
-
-        .parent-actions {
+        .asm-parent-edit-card-title {
             display: flex;
-            justify-content: flex-end;
-            gap: .85rem;
-            flex-wrap: wrap;
-            margin-top: 1.5rem;
+            align-items: center;
+            gap: .65rem;
+            color: var(--pe-ink);
+            font-size: 1rem;
+            font-weight: 950;
         }
 
-        .parent-btn {
-            border-radius: 16px;
-            padding: .82rem 1.2rem;
+            .asm-parent-edit-card-title i {
+                color: #2463eb;
+            }
+
+        .asm-parent-edit-required {
+            color: #7a879d;
+            font-size: .72rem;
+            font-weight: 800;
+        }
+
+        .asm-parent-edit-form-body {
+            padding: 1.15rem;
+        }
+
+        .asm-parent-edit-validation {
+            margin-bottom: 1rem;
+            padding: .85rem 1rem;
+            color: #a62929;
+            border: 1px solid #f1cccc;
+            border-radius: 14px;
+            background: #fff5f5;
+        }
+
+        .asm-parent-edit-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.15rem;
+            border-top: 1px solid #e5eaf2;
+            background: #fbfcff;
+        }
+
+        .asm-parent-edit-save-note {
+            color: #71809d;
+            font-size: .76rem;
+            font-weight: 800;
+        }
+
+            .asm-parent-edit-save-note i {
+                color: var(--pe-green);
+            }
+
+        .asm-parent-edit-action-buttons {
+            display: flex;
+            gap: .55rem;
+        }
+
+        .asm-parent-edit-sidebar {
+            position: sticky;
+            top: 1rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .asm-parent-edit-side-card {
+            padding: 1rem;
+        }
+
+        .asm-parent-edit-side-title {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: .8rem;
+            color: var(--pe-ink);
+            font-size: .9rem;
+            font-weight: 950;
+        }
+
+            .asm-parent-edit-side-title i {
+                color: #6846d8;
+            }
+
+        .asm-parent-edit-preview-list {
+            display: grid;
+            gap: .55rem;
+        }
+
+        .asm-parent-edit-preview-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            padding: .68rem .72rem;
+            border: 1px solid #e6ebf2;
+            border-radius: 12px;
+            background: #f8faff;
+        }
+
+            .asm-parent-edit-preview-row small {
+                color: #71809d;
+                font-size: .65rem;
+                font-weight: 900;
+                text-transform: uppercase;
+            }
+
+            .asm-parent-edit-preview-row strong {
+                max-width: 175px;
+                overflow: hidden;
+                color: var(--pe-ink);
+                font-size: .76rem;
+                font-weight: 950;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+        .asm-parent-edit-status {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .3rem .55rem;
+            color: #147a3f;
+            font-size: .7rem;
             font-weight: 900;
-            transition: .2s ease;
+            border-radius: 999px;
+            background: #e4f5eb;
         }
 
-            .parent-btn:hover {
-                transform: translateY(-2px);
+            .asm-parent-edit-status.inactive {
+                color: #b22f2f;
+                background: #fdeaea;
             }
 
-        .parent-btn-primary {
-            color: #fff;
-            background: linear-gradient(135deg,#2563eb,#1d4ed8);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(37,99,235,.24);
+        .asm-parent-edit-checklist {
+            display: grid;
+            gap: .65rem;
         }
 
-            .parent-btn-primary:hover {
-                color: #fff;
+        .asm-parent-edit-check-item {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            padding: .65rem;
+            border-radius: 12px;
+            background: #f8faff;
+        }
+
+        .asm-parent-edit-check-number {
+            display: inline-flex;
+            flex: 0 0 30px;
+            width: 30px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            color: #2459d8;
+            font-size: .72rem;
+            font-weight: 950;
+            border-radius: 10px;
+            background: #e8efff;
+        }
+
+        .asm-parent-edit-check-item span:last-child {
+            color: #536079;
+            font-size: .73rem;
+            font-weight: 800;
+        }
+
+        .asm-parent-edit-tip-list {
+            display: grid;
+            gap: .7rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+            .asm-parent-edit-tip-list li {
+                display: flex;
+                gap: .55rem;
+                color: #56637b;
+                font-size: .75rem;
+                line-height: 1.5;
             }
 
-        .parent-btn-light {
-            background: #fff;
-            color: #0f172a;
+            .asm-parent-edit-tip-list i {
+                margin-top: .15rem;
+                color: #2463eb;
+            }
+
+        .asm-parent-edit-submitting {
+            opacity: .72;
+            pointer-events: none;
+        }
+
+        .asm-parent-edit-spinner {
+            display: none;
+        }
+
+        .asm-parent-edit-submitting .asm-parent-edit-spinner {
+            display: inline-block;
+        }
+
+        .asm-parent-edit-submitting .asm-parent-edit-save-icon {
+            display: none;
+        }
+
+        @@media (max-width: 1399.98px) {
+            .asm-parent-edit-command-main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .asm-parent-edit-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-parent-edit-sidebar {
+                position: static;
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .asm-parent-edit-kpis {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         @@media (max-width: 767.98px) {
-            .parent-hero {
-                border-radius: 22px;
-                padding: 1.25rem;
+            .asm-parent-edit-page {
+                padding: .85rem;
             }
 
-            .parent-actions {
+            .asm-parent-edit-command,
+            .asm-parent-edit-form-card,
+            .asm-parent-edit-side-card {
+                border-radius: 20px;
+            }
+
+            .asm-parent-edit-command {
+                padding: 1.25rem 1rem 1rem;
+            }
+
+            .asm-parent-edit-title {
+                align-items: flex-start;
+            }
+
+            .asm-parent-edit-title-icon {
+                width: 56px;
+                height: 56px;
+                flex-basis: 56px;
+                border-radius: 17px;
+            }
+
+            .asm-parent-edit-kpis {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .asm-parent-edit-card-head,
+            .asm-parent-edit-actions {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .asm-parent-edit-action-buttons {
+                width: 100%;
+            }
+
+                .asm-parent-edit-action-buttons .btn {
+                    flex: 1;
+                }
+
+            .asm-parent-edit-sidebar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .asm-parent-edit-title {
+                flex-direction: column;
+            }
+
+            .asm-parent-edit-kpis {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-parent-edit-command-actions .btn {
+                width: 100%;
+            }
+
+            .asm-parent-edit-command-actions .ms-auto {
+                width: 100%;
+                margin-left: 0 !important;
+                text-align: center;
+            }
+
+            .asm-parent-edit-action-buttons {
                 flex-direction: column-reverse;
             }
 
-                .parent-actions .btn,
-                .parent-hero .btn {
+                .asm-parent-edit-action-buttons .btn {
                     width: 100%;
                 }
         }
     </style>
 }
 
-<div class="container-fluid py-4 parent-category-page">
+<div class="asm-parent-edit-page">
 
-    <div class="parent-hero mb-4">
-        <div>
-            <span class="parent-kicker">Admin Panel</span>
+    <section class="asm-parent-edit-command">
 
-            <h1>Edit Parent Category</h1>
+        <div class="asm-parent-edit-command-main">
 
-            <p>
-                Update top-level catalog category details, SEO slug,
-                sorting order, description, and visibility status.
-            </p>
-        </div>
+            <div class="asm-parent-edit-title">
 
-        <a asp-action="Index" class="btn parent-btn parent-btn-light">
-            <i class="fa-solid fa-arrow-left me-2"></i>
-            Back
-        </a>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-12 col-xxl-10">
-
-            <form asp-action="Edit" method="post">
-                @Html.AntiForgeryToken()
-
-                <input type="hidden" asp-for="Id" />
-
-                <partial name="_ParentCategoryForm" model="Model" />
-
-                <div class="parent-actions">
-                    <a asp-action="Index" class="btn parent-btn parent-btn-light border">
-                        <i class="fa-solid fa-xmark me-2"></i>
-                        Cancel
-                    </a>
-
-                    <button type="submit" class="btn parent-btn parent-btn-primary">
-                        <i class="fa-solid fa-floppy-disk me-2"></i>
-                        Save Changes
-                    </button>
+                <div class="asm-parent-edit-title-icon">
+                    <i class="fa-solid fa-pen-to-square"></i>
                 </div>
-            </form>
+
+                <div>
+                    <span class="asm-parent-edit-eyebrow">
+                        Catalog Management
+                    </span>
+
+                    <h1>
+                        Edit Parent <span>Category</span>
+                    </h1>
+
+                    <p>
+                        Update top-level catalog category information, SEO slug,
+                        sorting priority, description, and storefront visibility.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="asm-parent-edit-kpis">
+
+                <div class="asm-parent-edit-kpi">
+                    <span class="asm-parent-edit-kpi-icon blue">
+                        <i class="fa-solid fa-hashtag"></i>
+                    </span>
+
+                    <div>
+                        <small>Category ID</small>
+                        <strong>@Model.Id</strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-edit-kpi">
+                    <span class="asm-parent-edit-kpi-icon gray">
+                        <i class="fa-solid fa-font"></i>
+                    </span>
+
+                    <div>
+                        <small>Name</small>
+                        <strong id="topParentName">
+                            Not specified
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-edit-kpi">
+                    <span class="asm-parent-edit-kpi-icon green">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </span>
+
+                    <div>
+                        <small>Status</small>
+                        <strong id="topParentStatus">
+                            Active
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-edit-kpi">
+                    <span class="asm-parent-edit-kpi-icon orange">
+                        <i class="fa-solid fa-arrow-down-1-9"></i>
+                    </span>
+
+                    <div>
+                        <small>Display Order</small>
+                        <strong id="topParentOrder">
+                            —
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-edit-kpi">
+                    <span class="asm-parent-edit-kpi-icon purple">
+                        <i class="fa-solid fa-link"></i>
+                    </span>
+
+                    <div>
+                        <small>SEO Slug</small>
+                        <strong id="topParentSlug">
+                            Not specified
+                        </strong>
+                    </div>
+                </div>
+
+            </div>
 
         </div>
-    </div>
+
+        <div class="asm-parent-edit-command-actions">
+
+            <a asp-action="Index"
+               class="btn asm-parent-edit-btn asm-parent-edit-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Parent Categories
+            </a>
+
+            <a asp-action="Details"
+               asp-route-id="@Model.Id"
+               class="btn asm-parent-edit-btn asm-parent-edit-btn-outline">
+                <i class="fa-solid fa-circle-info"></i>
+                View Details
+            </a>
+
+            <span class="ms-auto text-muted small fw-bold">
+                <i class="fa-solid fa-shield-halved me-1"></i>
+                Protected admin form
+            </span>
+
+        </div>
+
+    </section>
+
+    <form asp-action="Edit"
+          method="post"
+          id="parentCategoryEditForm">
+
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="Id" />
+
+        <div class="asm-parent-edit-grid">
+
+            <section class="asm-parent-edit-form-card">
+
+                <div class="asm-parent-edit-card-head">
+
+                    <div class="asm-parent-edit-card-title">
+                        <i class="fa-solid fa-sliders"></i>
+                        Parent Category Information
+                    </div>
+
+                    <span class="asm-parent-edit-required">
+                        Fields marked with * are required
+                    </span>
+
+                </div>
+
+                <div class="asm-parent-edit-form-body">
+
+                    <div asp-validation-summary="ModelOnly"
+                         id="parentEditValidationSummary"
+                         class="asm-parent-edit-validation d-none"
+                         role="alert">
+                    </div>
+
+                    <partial name="_ParentCategoryForm"
+                             model="Model" />
+
+                </div>
+
+                <div class="asm-parent-edit-actions">
+
+                    <div class="asm-parent-edit-save-note">
+                        <i class="fa-solid fa-circle-check me-1"></i>
+                        Changes are validated before saving.
+                    </div>
+
+                    <div class="asm-parent-edit-action-buttons">
+
+                        <a asp-action="Index"
+                           class="btn asm-parent-edit-btn asm-parent-edit-btn-outline">
+                            <i class="fa-solid fa-xmark"></i>
+                            Cancel
+                        </a>
+
+                        <button type="submit"
+                                id="saveParentCategoryButton"
+                                class="btn asm-parent-edit-btn asm-parent-edit-btn-primary">
+
+                            <span class="spinner-border spinner-border-sm asm-parent-edit-spinner"
+                                  aria-hidden="true">
+                            </span>
+
+                            <i class="fa-solid fa-floppy-disk asm-parent-edit-save-icon"></i>
+
+                            <span class="asm-parent-edit-save-text">
+                                Save Changes
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <aside class="asm-parent-edit-sidebar">
+
+                <section class="asm-parent-edit-side-card">
+
+                    <div class="asm-parent-edit-side-title">
+                        <i class="fa-solid fa-chart-simple"></i>
+                        Live Preview
+                    </div>
+
+                    <div class="asm-parent-edit-preview-list">
+
+                        <div class="asm-parent-edit-preview-row">
+                            <small>ID</small>
+                            <strong>#@Model.Id</strong>
+                        </div>
+
+                        <div class="asm-parent-edit-preview-row">
+                            <small>Name</small>
+                            <strong id="parentNamePreview">
+                                Not specified
+                            </strong>
+                        </div>
+
+                        <div class="asm-parent-edit-preview-row">
+                            <small>Slug</small>
+                            <strong id="parentSlugPreview">
+                                Not specified
+                            </strong>
+                        </div>
+
+                        <div class="asm-parent-edit-preview-row">
+                            <small>Display Order</small>
+                            <strong id="parentOrderPreview">
+                                —
+                            </strong>
+                        </div>
+
+                        <div class="asm-parent-edit-preview-row">
+                            <small>Status</small>
+
+                            <span id="parentStatusPreview"
+                                  class="asm-parent-edit-status">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Active
+                            </span>
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="asm-parent-edit-side-card">
+
+                    <div class="asm-parent-edit-side-title">
+                        <i class="fa-solid fa-list-check"></i>
+                        Editing Checklist
+                    </div>
+
+                    <div class="asm-parent-edit-checklist">
+
+                        <div class="asm-parent-edit-check-item">
+                            <span class="asm-parent-edit-check-number">1</span>
+                            <span>Review the customer-facing category name.</span>
+                        </div>
+
+                        <div class="asm-parent-edit-check-item">
+                            <span class="asm-parent-edit-check-number">2</span>
+                            <span>Verify the SEO slug before changing it.</span>
+                        </div>
+
+                        <div class="asm-parent-edit-check-item">
+                            <span class="asm-parent-edit-check-number">3</span>
+                            <span>Confirm the storefront display order.</span>
+                        </div>
+
+                        <div class="asm-parent-edit-check-item">
+                            <span class="asm-parent-edit-check-number">4</span>
+                            <span>Review visibility before saving changes.</span>
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="asm-parent-edit-side-card">
+
+                    <div class="asm-parent-edit-side-title">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        Editing Guidance
+                    </div>
+
+                    <ul class="asm-parent-edit-tip-list">
+
+                        <li>
+                            <i class="fa-solid fa-check"></i>
+                            <span>
+                                Keep the parent category broad enough to contain
+                                multiple child categories.
+                            </span>
+                        </li>
+
+                        <li>
+                            <i class="fa-solid fa-check"></i>
+                            <span>
+                                Avoid changing an indexed slug unless a redirect
+                                is configured.
+                            </span>
+                        </li>
+
+                        <li>
+                            <i class="fa-solid fa-check"></i>
+                            <span>
+                                Lower display-order values appear before higher values.
+                            </span>
+                        </li>
+
+                        <li>
+                            <i class="fa-solid fa-check"></i>
+                            <span>
+                                Disable the category when it should be hidden
+                                from the storefront.
+                            </span>
+                        </li>
+
+                    </ul>
+
+                </section>
+
+            </aside>
+
+        </div>
+
+    </form>
 
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            'use strict';
+
+            const form =
+                document.getElementById('parentCategoryEditForm');
+
+            const saveButton =
+                document.getElementById('saveParentCategoryButton');
+
+            const validationSummary =
+                document.getElementById('parentEditValidationSummary');
+
+            if (!form) {
+                return;
+            }
+
+            function getField(name) {
+                return form.querySelector(
+                    '[name="' + name + '"]'
+                );
+            }
+
+            const nameInput = getField('Name');
+            const slugInput = getField('Slug');
+            const orderInput = getField('DisplayOrder');
+            const activeInput = getField('IsActive');
+
+            const topName =
+                document.getElementById('topParentName');
+
+            const topSlug =
+                document.getElementById('topParentSlug');
+
+            const topOrder =
+                document.getElementById('topParentOrder');
+
+            const topStatus =
+                document.getElementById('topParentStatus');
+
+            const namePreview =
+                document.getElementById('parentNamePreview');
+
+            const slugPreview =
+                document.getElementById('parentSlugPreview');
+
+            const orderPreview =
+                document.getElementById('parentOrderPreview');
+
+            const statusPreview =
+                document.getElementById('parentStatusPreview');
+
+            function valueOrFallback(input, fallback) {
+                if (!input) {
+                    return fallback;
+                }
+
+                const value =
+                    String(input.value || '').trim();
+
+                return value || fallback;
+            }
+
+            function getActiveState() {
+                if (!activeInput) {
+                    return true;
+                }
+
+                if (activeInput.type === 'checkbox') {
+                    return activeInput.checked;
+                }
+
+                return String(activeInput.value)
+                    .toLowerCase() === 'true';
+            }
+
+            function updatePreview() {
+                const name =
+                    valueOrFallback(
+                        nameInput,
+                        'Not specified'
+                    );
+
+                const slug =
+                    valueOrFallback(
+                        slugInput,
+                        'Not specified'
+                    );
+
+                const order =
+                    valueOrFallback(
+                        orderInput,
+                        '—'
+                    );
+
+                const isActive =
+                    getActiveState();
+
+                if (topName) {
+                    topName.textContent = name;
+                    topName.title = name;
+                }
+
+                if (namePreview) {
+                    namePreview.textContent = name;
+                    namePreview.title = name;
+                }
+
+                if (topSlug) {
+                    topSlug.textContent = slug;
+                    topSlug.title = slug;
+                }
+
+                if (slugPreview) {
+                    slugPreview.textContent = slug;
+                    slugPreview.title = slug;
+                }
+
+                if (topOrder) {
+                    topOrder.textContent = order;
+                }
+
+                if (orderPreview) {
+                    orderPreview.textContent = order;
+                }
+
+                if (topStatus) {
+                    topStatus.textContent =
+                        isActive
+                            ? 'Active'
+                            : 'Inactive';
+                }
+
+                if (statusPreview) {
+                    statusPreview.classList.toggle(
+                        'inactive',
+                        !isActive
+                    );
+
+                    statusPreview.innerHTML =
+                        isActive
+                            ? '<i class="fa-solid fa-circle-check"></i> Active'
+                            : '<i class="fa-solid fa-circle-xmark"></i> Inactive';
+                }
+            }
+
+            function updateValidationSummary() {
+                if (!validationSummary) {
+                    return;
+                }
+
+                const hasErrors =
+                    validationSummary.querySelector('li') !== null ||
+                    String(
+                        validationSummary.innerText || ''
+                    ).trim().length > 0;
+
+                validationSummary.classList.toggle(
+                    'd-none',
+                    !hasErrors
+                );
+            }
+
+            function focusFirstInvalidField() {
+                const invalidField =
+                    form.querySelector(
+                        '.input-validation-error,' +
+                        '.form-control.is-invalid,' +
+                        '.form-select.is-invalid'
+                    );
+
+                if (!invalidField) {
+                    return;
+                }
+
+                invalidField.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+
+                window.setTimeout(function () {
+                    invalidField.focus({
+                        preventScroll: true
+                    });
+                }, 300);
+            }
+
+            [
+                nameInput,
+                slugInput,
+                orderInput,
+                activeInput
+            ].forEach(function (input) {
+                if (!input) {
+                    return;
+                }
+
+                input.addEventListener(
+                    'input',
+                    updatePreview
+                );
+
+                input.addEventListener(
+                    'change',
+                    updatePreview
+                );
+            });
+
+            form.addEventListener(
+                'submit',
+                function (event) {
+                    updateValidationSummary();
+
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        focusFirstInvalidField();
+                        return;
+                    }
+
+                    if (!saveButton) {
+                        return;
+                    }
+
+                    saveButton.disabled = true;
+
+                    saveButton.classList.add(
+                        'asm-parent-edit-submitting'
+                    );
+
+                    const buttonText =
+                        saveButton.querySelector(
+                            '.asm-parent-edit-save-text'
+                        );
+
+                    if (buttonText) {
+                        buttonText.textContent =
+                            'Saving...';
+                    }
+                }
+            );
+
+            updatePreview();
+            updateValidationSummary();
+
+            window.setTimeout(
+                focusFirstInvalidField,
+                100
+            );
+        })();
+    </script>
 }

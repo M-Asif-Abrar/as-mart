@@ -2,243 +2,753 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var publishedText = Model.IsPublished
+        ? "Published"
+        : "Draft";
+
+    var publishedDate = Model.PublishedAt.HasValue
+        ? Model.PublishedAt.Value
+            .ToLocalTime()
+            .ToString("dd MMM yyyy, hh:mm tt")
+        : "Not published";
 }
 
 @section Styles {
     <style>
-        .admin-page {
+        .delete-page {
             min-height: calc(100vh - 80px);
-            background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 45%, #ffffff 100%);
+            padding: 12px 0 34px;
+            background: radial-gradient( circle at 6% 0%, rgba(220, 38, 38, .08), transparent 28%), radial-gradient( circle at 94% 2%, rgba(37, 99, 235, .06), transparent 27%), linear-gradient( 180deg, #f8fafc 0%, #ffffff 48%, #f1f5f9 100%);
         }
 
         .delete-shell {
-            min-height: calc(100vh - 130px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .delete-card {
             width: 100%;
-            max-width: 620px;
-            border-radius: 28px;
-            background: rgba(255,255,255,.96);
-            border: 1px solid rgba(15,23,42,.08);
-            box-shadow: 0 24px 70px rgba(15,23,42,.12);
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 14px;
+        }
+
+        .delete-dashboard {
+            position: relative;
             overflow: hidden;
+            margin-bottom: 14px;
+            padding: 18px 20px;
+            border: 1px solid rgba(220, 38, 38, .12);
+            border-radius: 22px;
+            background: radial-gradient( 430px 180px at 2% 0%, rgba(220, 38, 38, .13), transparent 65%), radial-gradient( 390px 170px at 98% 0%, rgba(239, 68, 68, .09), transparent 65%), linear-gradient( 125deg, rgba(255, 255, 255, .98), rgba(254, 242, 242, .95) 55%, rgba(255, 247, 237, .92));
+            box-shadow: 0 15px 38px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
         }
 
-        .delete-hero {
-            padding: 2.25rem;
-            text-align: center;
-            color: #fff;
-            background: linear-gradient(135deg, #991b1b, #dc2626, #ef4444);
+            .delete-dashboard::before,
+            .delete-dashboard::after {
+                position: absolute;
+                content: "";
+                border-radius: 999px;
+                pointer-events: none;
+            }
+
+            .delete-dashboard::before {
+                top: -74px;
+                right: -44px;
+                width: 168px;
+                height: 168px;
+                background: rgba(220, 38, 38, .06);
+            }
+
+            .delete-dashboard::after {
+                bottom: -104px;
+                left: 38%;
+                width: 208px;
+                height: 208px;
+                background: rgba(245, 158, 11, .05);
+            }
+
+        .delete-dashboard-main,
+        .delete-dashboard-nav {
+            position: relative;
+            z-index: 2;
         }
 
-        .delete-icon {
-            width: 78px;
-            height: 78px;
-            border-radius: 24px;
-            margin: 0 auto 1rem;
-            background: rgba(255,255,255,.15);
+        .delete-dashboard-main {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .delete-dashboard-icon {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
+            width: 54px;
+            height: 54px;
+            border: 1px solid rgba(220, 38, 38, .16);
+            border-radius: 17px;
+            background: linear-gradient( 145deg, rgba(220, 38, 38, .14), rgba(239, 68, 68, .08));
+            color: #dc2626;
+            box-shadow: 0 10px 24px rgba(220, 38, 38, .11);
+            font-size: 20px;
+        }
+
+        .delete-dashboard-copy {
+            min-width: 0;
         }
 
         .delete-kicker {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            color: #dc2626;
+            font-size: 9.5px;
+            font-weight: 900;
+            letter-spacing: .07em;
             text-transform: uppercase;
-            letter-spacing: .14em;
-            font-size: .78rem;
-            font-weight: 900;
-            color: rgba(255,255,255,.8);
-            margin-bottom: .35rem;
         }
 
-        .delete-hero h1 {
-            font-size: clamp(1.8rem, 4vw, 2.5rem);
-            font-weight: 900;
-            margin: 0 0 .5rem;
-        }
-
-        .delete-hero p {
+        .delete-title {
             margin: 0;
-            color: rgba(255,255,255,.82);
-            font-weight: 500;
+            color: #0f172a;
+            font-size: clamp(24px, 3vw, 38px);
+            font-weight: 950;
+            line-height: 1.08;
+            letter-spacing: -.04em;
         }
 
-        .delete-body {
-            padding: 1.5rem;
+        .delete-title-accent {
+            background: linear-gradient( 100deg, #dc2626, #ef4444);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
         }
+
+        .delete-subtitle {
+            max-width: 760px;
+            margin: 7px 0 0;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 650;
+            line-height: 1.55;
+        }
+
+        .delete-dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(112px, 1fr));
+            gap: 7px;
+        }
+
+        .delete-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 46px;
+            padding: 7px 9px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .80);
+            box-shadow: 0 7px 18px rgba(15, 23, 42, .045);
+        }
+
+        .delete-stat-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 29px;
+            height: 29px;
+            min-width: 29px;
+            border-radius: 9px;
+            background: rgba(220, 38, 38, .09);
+            color: #dc2626;
+            font-size: 11px;
+        }
+
+        .delete-stat:nth-child(2) .delete-stat-icon {
+            background: rgba(37, 99, 235, .09);
+            color: #2563eb;
+        }
+
+        .delete-stat-value {
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 950;
+            line-height: 1.15;
+        }
+
+        .delete-stat-label {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 8.5px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .delete-dashboard-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 12px;
+            padding-top: 11px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
+        }
+
+        .delete-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 35px;
+            padding: 0 11px;
+            border-radius: 10px;
+            font-size: 10.5px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .delete-content-card {
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 14px 40px rgba(15, 23, 42, .065);
+        }
+
+        .delete-content-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(15, 23, 42, .08);
+            background: rgba(248, 250, 252, .80);
+        }
+
+        .delete-content-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            color: #0f172a;
+            font-size: 15px;
+            font-weight: 950;
+            letter-spacing: -.025em;
+        }
+
+            .delete-content-title i {
+                color: #dc2626;
+            }
+
+        .delete-content-subtitle {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .delete-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            min-height: 30px;
+            padding: 0 9px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 999px;
+            background: #ffffff;
+            color: #475569;
+            font-size: 10px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .delete-content-body {
+            padding: 16px;
+        }
+
+        .delete-warning {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding: 11px 12px;
+            border: 1px solid rgba(220, 38, 38, .14);
+            border-radius: 13px;
+            background: rgba(254, 242, 242, .85);
+            color: #991b1b;
+        }
+
+            .delete-warning i {
+                margin-top: 2px;
+                color: #dc2626;
+                font-size: 14px;
+            }
+
+            .delete-warning strong {
+                display: block;
+                font-size: 11.5px;
+                font-weight: 950;
+            }
+
+            .delete-warning span {
+                display: block;
+                margin-top: 3px;
+                color: #7f1d1d;
+                font-size: 10.5px;
+                font-weight: 650;
+                line-height: 1.5;
+            }
 
         .post-preview {
-            border-radius: 22px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .preview-item {
+            min-width: 0;
+            padding: 11px 12px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 13px;
             background: #f8fafc;
-            border: 1px solid rgba(15,23,42,.08);
-            padding: 1.25rem;
+        }
+
+        .preview-item-title {
+            grid-column: 1 / -1;
         }
 
         .preview-label {
             color: #64748b;
-            font-size: .78rem;
+            font-size: 8.5px;
             font-weight: 900;
+            letter-spacing: .05em;
             text-transform: uppercase;
-            letter-spacing: .06em;
+        }
+
+        .preview-value {
+            margin-top: 5px;
+            color: #0f172a;
+            font-size: 11.5px;
+            font-weight: 850;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
         }
 
         .preview-title {
-            color: #0f172a;
-            font-weight: 900;
-            font-size: 1.15rem;
-            line-height: 1.35;
-            overflow-wrap: anywhere;
-        }
-
-        .preview-slug {
-            color: #2563eb;
-            font-weight: 800;
-            overflow-wrap: anywhere;
+            display: -webkit-box;
+            overflow: hidden;
+            font-size: 14px;
+            font-weight: 950;
+            text-align: justify;
+            text-justify: inter-word;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
         }
 
         .delete-actions {
             display: flex;
-            justify-content: center;
-            gap: .75rem;
+            justify-content: flex-end;
             flex-wrap: wrap;
-            margin-top: 1.5rem;
-        }
-
-        .modern-btn {
-            border-radius: 16px;
-            padding: .78rem 1.2rem;
-            font-weight: 900;
-        }
-
-        .danger-btn {
-            color: #fff;
-            background: linear-gradient(135deg, #dc2626, #ef4444);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(220,38,38,.2);
-        }
-
-        .light-btn {
-            background: #fff;
-            color: #0f172a;
+            gap: 7px;
+            margin-top: 14px;
+            padding-top: 13px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
         }
 
         .confirm-modal {
+            overflow: hidden;
             border: 0;
-            border-radius: 28px;
-            box-shadow: 0 24px 70px rgba(15,23,42,.22);
+            border-radius: 22px;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, .22);
         }
 
         .modal-icon {
-            width: 76px;
-            height: 76px;
-            border-radius: 50%;
-            background: rgba(220,38,38,.08);
-            color: #dc2626;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
-            margin-bottom: 1rem;
+            width: 58px;
+            height: 58px;
+            margin-bottom: 12px;
+            border-radius: 18px;
+            background: rgba(220, 38, 38, .08);
+            color: #dc2626;
+            font-size: 24px;
+        }
+
+        .modal-copy {
+            max-width: 420px;
+            margin: 0 auto 18px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        @@media (max-width: 991.98px) {
+            .delete-dashboard-main {
+                grid-template-columns: 54px minmax(0, 1fr);
+            }
+
+            .delete-dashboard-stats {
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .delete-page {
+                padding: 10px 0 28px;
+            }
+
+            .delete-shell {
+                padding: 0 10px;
+            }
+
+            .delete-dashboard {
+                padding: 15px;
+                border-radius: 19px;
+            }
+
+            .delete-dashboard-main {
+                grid-template-columns: 44px minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .delete-dashboard-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+                font-size: 17px;
+            }
+
+            .delete-title {
+                font-size: 26px;
+            }
+
+            .delete-subtitle {
+                grid-column: 1 / -1;
+            }
+
+            .delete-dashboard-nav,
+            .delete-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .delete-btn {
+                width: 100%;
+            }
+
+            .delete-content-header {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .delete-content-body {
+                padding: 13px;
+            }
         }
 
         @@media (max-width: 575.98px) {
-            .delete-card,
-            .confirm-modal {
-                border-radius: 22px;
-            }
-
-            .delete-hero,
-            .delete-body {
-                padding: 1.25rem;
-            }
-
+            .delete-dashboard-stats,
+            .delete-dashboard-nav,
             .delete-actions,
-            .delete-actions .btn,
-            .modal-body .btn,
-            .modal-body form {
-                width: 100%;
+            .post-preview,
+            .modal-actions {
+                grid-template-columns: 1fr;
             }
+
+                .modal-actions,
+                .modal-actions .btn,
+                .modal-actions form {
+                    width: 100%;
+                }
         }
     </style>
 }
 
-<div class="container-fluid py-4 admin-page">
+<section class="delete-page">
     <div class="delete-shell">
-        <div class="delete-card">
-            <div class="delete-hero">
-                <div class="delete-icon">
+
+        <header class="delete-dashboard">
+
+            <div class="delete-dashboard-main">
+
+                <div class="delete-dashboard-icon"
+                     aria-hidden="true">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                 </div>
 
-                <span class="delete-kicker">Danger Zone</span>
-                <h1>Delete Blog Post</h1>
-                <p>This action is permanent and cannot be undone.</p>
+                <div class="delete-dashboard-copy">
+                    <div class="delete-kicker">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        Danger Zone
+                    </div>
+
+                    <h1 class="delete-title">
+                        Delete
+                        <span class="delete-title-accent">
+                            blog post
+                        </span>
+                    </h1>
+
+                    <p class="delete-subtitle">
+                        Review the post information carefully before permanently
+                        removing it from As-Mart.
+                    </p>
+                </div>
+
+                <div class="delete-dashboard-stats"
+                     aria-label="Post information">
+
+                    <div class="delete-stat">
+                        <div class="delete-stat-icon">
+                            <i class="fa-solid fa-hashtag"></i>
+                        </div>
+
+                        <div>
+                            <div class="delete-stat-value">
+                                @Model.Id
+                            </div>
+
+                            <div class="delete-stat-label">
+                                Post ID
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="delete-stat">
+                        <div class="delete-stat-icon">
+                            <i class="fa-solid fa-circle-info"></i>
+                        </div>
+
+                        <div>
+                            <div class="delete-stat-value">
+                                @publishedText
+                            </div>
+
+                            <div class="delete-stat-label">
+                                Current Status
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <div class="delete-body">
-                <div class="post-preview">
-                    <div class="preview-label">Post Title</div>
-                    <div class="preview-title">@Model.Title</div>
+            <nav class="delete-dashboard-nav"
+                 aria-label="Delete page navigation">
 
-                    <div class="preview-label mt-3">Slug</div>
-                    <div class="preview-slug">/@Model.Slug</div>
+                <a asp-action="Index"
+                   class="btn btn-outline-primary delete-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Blog Posts
+                </a>
+
+                <a asp-action="Edit"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-primary delete-btn">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Edit Post
+                </a>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Slug))
+                {
+                    <a asp-area=""
+                       asp-controller="Blog"
+                       asp-action="Post"
+                       asp-route-slug="@Model.Slug"
+                       class="btn btn-outline-primary delete-btn"
+                       target="_blank"
+                       rel="noopener">
+                        <i class="fa-regular fa-eye"></i>
+                        View Post
+                    </a>
+                }
+
+            </nav>
+
+        </header>
+
+        <section class="delete-content-card"
+                 aria-labelledby="delete-post-heading">
+
+            <div class="delete-content-header">
+                <div>
+                    <h2 id="delete-post-heading"
+                        class="delete-content-title">
+                        <i class="fa-solid fa-file-circle-xmark"></i>
+                        Post Scheduled for Deletion
+                    </h2>
+
+                    <p class="delete-content-subtitle">
+                        Confirm that this is the correct post before continuing.
+                    </p>
+                </div>
+
+                <span class="delete-status-badge">
+                    <i class="fa-solid @(Model.IsPublished ? "fa-circle-check" : "fa-pen")"></i>
+                    @publishedText
+                </span>
+            </div>
+
+            <div class="delete-content-body">
+
+                <div class="delete-warning">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+
+                    <div>
+                        <strong>This action is permanent.</strong>
+
+                        <span>
+                            The post and its related data cannot be restored after
+                            deletion.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="post-preview">
+
+                    <div class="preview-item preview-item-title">
+                        <div class="preview-label">
+                            Post Title
+                        </div>
+
+                        <div class="preview-value preview-title">
+                            @Model.Title
+                        </div>
+                    </div>
+
+                    <div class="preview-item">
+                        <div class="preview-label">
+                            Status
+                        </div>
+
+                        <div class="preview-value">
+                            @publishedText
+                        </div>
+                    </div>
+
+                    <div class="preview-item">
+                        <div class="preview-label">
+                            Published
+                        </div>
+
+                        <div class="preview-value">
+                            @publishedDate
+                        </div>
+                    </div>
+
+                    <div class="preview-item">
+                        <div class="preview-label">
+                            Rating
+                        </div>
+
+                        <div class="preview-value">
+                            @if (Model.RatingCount > 0)
+                            {
+                                <text>
+                                    @Model.AverageRating.ToString("0.0")
+                                    from @Model.RatingCount.ToString("N0") rating(s)
+                                </text>
+                            }
+                            else
+                            {
+                                <text>No ratings</text>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="preview-item">
+                        <div class="preview-label">
+                            Total Clicks
+                        </div>
+
+                        <div class="preview-value">
+                            @Model.TotalClicks.ToString("N0")
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="delete-actions">
+
+                    <a asp-action="Index"
+                       class="btn btn-outline-secondary delete-btn">
+                        <i class="fa-solid fa-xmark"></i>
+                        Cancel
+                    </a>
+
                     <button type="button"
-                            class="btn modern-btn danger-btn"
+                            class="btn btn-danger delete-btn"
                             data-bs-toggle="modal"
                             data-bs-target="#deleteConfirmModal">
-                        <i class="fa-solid fa-trash me-2"></i>
+                        <i class="fa-solid fa-trash"></i>
                         Delete Post
                     </button>
 
-                    <a asp-action="Index" class="btn modern-btn light-btn">
-                        Cancel
-                    </a>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+        </section>
 
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    </div>
+</section>
+
+<div class="modal fade"
+     id="deleteConfirmModal"
+     tabindex="-1"
+     aria-labelledby="deleteConfirmModalLabel"
+     aria-hidden="true">
+
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content confirm-modal">
+
             <div class="modal-body text-center p-4">
+
                 <div class="modal-icon">
                     <i class="fa-solid fa-circle-exclamation"></i>
                 </div>
 
-                <h4 class="fw-bold mb-2">Confirm Deletion</h4>
+                <h2 id="deleteConfirmModalLabel"
+                    class="h4 fw-bold mb-2">
+                    Confirm Permanent Deletion
+                </h2>
 
-                <p class="text-muted mb-4">
-                    Are you sure you want to delete this blog post?
-                    <br />
-                    <strong>@Model.Title</strong>
+                <p class="modal-copy">
+                    You are about to permanently delete
+                    <strong>@Model.Title</strong>.
+                    This action cannot be undone.
                 </p>
 
-                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <div class="modal-actions">
+
                     <button type="button"
-                            class="btn modern-btn light-btn border"
+                            class="btn btn-outline-secondary delete-btn"
                             data-bs-dismiss="modal">
+                        <i class="fa-solid fa-xmark"></i>
                         Cancel
                     </button>
 
-                    <form asp-action="Delete" method="post" class="m-0">
+                    <form asp-action="Delete"
+                          method="post"
+                          class="m-0">
                         @Html.AntiForgeryToken()
-                        <input type="hidden" asp-for="Id" />
 
-                        <button type="submit" class="btn modern-btn danger-btn">
-                            Yes, Delete
+                        <input type="hidden"
+                               asp-for="Id" />
+
+                        <button type="submit"
+                                class="btn btn-danger delete-btn">
+                            <i class="fa-solid fa-trash"></i>
+                            Yes, Delete Permanently
                         </button>
                     </form>
+
                 </div>
             </div>
         </div>

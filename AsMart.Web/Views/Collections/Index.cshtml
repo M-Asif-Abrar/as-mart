@@ -6,114 +6,202 @@
 
     var collections = Model?.ToList() ?? new List<CollectionListItemViewModel>();
     var totalCollections = collections.Count;
-    var totalProducts = collections.Sum(x => x.ProductCount);
+    var totalProducts = collections.Sum(collection => collection.ProductCount);
+    var populatedCollections = collections.Count(collection => collection.ProductCount > 0);
+    var emptyCollections = collections.Count(collection => collection.ProductCount == 0);
+    var averageProductsPerCollection = totalCollections > 0
+        ? (decimal)totalProducts / totalCollections
+        : 0;
 }
 
 @section Styles {
     <style>
         .collections-page {
             min-height: calc(100vh - 90px);
-            padding: 24px 0 42px;
-            background: radial-gradient(circle at 10% 8%, rgba(37,99,235,.10), transparent 30%), radial-gradient(circle at 90% 0%, rgba(14,165,233,.10), transparent 28%), linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+            padding: 12px 0 36px;
+            background: radial-gradient(circle at 6% 0%, rgba(37, 99, 235, .08), transparent 28%), radial-gradient(circle at 94% 2%, rgba(139, 92, 246, .07), transparent 27%), linear-gradient(180deg, #f8fafc 0%, #ffffff 48%, #f8fafc 100%);
         }
 
         .collections-shell {
-            max-width: 1500px;
+            width: 100%;
+            max-width: 1540px;
             margin: 0 auto;
+            padding: 0 14px;
         }
 
-        .collections-hero {
+        .collections-dashboard {
             position: relative;
             overflow: hidden;
-            border-radius: 30px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(239,246,255,.93)), radial-gradient(circle at top right, rgba(37,99,235,.17), transparent 36%);
-            box-shadow: 0 24px 70px rgba(15,23,42,.08);
-            margin-bottom: 22px;
+            margin-bottom: 14px;
+            padding: 18px 20px;
+            border: 1px solid rgba(37, 99, 235, .12);
+            border-radius: 22px;
+            background: radial-gradient(420px 170px at 2% 0%, rgba(37, 99, 235, .14), transparent 65%), radial-gradient(380px 160px at 98% 0%, rgba(139, 92, 246, .10), transparent 65%), linear-gradient(125deg, rgba(255, 255, 255, .98), rgba(239, 246, 255, .95) 55%, rgba(245, 243, 255, .92));
+            box-shadow: 0 15px 38px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
         }
 
-            .collections-hero::before {
-                content: "";
+            .collections-dashboard::before,
+            .collections-dashboard::after {
                 position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 16% 20%, rgba(37,99,235,.10), transparent 28%), radial-gradient(circle at 85% 80%, rgba(14,165,233,.13), transparent 30%);
+                content: "";
+                border-radius: 999px;
                 pointer-events: none;
             }
 
-        .collections-hero-body {
+            .collections-dashboard::before {
+                top: -74px;
+                right: -44px;
+                width: 168px;
+                height: 168px;
+                background: rgba(37, 99, 235, .06);
+            }
+
+            .collections-dashboard::after {
+                bottom: -104px;
+                left: 38%;
+                width: 208px;
+                height: 208px;
+                background: rgba(139, 92, 246, .05);
+            }
+
+        .collections-dashboard-main,
+        .collections-dashboard-nav,
+        .collections-search-panel {
             position: relative;
-            z-index: 1;
-            padding: 28px;
+            z-index: 2;
+        }
+
+        .collections-dashboard-main {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .collections-dashboard-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            border: 1px solid rgba(37, 99, 235, .16);
+            border-radius: 17px;
+            background: linear-gradient(145deg, rgba(37, 99, 235, .15), rgba(139, 92, 246, .08));
+            color: #2563eb;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, .11);
+            font-size: 20px;
+        }
+
+        .collections-dashboard-copy {
+            min-width: 0;
         }
 
         .collections-kicker {
             display: inline-flex;
             align-items: center;
-            gap: 9px;
-            padding: 8px 13px;
-            border-radius: 999px;
-            background: rgba(37,99,235,.09);
-            border: 1px solid rgba(37,99,235,.14);
-            color: #1d4ed8;
-            font-size: 12px;
+            gap: 6px;
+            margin-bottom: 4px;
+            color: #2563eb;
+            font-size: 9.5px;
             font-weight: 900;
+            letter-spacing: .07em;
             text-transform: uppercase;
-            letter-spacing: .04em;
-            margin-bottom: 13px;
         }
 
         .collections-title {
             margin: 0;
             color: #0f172a;
-            font-size: clamp(32px, 4vw, 56px);
-            line-height: 1.04;
-            letter-spacing: -.045em;
+            font-size: clamp(24px, 3vw, 38px);
             font-weight: 950;
+            line-height: 1.08;
+            letter-spacing: -.04em;
+        }
+
+        .collections-title-accent {
+            background: linear-gradient(100deg, #2563eb, #7c3aed);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
         }
 
         .collections-sub {
-            margin: 13px 0 0;
-            max-width: 780px;
-            color: #475569;
-            font-size: 15px;
-            line-height: 1.75;
-            font-weight: 650;
-        }
-
-        .collections-stat-card {
-            width: 100%;
-            max-width: 390px;
-            margin-left: auto;
-            padding: 19px;
-            border-radius: 26px;
-            background: rgba(255,255,255,.78);
-            border: 1px solid rgba(15,23,42,.08);
-            box-shadow: 0 18px 44px rgba(15,23,42,.07);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-        }
-
-        .collections-stat-row {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-            margin-bottom: 15px;
-        }
-
-        .collections-stat-label {
+            max-width: 820px;
+            margin: 7px 0 0;
             color: #64748b;
             font-size: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .05em;
+            font-weight: 650;
+            line-height: 1.55;
+        }
+
+        .collections-dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(104px, 1fr));
+            gap: 7px;
+        }
+
+        .collections-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 46px;
+            padding: 7px 9px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .80);
+            box-shadow: 0 7px 18px rgba(15, 23, 42, .045);
+        }
+
+        .collections-stat-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 29px;
+            height: 29px;
+            border-radius: 9px;
+            background: rgba(37, 99, 235, .09);
+            color: #2563eb;
+            font-size: 11px;
+        }
+
+        .collections-stat:nth-child(2) .collections-stat-icon {
+            background: rgba(139, 92, 246, .10);
+            color: #7c3aed;
+        }
+
+        .collections-stat:nth-child(3) .collections-stat-icon {
+            background: rgba(16, 185, 129, .10);
+            color: #047857;
+        }
+
+        .collections-stat:nth-child(4) .collections-stat-icon {
+            background: rgba(245, 158, 11, .12);
+            color: #d97706;
         }
 
         .collections-stat-value {
             color: #0f172a;
-            font-size: 31px;
+            font-size: 14px;
             font-weight: 950;
-            line-height: 1.1;
-            margin-top: 5px;
+            line-height: 1;
+        }
+
+        .collections-stat-label {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 8.5px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .collections-search-panel {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) auto;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 11px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
         }
 
         .collections-search-wrap {
@@ -122,91 +210,114 @@
 
             .collections-search-wrap i {
                 position: absolute;
-                left: 15px;
                 top: 50%;
+                left: 12px;
+                z-index: 2;
                 transform: translateY(-50%);
                 color: #64748b;
-                font-size: 14px;
-                z-index: 2;
+                font-size: 12px;
             }
 
         .collections-search {
-            height: 46px;
-            border-radius: 15px;
-            border: 1px solid rgba(15,23,42,.12);
-            padding-left: 42px;
+            min-height: 38px;
+            padding-left: 36px;
+            border: 1px solid rgba(15, 23, 42, .11);
+            border-radius: 11px;
+            background: rgba(255, 255, 255, .88);
             color: #0f172a;
-            font-size: 14px;
+            font-size: 11.5px;
             font-weight: 750;
-            background: #fff;
         }
 
             .collections-search:focus {
-                border-color: rgba(37,99,235,.45);
-                box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
+                border-color: rgba(37, 99, 235, .42);
+                box-shadow: 0 0 0 .18rem rgba(37, 99, 235, .10);
             }
+
+        .collections-dashboard-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .collections-dashboard-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 38px;
+            padding: 0 11px;
+            border-radius: 10px;
+            font-size: 10.5px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
 
         .collections-grid {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 18px;
+            gap: 14px;
+        }
+
+        .collection-item {
+            min-width: 0;
         }
 
         .collection-card {
-            height: 100%;
-            overflow: hidden;
-            border-radius: 24px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: rgba(255,255,255,.96);
-            box-shadow: 0 18px 48px rgba(15,23,42,.07);
             display: flex;
             flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .97);
+            box-shadow: 0 12px 34px rgba(15, 23, 42, .06);
             transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
         }
 
             .collection-card:hover {
-                transform: translateY(-4px);
-                border-color: rgba(37,99,235,.22);
-                box-shadow: 0 26px 70px rgba(15,23,42,.12);
+                transform: translateY(-3px);
+                border-color: rgba(37, 99, 235, .20);
+                box-shadow: 0 20px 48px rgba(15, 23, 42, .10);
             }
 
         .collection-cover {
-            height: 230px;
-            padding: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
+            height: 205px;
+            padding: 13px;
+            border-bottom: 1px solid rgba(15, 23, 42, .07);
             background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-            border-bottom: 1px solid rgba(15,23,42,.07);
             text-decoration: none;
         }
 
         .collection-img {
+            display: block;
             width: 100%;
             height: 100%;
             object-fit: contain;
-            display: block;
         }
 
         .collection-body {
-            padding: 17px;
-            flex: 1;
             display: flex;
+            flex: 1;
             flex-direction: column;
-            gap: 11px;
+            gap: 9px;
+            padding: 14px;
         }
 
         .collection-head {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 10px;
+            gap: 9px;
         }
 
         .collection-name {
             margin: 0;
             color: #0f172a;
-            font-size: 17px;
+            font-size: 15px;
             font-weight: 950;
             line-height: 1.35;
             letter-spacing: -.015em;
@@ -223,189 +334,330 @@
             }
 
         .collection-badge {
-            flex: 0 0 auto;
             display: inline-flex;
+            flex: 0 0 auto;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            min-height: 30px;
+            padding: 0 8px;
+            border: 1px solid rgba(37, 99, 235, .14);
             border-radius: 999px;
-            padding: 7px 10px;
-            background: rgba(37,99,235,.09);
+            background: rgba(37, 99, 235, .08);
             color: #1d4ed8;
-            border: 1px solid rgba(37,99,235,.14);
-            font-size: 12px;
+            font-size: 10.5px;
             font-weight: 950;
             white-space: nowrap;
         }
 
         .collection-meta {
             color: #64748b;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 800;
         }
 
         .collection-cta {
-            margin-top: auto;
-            min-height: 44px;
-            border-radius: 15px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 9px;
-            font-size: 13px;
-            font-weight: 950;
+            gap: 7px;
+            min-height: 38px;
+            margin-top: auto;
+            border-radius: 11px;
+            font-size: 11.5px;
+            font-weight: 900;
         }
 
         .collections-empty {
-            border-radius: 28px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: rgba(255,255,255,.94);
-            box-shadow: 0 20px 60px rgba(15,23,42,.08);
-            padding: 42px 22px;
+            padding: 34px 20px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, .95);
+            box-shadow: 0 16px 46px rgba(15, 23, 42, .07);
             text-align: center;
         }
 
         .collections-nomatch {
-            margin-top: 18px;
+            margin-top: 14px;
         }
 
         .collections-empty-icon {
-            width: 76px;
-            height: 76px;
-            margin: 0 auto 16px;
-            border-radius: 26px;
-            background: rgba(37,99,235,.09);
-            color: #2563eb;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 29px;
+            width: 62px;
+            height: 62px;
+            margin: 0 auto 13px;
+            border-radius: 20px;
+            background: rgba(37, 99, 235, .09);
+            color: #2563eb;
+            font-size: 24px;
         }
 
         .collections-empty h2 {
             margin: 0;
             color: #0f172a;
-            font-size: 25px;
+            font-size: 22px;
             font-weight: 950;
             letter-spacing: -.03em;
         }
 
         .collections-empty p {
-            margin: 9px auto 0;
-            max-width: 620px;
+            max-width: 600px;
+            margin: 8px auto 0;
             color: #64748b;
-            font-size: 14px;
-            line-height: 1.7;
+            font-size: 13px;
             font-weight: 650;
+            line-height: 1.65;
         }
 
         @@media (max-width: 1199.98px) {
-            .collections-page {
-                padding: 18px 0 34px;
+            .collections-dashboard-main {
+                grid-template-columns: 54px minmax(0, 1fr);
+            }
+
+            .collections-dashboard-stats {
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
             }
 
             .collections-grid {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }
-
-            .collections-stat-card {
-                max-width: none;
-                margin-left: 0;
-            }
         }
 
         @@media (max-width: 991.98px) {
-            .collections-hero-body {
-                padding: 22px;
-            }
-
             .collections-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .collections-search-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .collections-page {
+                padding: 10px 0 30px;
+            }
+
+            .collections-shell {
+                padding: 0 10px;
+            }
+
+            .collections-dashboard {
+                padding: 15px;
+                border-radius: 19px;
+            }
+
+            .collections-dashboard-main {
+                grid-template-columns: 44px minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .collections-dashboard-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+                font-size: 17px;
+            }
+
+            .collections-title {
+                font-size: 26px;
+            }
+
+            .collections-sub {
+                grid-column: 1 / -1;
+            }
+
+            .collections-dashboard-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .collections-dashboard-nav {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .collections-dashboard-btn {
+                width: 100%;
             }
         }
 
         @@media (max-width: 575.98px) {
-            .collections-page {
-                padding: 14px 0 28px;
-            }
-
-            .collections-hero {
-                border-radius: 22px;
-            }
-
-            .collections-hero-body {
-                padding: 17px;
-            }
-
-            .collections-stat-card,
-            .collection-card {
-                border-radius: 21px;
-            }
-
-            .collections-stat-row {
-                grid-template-columns: 1fr;
-            }
-
             .collections-grid {
                 grid-template-columns: 1fr;
             }
 
             .collection-cover {
-                height: 280px;
+                height: 260px;
             }
 
-            .collections-empty {
-                border-radius: 22px;
-                padding: 34px 18px;
+            .collections-dashboard-nav {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 390px) {
+            .collections-dashboard-stats {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 }
 
+
 <section class="collections-page">
     <div class="container-fluid collections-shell">
 
-        <header class="collections-hero">
-            <div class="collections-hero-body">
-                <div class="row align-items-center g-3">
-                    <div class="col-12 col-lg-8">
-                        <div class="collections-kicker">
+        <header class="collections-dashboard">
+
+            <div class="collections-dashboard-main">
+
+                <div class="collections-dashboard-icon" aria-hidden="true">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+
+                <div class="collections-dashboard-copy">
+                    <div class="collections-kicker">
+                        <i class="fa-solid fa-sparkles"></i>
+                        Curated Shopping Groups
+                    </div>
+
+                    <h1 class="collections-title">
+                        Explore our
+                        <span class="collections-title-accent">
+                            product collections
+                        </span>
+                    </h1>
+
+                    <p class="collections-sub">
+                        Browse curated product sets, themed groups and shopping
+                        collections designed to help visitors discover relevant
+                        products faster.
+                    </p>
+                </div>
+
+                <div class="collections-dashboard-stats"
+                     aria-label="Collection statistics">
+
+                    <div class="collections-stat">
+                        <div class="collections-stat-icon">
                             <i class="fa-solid fa-layer-group"></i>
-                            Curated Collections
                         </div>
-
-                        <h1 class="collections-title">Collections</h1>
-
-                        <p class="collections-sub">
-                            Browse curated product sets, bundles, themes, and shopping groups from As-Mart.
-                        </p>
-                    </div>
-
-                    <div class="col-12 col-lg-4">
-                        <div class="collections-stat-card">
-                            <div class="collections-stat-row">
-                                <div>
-                                    <div class="collections-stat-label">Collections</div>
-                                    <div class="collections-stat-value">@totalCollections</div>
-                                </div>
-
-                                <div>
-                                    <div class="collections-stat-label">Products</div>
-                                    <div class="collections-stat-value">@totalProducts</div>
-                                </div>
+                        <div>
+                            <div class="collections-stat-value">
+                                @totalCollections.ToString("N0")
                             </div>
-
-                            <div class="collections-search-wrap">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                                <input id="collectionSearch"
-                                       type="text"
-                                       class="form-control collections-search"
-                                       placeholder="Search collections..."
-                                       autocomplete="off" />
+                            <div class="collections-stat-label">
+                                Collections
                             </div>
                         </div>
                     </div>
+
+                    <div class="collections-stat">
+                        <div class="collections-stat-icon">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+                        <div>
+                            <div class="collections-stat-value">
+                                @totalProducts.ToString("N0")
+                            </div>
+                            <div class="collections-stat-label">
+                                Products
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collections-stat">
+                        <div class="collections-stat-icon">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <div class="collections-stat-value">
+                                @populatedCollections.ToString("N0")
+                            </div>
+                            <div class="collections-stat-label">
+                                Active Groups
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collections-stat">
+                        <div class="collections-stat-icon">
+                            <i class="fa-solid fa-chart-simple"></i>
+                        </div>
+                        <div>
+                            <div class="collections-stat-value">
+                                @averageProductsPerCollection.ToString("0.0")
+                            </div>
+                            <div class="collections-stat-label">
+                                Avg. Products
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
+
+            <div class="collections-search-panel">
+
+                <div class="collections-search-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input id="collectionSearch"
+                           type="search"
+                           class="form-control collections-search"
+                           placeholder="Search collections by name..."
+                           autocomplete="off"
+                           aria-label="Search collections" />
+                </div>
+
+                <nav class="collections-dashboard-nav"
+                     aria-label="Collections navigation">
+
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="btn btn-outline-primary collections-dashboard-btn">
+                        <i class="fa-solid fa-star"></i>
+                        Featured
+                    </a>
+
+                    <a asp-controller="Catalog"
+                       asp-action="Index"
+                       class="btn btn-outline-primary collections-dashboard-btn">
+                        <i class="fa-solid fa-store"></i>
+                        Catalog
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Deals"
+                       class="btn btn-outline-primary collections-dashboard-btn">
+                        <i class="fa-solid fa-bolt"></i>
+                        Deals
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="TopVisited"
+                       class="btn btn-outline-primary collections-dashboard-btn">
+                        <i class="fa-solid fa-chart-line"></i>
+                        Top Visited
+                    </a>
+
+                    <a asp-controller="Gallery"
+                       asp-action="Index"
+                       class="btn btn-outline-primary collections-dashboard-btn">
+                        <i class="fa-regular fa-images"></i>
+                        Gallery
+                    </a>
+
+                    <span class="btn btn-light collections-dashboard-btn disabled">
+                        <i class="fa-solid fa-box-open"></i>
+                        @emptyCollections Empty
+                    </span>
+
+                </nav>
+            </div>
+
         </header>
 
         @if (!collections.Any())
@@ -418,61 +670,73 @@
                 <h2>No collections yet</h2>
 
                 <p>
-                    Create collections to group products by theme, category, deal type, or buyer intent.
+                    Create collections to group products by theme, category,
+                    deal type or buyer intent.
                 </p>
             </div>
         }
         else
         {
-            <div class="collections-grid" id="collectionsGrid">
-                @foreach (var c in collections)
+            <div class="collections-grid"
+                 id="collectionsGrid">
+
+                @foreach (var collection in collections)
                 {
-                    var imageUrl = string.IsNullOrWhiteSpace(c.FirstProductImageUrl)
+                    var imageUrl =
+                    string.IsNullOrWhiteSpace(collection.FirstProductImageUrl)
                     ? Url.Content("~/images/no-image.png")
-                    : c.FirstProductImageUrl;
+                    : collection.FirstProductImageUrl;
 
                     <article class="collection-item"
-                             data-name="@((c.Name ?? "").ToLowerInvariant())"
-                             data-slug="@((c.Slug ?? "").ToLowerInvariant())">
+                             data-name="@((collection.Name ?? "").ToLowerInvariant())"
+                             data-slug="@((collection.Slug ?? "").ToLowerInvariant())">
 
                         <div class="collection-card">
+
                             <a asp-controller="Collections"
                                asp-action="Details"
-                               asp-route-slug="@c.Slug"
-                               class="collection-cover">
+                               asp-route-slug="@collection.Slug"
+                               class="collection-cover"
+                               aria-label="View @collection.Name collection">
+
                                 <img src="@imageUrl"
                                      class="collection-img"
-                                     alt="@c.Name"
+                                     alt="@collection.Name"
                                      loading="lazy" />
                             </a>
 
                             <div class="collection-body">
+
                                 <div class="collection-head">
+
                                     <h2 class="collection-name">
                                         <a asp-controller="Collections"
                                            asp-action="Details"
-                                           asp-route-slug="@c.Slug"
+                                           asp-route-slug="@collection.Slug"
                                            class="collection-link">
-                                            @c.Name
+                                            @collection.Name
                                         </a>
                                     </h2>
 
-                                    <span class="collection-badge">
+                                    <span class="collection-badge"
+                                          title="@collection.ProductCount product(s)">
                                         <i class="fa-solid fa-box"></i>
-                                        @c.ProductCount
+                                        @collection.ProductCount.ToString("N0")
                                     </span>
                                 </div>
 
                                 <div class="collection-meta">
-                                    @c.ProductCount product@(c.ProductCount == 1 ? "" : "s")
+                                    @collection.ProductCount.ToString("N0")
+                                    product@(collection.ProductCount == 1 ? "" : "s")
+                                    in this collection
                                 </div>
 
                                 <a asp-controller="Collections"
                                    asp-action="Details"
-                                   asp-route-slug="@c.Slug"
-                                   class="btn btn-primary collection-cta">
+                                   asp-route-slug="@collection.Slug"
+                                   class="btn btn-outline-primary collection-cta">
+                                    <i class="fa-solid fa-eye"></i>
                                     <span>View Collection</span>
-                                    <i class="fa-solid fa-arrow-right"></i>
                                 </a>
                             </div>
                         </div>
@@ -480,15 +744,17 @@
                 }
             </div>
 
-            <div id="collectionsNoMatch" class="collections-empty collections-nomatch d-none">
+            <div id="collectionsNoMatch"
+                 class="collections-empty collections-nomatch d-none">
+
                 <div class="collections-empty-icon">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </div>
 
-                <h2>No matches</h2>
+                <h2>No matching collections</h2>
 
                 <p>
-                    Try another collection name or keyword.
+                    Try a different collection name or keyword.
                 </p>
             </div>
         }

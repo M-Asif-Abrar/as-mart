@@ -2,431 +2,1222 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
     var cannotDelete = Model.ChildCount > 0 || Model.ProductCount > 0;
+    var dependencyCount = Model.ChildCount + Model.ProductCount;
 }
 
 @section Styles {
     <style>
-        .parent-delete-page {
-            min-height: calc(100vh - 80px);
-            background: linear-gradient(135deg,#f8fafc 0%,#eef4ff 45%,#ffffff 100%);
-        }
-
-        .parent-delete-shell {
-            min-height: calc(100vh - 130px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .parent-delete-card {
-            width: 100%;
-            max-width: 920px;
-            border-radius: 30px;
-            background: rgba(255,255,255,.96);
-            border: 1px solid rgba(15,23,42,.08);
-            box-shadow: 0 24px 70px rgba(15,23,42,.12);
-            overflow: hidden;
-        }
-
-        .delete-hero {
-            padding: 2.25rem;
-            text-align: center;
-            color: #fff;
-            background: linear-gradient(135deg,#991b1b,#dc2626,#ef4444);
-        }
-
-        .delete-icon {
-            width: 78px;
-            height: 78px;
-            border-radius: 24px;
-            margin: 0 auto 1rem;
-            background: rgba(255,255,255,.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.2rem;
-        }
-
-        .delete-kicker {
-            text-transform: uppercase;
-            letter-spacing: .14em;
-            font-size: .78rem;
-            font-weight: 900;
-            color: rgba(255,255,255,.8);
-        }
-
-        .delete-hero h1 {
-            font-size: clamp(1.9rem,4vw,2.8rem);
-            font-weight: 900;
-            margin: .35rem 0 .5rem;
-        }
-
-        .delete-hero p {
-            margin: 0 auto;
-            max-width: 680px;
-            color: rgba(255,255,255,.82);
-            line-height: 1.6;
-        }
-
-        .delete-body {
-            padding: 1.5rem;
-        }
-
-        .summary-card {
-            border-radius: 24px;
-            background: #f8fafc;
-            border: 1px solid rgba(15,23,42,.08);
+        .asm-parent-delete-page {
+            --pd-blue: #146cff;
+            --pd-indigo: #5b4bff;
+            --pd-green: #159447;
+            --pd-orange: #b76312;
+            --pd-red: #d93a3a;
+            --pd-red-dark: #b92525;
+            --pd-ink: #111a2e;
+            --pd-text: #33415c;
+            --pd-muted: #71809d;
+            --pd-border: rgba(99, 116, 150, .15);
+            min-height: calc(100vh - 70px);
             padding: 1.25rem;
+            background: radial-gradient( circle at 8% 2%, rgba(37, 99, 235, .10), transparent 30rem ), radial-gradient( circle at 96% 10%, rgba(124, 58, 237, .10), transparent 28rem ), linear-gradient( 135deg, #eef5ff 0%, #f8fbff 50%, #f3f1ff 100% );
         }
 
-        .summary-label,
-        .metric-label {
-            color: #64748b;
-            font-size: .78rem;
+        .asm-parent-delete-command,
+        .asm-parent-delete-main-card,
+        .asm-parent-delete-side-card {
+            border: 1px solid var(--pd-border);
+            border-radius: 26px;
+            background: rgba(255, 255, 255, .92);
+            box-shadow: 0 16px 42px rgba(33, 54, 92, .09);
+            backdrop-filter: blur(14px);
+        }
+
+        .asm-parent-delete-command {
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 1.5rem 1.25rem;
+        }
+
+            .asm-parent-delete-command::after {
+                position: absolute;
+                top: -100px;
+                right: -45px;
+                width: 245px;
+                height: 245px;
+                content: "";
+                border-radius: 50%;
+                background: rgba(217, 58, 58, .08);
+                pointer-events: none;
+            }
+
+        .asm-parent-delete-command-main {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(340px, 1.2fr) minmax(520px, 1.5fr);
+            gap: 1.4rem;
+            align-items: center;
+        }
+
+        .asm-parent-delete-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 0;
+        }
+
+        .asm-parent-delete-title-icon {
+            display: inline-flex;
+            flex: 0 0 68px;
+            width: 68px;
+            height: 68px;
+            align-items: center;
+            justify-content: center;
+            color: var(--pd-red);
+            font-size: 1.55rem;
+            border: 1px solid #f5b8b8;
+            border-radius: 22px;
+            background: linear-gradient( 145deg, #ffe1e1, #fff0f0 );
+        }
+
+        .asm-parent-delete-eyebrow {
+            display: block;
+            margin-bottom: .35rem;
+            color: #c62e2e;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .asm-parent-delete-title h1 {
+            margin: 0;
+            color: var(--pd-ink);
+            font-size: clamp(2rem, 3vw, 3rem);
+            font-weight: 950;
+            line-height: 1;
+            letter-spacing: -.045em;
+        }
+
+            .asm-parent-delete-title h1 span {
+                color: var(--pd-red);
+            }
+
+        .asm-parent-delete-title p {
+            max-width: 680px;
+            margin: .55rem 0 0;
+            color: var(--pd-muted);
+            font-size: .92rem;
+            line-height: 1.65;
+        }
+
+        .asm-parent-delete-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(120px, 1fr));
+            gap: .6rem;
+        }
+
+        .asm-parent-delete-kpi {
+            display: flex;
+            min-width: 0;
+            min-height: 58px;
+            align-items: center;
+            gap: .65rem;
+            padding: .65rem .75rem;
+            border: 1px solid var(--pd-border);
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .asm-parent-delete-kpi-icon {
+            display: inline-flex;
+            flex: 0 0 36px;
+            width: 36px;
+            height: 36px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+            font-size: .88rem;
+        }
+
+            .asm-parent-delete-kpi-icon.blue {
+                color: #2e62dc;
+                background: #e8efff;
+            }
+
+            .asm-parent-delete-kpi-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-parent-delete-kpi-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+            .asm-parent-delete-kpi-icon.red {
+                color: #c52f2f;
+                background: #fde9e9;
+            }
+
+        .asm-parent-delete-kpi small {
+            display: block;
+            color: #697895;
+            font-size: .61rem;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: .06em;
-        }
-
-        .summary-title {
-            color: #0f172a;
-            font-weight: 900;
-            font-size: clamp(1.35rem,3vw,1.9rem);
-            margin: .25rem 0;
-            overflow-wrap: anywhere;
-        }
-
-        .summary-slug {
-            color: #2563eb;
-            font-weight: 800;
-            overflow-wrap: anywhere;
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: .55rem .9rem;
-            font-size: .8rem;
-            font-weight: 900;
             white-space: nowrap;
         }
 
-            .status-badge.blocked {
-                color: #dc2626;
-                background: rgba(220,38,38,.08);
-                border: 1px solid rgba(220,38,38,.16);
-            }
+        .asm-parent-delete-kpi strong {
+            display: block;
+            max-width: 150px;
+            margin-top: .05rem;
+            overflow: hidden;
+            color: var(--pd-ink);
+            font-size: .92rem;
+            font-weight: 950;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
-            .status-badge.ready {
-                color: #166534;
-                background: rgba(22,101,52,.08);
-                border: 1px solid rgba(22,101,52,.18);
-            }
-
-        .metric-card {
-            height: 100%;
-            border-radius: 22px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: #fff;
-            padding: 1rem;
+        .asm-parent-delete-command-actions {
+            position: relative;
+            z-index: 1;
             display: flex;
             align-items: center;
-            gap: .85rem;
-        }
-
-        .metric-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex: 0 0 auto;
-        }
-
-            .metric-icon.warning {
-                background: rgba(245,158,11,.10);
-                color: #d97706;
-            }
-
-            .metric-icon.blue {
-                background: rgba(37,99,235,.08);
-                color: #2563eb;
-            }
-
-        .metric-value {
-            color: #0f172a;
-            font-weight: 900;
-        }
-
-        .delete-alert {
-            border-radius: 22px;
-            padding: 1rem;
-            display: flex;
-            align-items: flex-start;
-            gap: .85rem;
-        }
-
-            .delete-alert.warning {
-                background: rgba(245,158,11,.08);
-                border: 1px solid rgba(245,158,11,.20);
-            }
-
-            .delete-alert.danger {
-                background: rgba(220,38,38,.08);
-                border: 1px solid rgba(220,38,38,.16);
-            }
-
-        .alert-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff;
-            color: #dc2626;
-            flex: 0 0 auto;
-        }
-
-        .delete-alert.warning .alert-icon {
-            color: #d97706;
-        }
-
-        .delete-alert h5 {
-            font-weight: 900;
-            color: #0f172a;
-            margin-bottom: .25rem;
-        }
-
-        .delete-alert p {
-            margin: 0;
-            color: #64748b;
-            line-height: 1.5;
-        }
-
-        .delete-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: .85rem;
+            gap: .55rem;
             flex-wrap: wrap;
+            margin-top: 1.15rem;
+            padding-top: .9rem;
+            border-top: 1px solid #e3e9f2;
         }
 
-        .parent-btn {
-            border-radius: 16px;
-            padding: .82rem 1.2rem;
+        .asm-parent-delete-btn {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .65rem 1rem;
+            font-size: .78rem;
             font-weight: 900;
+            border-radius: 13px;
+            transition: .2s ease;
         }
 
-        .parent-btn-light {
+            .asm-parent-delete-btn:hover:not(:disabled) {
+                transform: translateY(-2px);
+            }
+
+        .asm-parent-delete-btn-outline {
+            color: var(--pd-blue);
+            border: 1px solid var(--pd-blue);
             background: #fff;
-            color: #0f172a;
         }
 
-        .parent-btn-danger {
+        .asm-parent-delete-btn-danger {
             color: #fff;
-            background: linear-gradient(135deg,#dc2626,#ef4444);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(220,38,38,.20);
+            border: 1px solid var(--pd-red);
+            background: linear-gradient( 135deg, var(--pd-red), var(--pd-red-dark) );
+            box-shadow: 0 9px 20px rgba(217, 58, 58, .22);
         }
 
-            .parent-btn-danger:disabled {
-                opacity: .55;
+            .asm-parent-delete-btn-danger:hover {
+                color: #fff;
+            }
+
+            .asm-parent-delete-btn-danger:disabled {
                 cursor: not-allowed;
+                opacity: .5;
+                transform: none;
                 box-shadow: none;
             }
 
-        .delete-modal {
-            border: 0;
-            border-radius: 28px;
-            box-shadow: 0 24px 70px rgba(15,23,42,.22);
+        .asm-parent-delete-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: start;
         }
 
-        .modal-delete-icon {
-            width: 76px;
-            height: 76px;
-            border-radius: 50%;
-            background: rgba(220,38,38,.08);
-            color: #dc2626;
+        .asm-parent-delete-main-card {
+            overflow: hidden;
+        }
+
+        .asm-parent-delete-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.15rem;
+            border-bottom: 1px solid #e5eaf2;
+        }
+
+        .asm-parent-delete-card-title {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            color: var(--pd-ink);
+            font-size: 1rem;
+            font-weight: 950;
+        }
+
+            .asm-parent-delete-card-title i {
+                color: var(--pd-red);
+            }
+
+        .asm-parent-delete-status {
             display: inline-flex;
             align-items: center;
+            gap: .4rem;
+            padding: .38rem .65rem;
+            font-size: .7rem;
+            font-weight: 900;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+            .asm-parent-delete-status.blocked {
+                color: #b22f2f;
+                border: 1px solid #f2caca;
+                background: #fdeaea;
+            }
+
+            .asm-parent-delete-status.ready {
+                color: #147a3f;
+                border: 1px solid #cce8d7;
+                background: #e4f5eb;
+            }
+
+        .asm-parent-delete-body {
+            padding: 1.15rem;
+        }
+
+        .asm-parent-delete-summary {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid #e3e9f2;
+            border-radius: 16px;
+            background: #f8faff;
+        }
+
+        .asm-parent-delete-summary-label {
+            display: block;
+            color: #71809d;
+            font-size: .66rem;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .asm-parent-delete-summary h2 {
+            margin: .25rem 0 .35rem;
+            color: var(--pd-ink);
+            font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+            font-weight: 950;
+            overflow-wrap: anywhere;
+        }
+
+        .asm-parent-delete-slug {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            gap: .4rem;
+            color: #2459d8;
+            font-size: .78rem;
+            font-weight: 850;
+            overflow-wrap: anywhere;
+        }
+
+        .asm-parent-delete-id {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .38rem .65rem;
+            color: #536079;
+            font-size: .72rem;
+            font-weight: 900;
+            border: 1px solid #dde4ee;
+            border-radius: 999px;
+            background: #fff;
+            white-space: nowrap;
+        }
+
+        .asm-parent-delete-dependency-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .75rem;
+            margin-top: .9rem;
+        }
+
+        .asm-parent-delete-dependency-card {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            min-height: 86px;
+            padding: .9rem;
+            border: 1px solid #e4e9f1;
+            border-radius: 15px;
+            background: #fff;
+        }
+
+        .asm-parent-delete-dependency-icon {
+            display: inline-flex;
+            flex: 0 0 44px;
+            width: 44px;
+            height: 44px;
+            align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
+            border-radius: 14px;
+        }
+
+            .asm-parent-delete-dependency-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-parent-delete-dependency-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+        .asm-parent-delete-dependency-card small {
+            display: block;
+            color: #71809d;
+            font-size: .64rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .asm-parent-delete-dependency-card strong {
+            display: block;
+            margin-top: .08rem;
+            color: var(--pd-ink);
+            font-size: 1rem;
+            font-weight: 950;
+        }
+
+        .asm-parent-delete-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+            margin-top: .9rem;
+            padding: .9rem;
+            border-radius: 15px;
+        }
+
+            .asm-parent-delete-alert.blocked {
+                border: 1px solid #f2d3a8;
+                background: #fff8ed;
+            }
+
+            .asm-parent-delete-alert.ready {
+                border: 1px solid #f2caca;
+                background: #fff4f4;
+            }
+
+        .asm-parent-delete-alert-icon {
+            display: inline-flex;
+            flex: 0 0 40px;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .asm-parent-delete-alert.blocked
+        .asm-parent-delete-alert-icon {
+            color: var(--pd-orange);
+        }
+
+        .asm-parent-delete-alert.ready
+        .asm-parent-delete-alert-icon {
+            color: var(--pd-red);
+        }
+
+        .asm-parent-delete-alert h3 {
+            margin: 0 0 .2rem;
+            color: var(--pd-ink);
+            font-size: .9rem;
+            font-weight: 950;
+        }
+
+        .asm-parent-delete-alert p {
+            margin: 0;
+            color: #61708b;
+            font-size: .77rem;
+            line-height: 1.55;
+        }
+
+        .asm-parent-delete-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.15rem;
+            border-top: 1px solid #e5eaf2;
+            background: #fbfcff;
+        }
+
+        .asm-parent-delete-note {
+            color: #71809d;
+            font-size: .76rem;
+            font-weight: 800;
+        }
+
+            .asm-parent-delete-note i {
+                color: var(--pd-red);
+            }
+
+        .asm-parent-delete-action-buttons {
+            display: flex;
+            gap: .55rem;
+        }
+
+        .asm-parent-delete-sidebar {
+            position: sticky;
+            top: 1rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .asm-parent-delete-side-card {
+            padding: 1rem;
+        }
+
+        .asm-parent-delete-side-title {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: .8rem;
+            color: var(--pd-ink);
+            font-size: .9rem;
+            font-weight: 950;
+        }
+
+            .asm-parent-delete-side-title i {
+                color: #6846d8;
+            }
+
+        .asm-parent-delete-checklist {
+            display: grid;
+            gap: .65rem;
+        }
+
+        .asm-parent-delete-check-item {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            padding: .65rem;
+            border-radius: 12px;
+            background: #f8faff;
+        }
+
+        .asm-parent-delete-check-number {
+            display: inline-flex;
+            flex: 0 0 30px;
+            width: 30px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            color: #c52f2f;
+            font-size: .72rem;
+            font-weight: 950;
+            border-radius: 10px;
+            background: #fde9e9;
+        }
+
+        .asm-parent-delete-check-item span:last-child {
+            color: #536079;
+            font-size: .73rem;
+            font-weight: 800;
+        }
+
+        .asm-parent-delete-list {
+            display: grid;
+            gap: .7rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+            .asm-parent-delete-list li {
+                display: flex;
+                gap: .55rem;
+                color: #56637b;
+                font-size: .75rem;
+                line-height: 1.5;
+            }
+
+            .asm-parent-delete-list i {
+                margin-top: .15rem;
+                color: #2463eb;
+            }
+
+        .asm-parent-delete-impact-list i {
+            color: var(--pd-red);
+        }
+
+        .asm-parent-delete-modal {
+            border: 0;
+            border-radius: 22px;
+            box-shadow: 0 25px 70px rgba(17, 26, 46, .22);
+        }
+
+        .asm-parent-delete-modal-icon {
+            display: inline-flex;
+            width: 68px;
+            height: 68px;
+            align-items: center;
+            justify-content: center;
             margin-bottom: 1rem;
+            color: var(--pd-red);
+            font-size: 1.8rem;
+            border-radius: 20px;
+            background: #fdeaea;
+        }
+
+        .asm-parent-delete-confirm-name {
+            display: inline-block;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+        }
+
+        .asm-parent-delete-submitting {
+            opacity: .72;
+            pointer-events: none;
+        }
+
+        .asm-parent-delete-spinner {
+            display: none;
+        }
+
+        .asm-parent-delete-submitting
+        .asm-parent-delete-spinner {
+            display: inline-block;
+        }
+
+        .asm-parent-delete-submitting
+        .asm-parent-delete-submit-icon {
+            display: none;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .asm-parent-delete-command-main {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-parent-delete-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-parent-delete-sidebar {
+                position: static;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         @@media (max-width: 767.98px) {
-            .parent-delete-card,
-            .delete-modal {
-                border-radius: 22px;
+            .asm-parent-delete-page {
+                padding: .85rem;
             }
 
-            .delete-hero,
-            .delete-body {
-                padding: 1.25rem;
+            .asm-parent-delete-command,
+            .asm-parent-delete-main-card,
+            .asm-parent-delete-side-card,
+            .asm-parent-delete-modal {
+                border-radius: 20px;
             }
 
-            .delete-alert {
+            .asm-parent-delete-command {
+                padding: 1.25rem 1rem 1rem;
+            }
+
+            .asm-parent-delete-title {
+                align-items: flex-start;
+            }
+
+            .asm-parent-delete-title-icon {
+                width: 56px;
+                height: 56px;
+                flex-basis: 56px;
+                border-radius: 17px;
+            }
+
+            .asm-parent-delete-kpis {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .asm-parent-delete-card-head,
+            .asm-parent-delete-actions {
+                align-items: flex-start;
                 flex-direction: column;
             }
 
-            .delete-actions {
+            .asm-parent-delete-action-buttons {
+                width: 100%;
+            }
+
+                .asm-parent-delete-action-buttons .btn {
+                    flex: 1;
+                }
+
+            .asm-parent-delete-sidebar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .asm-parent-delete-title {
+                flex-direction: column;
+            }
+
+            .asm-parent-delete-kpis,
+            .asm-parent-delete-dependency-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-parent-delete-command-actions .btn {
+                width: 100%;
+            }
+
+            .asm-parent-delete-command-actions .ms-auto {
+                width: 100%;
+                margin-left: 0 !important;
+                text-align: center;
+            }
+
+            .asm-parent-delete-summary,
+            .asm-parent-delete-alert {
+                flex-direction: column;
+            }
+
+            .asm-parent-delete-action-buttons {
                 flex-direction: column-reverse;
             }
 
-                .delete-actions .btn,
-                .modal-body .btn,
-                .modal-body form {
+                .asm-parent-delete-action-buttons .btn,
+                .asm-parent-delete-modal .btn,
+                .asm-parent-delete-modal form {
                     width: 100%;
                 }
         }
     </style>
 }
 
-<div class="container-fluid py-4 parent-delete-page">
-    <div class="parent-delete-shell">
-        <div class="parent-delete-card">
+<div class="asm-parent-delete-page">
 
-            <div class="delete-hero">
-                <div class="delete-icon">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
+    <section class="asm-parent-delete-command">
+
+        <div class="asm-parent-delete-command-main">
+
+            <div class="asm-parent-delete-title">
+
+                <div class="asm-parent-delete-title-icon">
+                    <i class="fa-solid fa-trash-can"></i>
                 </div>
 
-                <span class="delete-kicker">Danger Zone</span>
-                <h1>Delete Parent Category</h1>
-                <p>Review dependencies before deleting this parent category.</p>
+                <div>
+                    <span class="asm-parent-delete-eyebrow">
+                        Catalog Management
+                    </span>
+
+                    <h1>
+                        Delete Parent <span>Category</span>
+                    </h1>
+
+                    <p>
+                        Review child-category and product dependencies before
+                        permanently removing this top-level catalog category.
+                    </p>
+                </div>
+
             </div>
 
-            <div class="delete-body">
+            <div class="asm-parent-delete-kpis">
 
-                <div class="summary-card mb-4">
-                    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
-                        <div>
-                            <div class="summary-label">Parent Category</div>
-                            <h2 class="summary-title">@Model.Name</h2>
-                            <div class="summary-slug">
-                                <i class="fa-solid fa-link me-2"></i>@Model.Slug
-                            </div>
-                        </div>
+                <div class="asm-parent-delete-kpi">
+                    <span class="asm-parent-delete-kpi-icon blue">
+                        <i class="fa-solid fa-hashtag"></i>
+                    </span>
 
-                        @if (cannotDelete)
-                        {
-                            <span class="status-badge blocked">
-                                <i class="fa-solid fa-ban me-1"></i>Blocked
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="status-badge ready">
-                                <i class="fa-solid fa-trash me-1"></i>Ready to Delete
-                            </span>
-                        }
+                    <div>
+                        <small>Category ID</small>
+                        <strong>@Model.Id</strong>
                     </div>
                 </div>
 
-                <div class="row g-3 mb-4">
-                    <div class="col-12 col-md-6">
-                        <div class="metric-card">
-                            <div class="metric-icon warning">
-                                <i class="fa-solid fa-folder-tree"></i>
-                            </div>
-                            <div>
-                                <div class="metric-label">Child Categories</div>
-                                <div class="metric-value">@Model.ChildCount</div>
-                            </div>
+                <div class="asm-parent-delete-kpi">
+                    <span class="asm-parent-delete-kpi-icon orange">
+                        <i class="fa-solid fa-folder-tree"></i>
+                    </span>
+
+                    <div>
+                        <small>Children</small>
+                        <strong>@Model.ChildCount</strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-delete-kpi">
+                    <span class="asm-parent-delete-kpi-icon purple">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </span>
+
+                    <div>
+                        <small>Products</small>
+                        <strong>@Model.ProductCount</strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-delete-kpi">
+                    <span class="asm-parent-delete-kpi-icon red">
+                        <i class="fa-solid @(cannotDelete ? "fa-ban" : "fa-trash-can")"></i>
+                    </span>
+
+                    <div>
+                        <small>Eligibility</small>
+                        <strong>
+                            @(cannotDelete ? "Blocked" : "Ready")
+                        </strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="asm-parent-delete-command-actions">
+
+            <a asp-action="Index"
+               class="btn asm-parent-delete-btn asm-parent-delete-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Parent Categories
+            </a>
+
+            <a asp-action="Details"
+               asp-route-id="@Model.Id"
+               class="btn asm-parent-delete-btn asm-parent-delete-btn-outline">
+                <i class="fa-solid fa-circle-info"></i>
+                View Details
+            </a>
+
+            <span class="ms-auto text-muted small fw-bold">
+                <i class="fa-solid fa-shield-halved me-1"></i>
+                Protected destructive action
+            </span>
+
+        </div>
+
+    </section>
+
+    <div class="asm-parent-delete-grid">
+
+        <section class="asm-parent-delete-main-card">
+
+            <div class="asm-parent-delete-card-head">
+
+                <div class="asm-parent-delete-card-title">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Deletion Review
+                </div>
+
+                <span class="asm-parent-delete-status @(cannotDelete ? "blocked" : "ready")">
+                    <i class="fa-solid @(cannotDelete ? "fa-ban" : "fa-circle-check")"></i>
+
+                    @(cannotDelete
+                                        ? "Deletion Blocked"
+                                        : "Ready to Delete")
+                </span>
+
+            </div>
+
+            <div class="asm-parent-delete-body">
+
+                <div class="asm-parent-delete-summary">
+
+                    <div>
+                        <span class="asm-parent-delete-summary-label">
+                            Parent Category
+                        </span>
+
+                        <h2>@Model.Name</h2>
+
+                        <div class="asm-parent-delete-slug">
+                            <i class="fa-solid fa-link"></i>
+                            @Model.Slug
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <div class="metric-card">
-                            <div class="metric-icon blue">
-                                <i class="fa-solid fa-boxes-stacked"></i>
-                            </div>
-                            <div>
-                                <div class="metric-label">Products</div>
-                                <div class="metric-value">@Model.ProductCount</div>
-                            </div>
+                    <span class="asm-parent-delete-id">
+                        <i class="fa-solid fa-hashtag"></i>
+                        @Model.Id
+                    </span>
+
+                </div>
+
+                <div class="asm-parent-delete-dependency-grid">
+
+                    <div class="asm-parent-delete-dependency-card">
+
+                        <span class="asm-parent-delete-dependency-icon orange">
+                            <i class="fa-solid fa-folder-tree"></i>
+                        </span>
+
+                        <div>
+                            <small>Child Categories</small>
+                            <strong>@Model.ChildCount</strong>
                         </div>
+
                     </div>
+
+                    <div class="asm-parent-delete-dependency-card">
+
+                        <span class="asm-parent-delete-dependency-icon purple">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </span>
+
+                        <div>
+                            <small>Assigned Products</small>
+                            <strong>@Model.ProductCount</strong>
+                        </div>
+
+                    </div>
+
                 </div>
 
                 @if (cannotDelete)
                 {
-                    <div class="delete-alert warning mb-4">
-                        <div class="alert-icon">
+                    <div class="asm-parent-delete-alert blocked">
+
+                        <span class="asm-parent-delete-alert-icon">
                             <i class="fa-solid fa-circle-info"></i>
-                        </div>
+                        </span>
+
                         <div>
-                            <h5>Deletion is not available</h5>
-                            <p>This parent category has child categories and/or products. Remove or reassign them before deleting.</p>
+                            <h3>Deletion is currently unavailable</h3>
+
+                            <p>
+                                This parent category has @dependencyCount
+                                active dependenc@(dependencyCount == 1 ? "y" : "ies").
+                                Remove or reassign its child categories and products
+                                before attempting deletion again.
+                            </p>
                         </div>
+
                     </div>
                 }
                 else
                 {
-                    <div class="delete-alert danger mb-4">
-                        <div class="alert-icon">
+                    <div class="asm-parent-delete-alert ready">
+
+                        <span class="asm-parent-delete-alert-icon">
                             <i class="fa-solid fa-triangle-exclamation"></i>
-                        </div>
+                        </span>
+
                         <div>
-                            <h5>Permanent deletion</h5>
-                            <p>Once deleted, this parent category cannot be restored from this screen.</p>
+                            <h3>Permanent deletion warning</h3>
+
+                            <p>
+                                This parent category has no child categories or
+                                assigned products. Once confirmed, it will be
+                                permanently removed and cannot be restored from
+                                this dashboard.
+                            </p>
                         </div>
+
                     </div>
                 }
 
-                <div class="delete-actions">
-                    <a asp-action="Index" class="btn parent-btn parent-btn-light border">
-                        <i class="fa-solid fa-xmark me-2"></i>Cancel
+            </div>
+
+            <div class="asm-parent-delete-actions">
+
+                <div class="asm-parent-delete-note">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i>
+                    Final confirmation is required before deletion.
+                </div>
+
+                <div class="asm-parent-delete-action-buttons">
+
+                    <a asp-action="Index"
+                       class="btn asm-parent-delete-btn asm-parent-delete-btn-outline">
+                        <i class="fa-solid fa-xmark"></i>
+                        Cancel
                     </a>
 
                     <button type="button"
-                            class="btn parent-btn parent-btn-danger"
+                            class="btn asm-parent-delete-btn asm-parent-delete-btn-danger"
                             data-bs-toggle="modal"
                             data-bs-target="#deleteConfirmModal"
                             @(cannotDelete ? "disabled" : null)>
-                        <i class="fa-solid fa-trash me-2"></i>Delete Parent Category
+
+                        <i class="fa-solid fa-trash"></i>
+                        Delete Parent Category
+
                     </button>
+
                 </div>
 
             </div>
-        </div>
-    </div>
-</div>
 
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content delete-modal">
-            <div class="modal-body text-center p-4">
-                <div class="modal-delete-icon">
-                    <i class="fa-solid fa-circle-exclamation"></i>
+        </section>
+
+        <aside class="asm-parent-delete-sidebar">
+
+            <section class="asm-parent-delete-side-card">
+
+                <div class="asm-parent-delete-side-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Deletion Checklist
                 </div>
 
-                <h4 class="fw-bold mb-2">Confirm Deletion</h4>
+                <div class="asm-parent-delete-checklist">
+
+                    <div class="asm-parent-delete-check-item">
+                        <span class="asm-parent-delete-check-number">1</span>
+                        <span>Confirm the parent category identity.</span>
+                    </div>
+
+                    <div class="asm-parent-delete-check-item">
+                        <span class="asm-parent-delete-check-number">2</span>
+                        <span>Review child-category dependencies.</span>
+                    </div>
+
+                    <div class="asm-parent-delete-check-item">
+                        <span class="asm-parent-delete-check-number">3</span>
+                        <span>Review assigned product dependencies.</span>
+                    </div>
+
+                    <div class="asm-parent-delete-check-item">
+                        <span class="asm-parent-delete-check-number">4</span>
+                        <span>Confirm permanent deletion.</span>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="asm-parent-delete-side-card">
+
+                <div class="asm-parent-delete-side-title">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    Safety Rules
+                </div>
+
+                <ul class="asm-parent-delete-list">
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>
+                            Parent categories containing children cannot
+                            be deleted.
+                        </span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>
+                            Parent categories containing products must
+                            be cleared first.
+                        </span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>
+                            The deletion request uses anti-forgery protection.
+                        </span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>
+                            The final action is submitted using HTTP POST.
+                        </span>
+                    </li>
+
+                </ul>
+
+            </section>
+
+            @if (!cannotDelete)
+            {
+                <section class="asm-parent-delete-side-card">
+
+                    <div class="asm-parent-delete-side-title">
+                        <i class="fa-solid fa-bolt"></i>
+                        Expected Impact
+                    </div>
+
+                    <ul class="asm-parent-delete-list asm-parent-delete-impact-list">
+
+                        <li>
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>
+                                The parent category record will be removed.
+                            </span>
+                        </li>
+
+                        <li>
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>
+                                Its storefront hierarchy entry will disappear.
+                            </span>
+                        </li>
+
+                        <li>
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>
+                                Its public URL may stop resolving.
+                            </span>
+                        </li>
+
+                        <li>
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>
+                                The action cannot be undone from this page.
+                            </span>
+                        </li>
+
+                    </ul>
+
+                </section>
+            }
+
+        </aside>
+
+    </div>
+
+</div>
+
+<div class="modal fade"
+     id="deleteConfirmModal"
+     tabindex="-1"
+     aria-labelledby="deleteConfirmModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content asm-parent-delete-modal">
+
+            <div class="modal-body p-4 text-center">
+
+                <div class="asm-parent-delete-modal-icon">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+
+                <h4 id="deleteConfirmModalLabel"
+                    class="fw-bold mb-2">
+                    Permanently Delete Parent Category?
+                </h4>
 
                 <p class="text-muted mb-4">
-                    Are you sure you want to permanently delete this parent category?
-                    <br />
-                    <strong>@Model.Name</strong>
+                    You are about to permanently delete
+                    <strong class="asm-parent-delete-confirm-name">
+                        @Model.Name
+                    </strong>.
+                    This action cannot be undone.
                 </p>
 
                 <div class="d-flex justify-content-center gap-2 flex-wrap">
-                    <button type="button" class="btn parent-btn parent-btn-light border" data-bs-dismiss="modal">
+
+                    <button type="button"
+                            class="btn asm-parent-delete-btn asm-parent-delete-btn-outline"
+                            data-bs-dismiss="modal">
+
+                        <i class="fa-solid fa-xmark"></i>
                         Cancel
+
                     </button>
 
-                    <form asp-action="Delete" method="post" class="m-0">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Id" />
+                    <form asp-action="Delete"
+                          method="post"
+                          id="parentCategoryDeleteForm"
+                          class="m-0">
 
-                        <button type="submit" class="btn parent-btn parent-btn-danger">
-                            Yes, Delete
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="id"
+                               value="@Model.Id" />
+
+                        <button type="submit"
+                                id="confirmParentDeleteButton"
+                                class="btn asm-parent-delete-btn asm-parent-delete-btn-danger">
+
+                            <span class="spinner-border spinner-border-sm asm-parent-delete-spinner"
+                                  aria-hidden="true">
+                            </span>
+
+                            <i class="fa-solid fa-trash asm-parent-delete-submit-icon"></i>
+
+                            <span class="asm-parent-delete-submit-text">
+                                Yes, Delete Permanently
+                            </span>
+
                         </button>
+
                     </form>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            'use strict';
+
+            const deleteForm =
+                document.getElementById(
+                    'parentCategoryDeleteForm'
+                );
+
+            const deleteButton =
+                document.getElementById(
+                    'confirmParentDeleteButton'
+                );
+
+            if (!deleteForm || !deleteButton) {
+                return;
+            }
+
+            deleteForm.addEventListener(
+                'submit',
+                function () {
+                    deleteButton.disabled = true;
+
+                    deleteButton.classList.add(
+                        'asm-parent-delete-submitting'
+                    );
+
+                    const buttonText =
+                        deleteButton.querySelector(
+                            '.asm-parent-delete-submit-text'
+                        );
+
+                    if (buttonText) {
+                        buttonText.textContent =
+                            'Deleting...';
+                    }
+                }
+            );
+        })();
+    </script>
+}

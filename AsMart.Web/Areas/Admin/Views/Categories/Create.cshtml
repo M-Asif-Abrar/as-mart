@@ -6,218 +6,1017 @@
 
 @section Styles {
     <style>
-        .category-create-page {
-            min-height: calc(100vh - 80px);
-            background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 45%, #ffffff 100%);
+        .asm-category-creator {
+            --asm-blue: #146cff;
+            --asm-indigo: #5b4bff;
+            --asm-green: #159447;
+            --asm-orange: #b76312;
+            --asm-ink: #111a2e;
+            --asm-text: #33415c;
+            --asm-muted: #71809d;
+            --asm-line: #dfe6f1;
+            min-height: calc(100vh - 70px);
+            padding: 1.25rem;
+            background: radial-gradient(circle at 8% 2%, rgba(37, 99, 235, .10), transparent 30rem), radial-gradient(circle at 96% 10%, rgba(124, 58, 237, .10), transparent 28rem), linear-gradient(135deg, #eef5ff 0%, #f8fbff 50%, #f3f1ff 100%);
         }
 
-        .category-hero {
-            border-radius: 30px;
-            padding: 2rem;
-            background: linear-gradient(135deg, #0f172a, #2563eb);
+        .asm-create-command,
+        .asm-create-form-card,
+        .asm-create-side-card {
+            border: 1px solid rgba(99, 116, 150, .15);
+            border-radius: 26px;
+            background: rgba(255, 255, 255, .90);
+            box-shadow: 0 16px 42px rgba(33, 54, 92, .09);
+            backdrop-filter: blur(14px);
+        }
+
+        .asm-create-command {
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 1.5rem 1.25rem;
+        }
+
+            .asm-create-command::after {
+                position: absolute;
+                top: -100px;
+                right: -45px;
+                width: 245px;
+                height: 245px;
+                content: "";
+                border-radius: 50%;
+                background: rgba(91, 75, 255, .08);
+            }
+
+        .asm-create-command-main {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(340px, 1.2fr) minmax(520px, 1.5fr);
+            gap: 1.4rem;
+            align-items: center;
+        }
+
+        .asm-create-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .asm-create-icon {
+            display: inline-flex;
+            flex: 0 0 68px;
+            width: 68px;
+            height: 68px;
+            align-items: center;
+            justify-content: center;
+            color: #2f63dd;
+            font-size: 1.55rem;
+            border: 1px solid #bdd0ff;
+            border-radius: 22px;
+            background: linear-gradient(145deg, #dce8ff, #eef2ff);
+        }
+
+        .asm-create-eyebrow {
+            display: block;
+            margin-bottom: .35rem;
+            color: #2459d8;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .asm-create-title h1 {
+            margin: 0;
+            color: var(--asm-ink);
+            font-size: clamp(2rem, 3vw, 3rem);
+            font-weight: 950;
+            line-height: 1;
+            letter-spacing: -.045em;
+        }
+
+            .asm-create-title h1 span {
+                color: var(--asm-indigo);
+            }
+
+        .asm-create-title p {
+            max-width: 650px;
+            margin: .55rem 0 0;
+            color: var(--asm-muted);
+            font-size: .92rem;
+            line-height: 1.65;
+        }
+
+        .asm-create-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(120px, 1fr));
+            gap: .6rem;
+        }
+
+        .asm-create-kpi {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            min-height: 58px;
+            padding: .65rem .75rem;
+            border: 1px solid rgba(99, 116, 150, .15);
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .asm-create-kpi-icon {
+            display: inline-flex;
+            flex: 0 0 36px;
+            width: 36px;
+            height: 36px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+        }
+
+            .asm-create-kpi-icon.blue {
+                color: #2e62dc;
+                background: #e8efff;
+            }
+
+            .asm-create-kpi-icon.green {
+                color: #148645;
+                background: #e5f5ec;
+            }
+
+            .asm-create-kpi-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-create-kpi-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+        .asm-create-kpi small {
+            display: block;
+            color: #697895;
+            font-size: .62rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .asm-create-kpi strong {
+            display: block;
+            margin-top: .05rem;
+            overflow: hidden;
+            color: var(--asm-ink);
+            font-size: .92rem;
+            font-weight: 950;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .asm-create-command-actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            flex-wrap: wrap;
+            margin-top: 1.15rem;
+            padding-top: .9rem;
+            border-top: 1px solid #e3e9f2;
+        }
+
+        .asm-create-btn {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .65rem 1rem;
+            font-size: .78rem;
+            font-weight: 900;
+            border-radius: 13px;
+            transition: .2s ease;
+        }
+
+            .asm-create-btn:hover {
+                transform: translateY(-2px);
+            }
+
+        .asm-create-btn-primary {
             color: #fff;
-            box-shadow: 0 18px 45px rgba(15,23,42,.16);
+            border: 1px solid var(--asm-blue);
+            background: linear-gradient(135deg, var(--asm-blue), #2463eb);
+            box-shadow: 0 9px 20px rgba(20, 108, 255, .22);
+        }
+
+            .asm-create-btn-primary:hover {
+                color: #fff;
+            }
+
+        .asm-create-btn-outline {
+            color: var(--asm-blue);
+            border: 1px solid var(--asm-blue);
+            background: #fff;
+        }
+
+        .asm-create-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 310px;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: start;
+        }
+
+        .asm-create-form-card {
+            overflow: hidden;
+        }
+
+        .asm-create-card-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            flex-wrap: wrap;
+            padding: 1rem 1.15rem;
+            border-bottom: 1px solid #e5eaf2;
         }
 
-        .category-kicker {
-            text-transform: uppercase;
-            letter-spacing: .14em;
-            color: #bfdbfe;
-            font-size: .78rem;
-            font-weight: 900;
-        }
-
-        .category-hero h1 {
-            font-size: clamp(1.9rem, 4vw, 2.9rem);
-            font-weight: 900;
-            margin: .35rem 0;
-            line-height: 1.1;
-        }
-
-        .category-hero p {
-            margin: 0;
-            max-width: 760px;
-            color: rgba(255,255,255,.78);
-            font-weight: 500;
-            line-height: 1.6;
-        }
-
-        .hero-actions {
+        .asm-create-card-title {
             display: flex;
             align-items: center;
-            gap: .75rem;
-            flex-wrap: wrap;
+            gap: .65rem;
+            color: var(--asm-ink);
+            font-size: 1rem;
+            font-weight: 950;
         }
 
-        .category-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: .9rem;
-            flex-wrap: wrap;
-            margin-top: 1.5rem;
+            .asm-create-card-title i {
+                color: #2463eb;
+            }
+
+        .asm-create-required-note {
+            color: #7a879d;
+            font-size: .72rem;
+            font-weight: 800;
         }
 
-        .category-btn {
-            border-radius: 16px;
-            padding: .82rem 1.25rem;
+        .asm-create-form-body {
+            padding: 1.15rem;
+        }
+
+        .asm-category-creator .asm-create-form-body label,
+        .asm-category-creator .asm-create-form-body .form-label {
+            margin-bottom: .38rem;
+            color: #64718a;
+            font-size: .68rem;
             font-weight: 900;
-            transition: .2s ease;
+            letter-spacing: .035em;
+            text-transform: uppercase;
         }
 
-            .category-btn:hover {
-                transform: translateY(-2px);
-            }
-
-        .category-btn-primary {
-            color: #fff;
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(37,99,235,.24);
-        }
-
-            .category-btn-primary:hover {
-                color: #fff;
-            }
-
-        .category-btn-light {
+        .asm-category-creator .asm-create-form-body .form-control,
+        .asm-category-creator .asm-create-form-body .form-select {
+            min-height: 46px;
+            color: var(--asm-ink);
+            border: 1px solid #d8e0ec;
+            border-radius: 13px;
             background: #fff;
-            color: #0f172a;
         }
 
-        .validation-summary {
-            border-radius: 18px;
-            border: 0;
-            box-shadow: 0 10px 24px rgba(220,38,38,.08);
-            margin-bottom: 1.25rem;
+        .asm-category-creator .asm-create-form-body textarea.form-control {
+            min-height: 115px;
         }
 
-        @@media (max-width: 991.98px) {
+        .asm-category-creator .asm-create-form-body .form-control:focus,
+        .asm-category-creator .asm-create-form-body .form-select:focus {
+            border-color: #78a5ff;
+            box-shadow: 0 0 0 .2rem rgba(20, 108, 255, .10);
+        }
 
-            .category-hero {
-                padding: 1.5rem;
+        .asm-category-creator .asm-create-form-body .form-check-input:checked {
+            border-color: #159447;
+            background-color: #159447;
+        }
+
+        .asm-category-creator .asm-create-form-body .input-validation-error {
+            border-color: rgba(217, 58, 58, .60);
+            background: #fffafa;
+            box-shadow: 0 0 0 .18rem rgba(217, 58, 58, .08);
+        }
+
+        .asm-category-creator .asm-create-form-body .field-validation-error,
+        .asm-category-creator .asm-create-form-body .text-danger {
+            display: block;
+            margin-top: .3rem;
+            color: #c63131 !important;
+            font-size: .74rem;
+            font-weight: 800;
+        }
+
+        .asm-create-validation {
+            margin-bottom: 1rem;
+            padding: .85rem 1rem;
+            color: #a62929;
+            border: 1px solid #f1cccc;
+            border-radius: 14px;
+            background: #fff5f5;
+        }
+
+        .asm-create-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.15rem;
+            border-top: 1px solid #e5eaf2;
+            background: #fbfcff;
+        }
+
+        .asm-create-save-note {
+            color: #71809d;
+            font-size: .76rem;
+            font-weight: 800;
+        }
+
+            .asm-create-save-note i {
+                color: #159447;
             }
 
-            .category-actions {
-                justify-content: stretch;
+        .asm-create-action-buttons {
+            display: flex;
+            gap: .55rem;
+        }
+
+        .asm-create-sidebar {
+            position: sticky;
+            top: 1rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .asm-create-side-card {
+            padding: 1rem;
+        }
+
+        .asm-create-side-title {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: .8rem;
+            color: var(--asm-ink);
+            font-size: .9rem;
+            font-weight: 950;
+        }
+
+            .asm-create-side-title i {
+                color: #6846d8;
             }
 
-                .category-actions .btn,
-                .hero-actions .btn {
-                    width: 100%;
+        .asm-create-preview-list {
+            display: grid;
+            gap: .55rem;
+        }
+
+        .asm-create-preview-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            padding: .68rem .72rem;
+            border: 1px solid #e6ebf2;
+            border-radius: 12px;
+            background: #f8faff;
+        }
+
+            .asm-create-preview-row small {
+                color: #71809d;
+                font-size: .65rem;
+                font-weight: 900;
+                text-transform: uppercase;
+            }
+
+            .asm-create-preview-row strong {
+                max-width: 165px;
+                overflow: hidden;
+                color: var(--asm-ink);
+                font-size: .76rem;
+                font-weight: 950;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+        .asm-create-status-preview {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .3rem .55rem;
+            color: #147a3f;
+            font-size: .7rem;
+            font-weight: 900;
+            border-radius: 999px;
+            background: #e4f5eb;
+        }
+
+            .asm-create-status-preview.inactive {
+                color: #b22f2f;
+                background: #fdeaea;
+            }
+
+        .asm-create-tip-list {
+            display: grid;
+            gap: .7rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+            .asm-create-tip-list li {
+                display: flex;
+                gap: .55rem;
+                color: #56637b;
+                font-size: .75rem;
+                line-height: 1.5;
+            }
+
+            .asm-create-tip-list i {
+                margin-top: .15rem;
+                color: #2463eb;
+            }
+
+        .asm-create-progress {
+            display: grid;
+            gap: .65rem;
+        }
+
+        .asm-create-progress-step {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            padding: .65rem;
+            border-radius: 12px;
+            background: #f8faff;
+        }
+
+        .asm-create-step-number {
+            display: inline-flex;
+            flex: 0 0 30px;
+            width: 30px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            color: #2459d8;
+            font-size: .72rem;
+            font-weight: 950;
+            border-radius: 10px;
+            background: #e8efff;
+        }
+
+        .asm-create-progress-step span:last-child {
+            color: #536079;
+            font-size: .73rem;
+            font-weight: 800;
+        }
+
+        .asm-create-submitting {
+            opacity: .72;
+            pointer-events: none;
+        }
+
+        .asm-create-spinner {
+            display: none;
+        }
+
+        .asm-create-submitting .asm-create-spinner {
+            display: inline-block;
+        }
+
+        .asm-create-submitting .asm-create-save-icon {
+            display: none;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .asm-create-command-main {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-create-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-create-sidebar {
+                position: static;
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .asm-category-creator {
+                padding: .85rem;
+            }
+
+            .asm-create-command,
+            .asm-create-form-card,
+            .asm-create-side-card {
+                border-radius: 20px;
+            }
+
+            .asm-create-command {
+                padding: 1.25rem 1rem 1rem;
+            }
+
+            .asm-create-title {
+                align-items: flex-start;
+            }
+
+            .asm-create-icon {
+                width: 56px;
+                height: 56px;
+                flex-basis: 56px;
+                border-radius: 17px;
+            }
+
+            .asm-create-kpis {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .asm-create-card-head,
+            .asm-create-actions {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .asm-create-action-buttons {
+                width: 100%;
+            }
+
+                .asm-create-action-buttons .btn {
+                    flex: 1;
                 }
+
+            .asm-create-sidebar {
+                grid-template-columns: 1fr;
+            }
         }
 
         @@media (max-width: 575.98px) {
-
-            .category-hero {
-                border-radius: 22px;
-                padding: 1.25rem;
+            .asm-create-title {
+                flex-direction: column;
             }
 
-                .category-hero h1 {
-                    font-size: 1.8rem;
-                }
+            .asm-create-kpis {
+                grid-template-columns: 1fr;
+            }
 
-            .category-actions {
+            .asm-create-command-actions .btn {
+                width: 100%;
+            }
+
+            .asm-create-command-actions .ms-auto {
+                width: 100%;
+                margin-left: 0 !important;
+                text-align: center;
+            }
+
+            .asm-create-action-buttons {
                 flex-direction: column-reverse;
             }
+
+                .asm-create-action-buttons .btn {
+                    width: 100%;
+                }
         }
     </style>
 }
 
-<div class="container-fluid py-4 category-create-page">
+<div class="asm-category-creator">
+    <section class="asm-create-command">
+        <div class="asm-create-command-main">
+            <div class="asm-create-title">
+                <div class="asm-create-icon">
+                    <i class="fa-solid fa-folder-plus"></i>
+                </div>
 
-    <div class="category-hero mb-4">
+                <div>
+                    <span class="asm-create-eyebrow">Catalog Management</span>
 
-        <div>
-            <span class="category-kicker">
-                Admin Panel
-            </span>
+                    <h1>Create <span>Category</span></h1>
 
-            <h1>Create Category</h1>
+                    <p>
+                        Build a new SEO-friendly product category, define its hierarchy,
+                        configure storefront placement, and control publishing status.
+                    </p>
+                </div>
+            </div>
 
-            <p>
-                Create SEO-friendly product categories, hierarchy structure,
-                storefront navigation, and category landing organization.
-            </p>
+            <div class="asm-create-kpis">
+                <div class="asm-create-kpi">
+                    <span class="asm-create-kpi-icon blue">
+                        <i class="fa-solid fa-font"></i>
+                    </span>
+                    <div>
+                        <small>Name</small>
+                        <strong id="topNameText">Not specified</strong>
+                    </div>
+                </div>
+
+                <div class="asm-create-kpi">
+                    <span class="asm-create-kpi-icon green">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </span>
+                    <div>
+                        <small>Status</small>
+                        <strong id="topStatusText">Active</strong>
+                    </div>
+                </div>
+
+                <div class="asm-create-kpi">
+                    <span class="asm-create-kpi-icon orange">
+                        <i class="fa-solid fa-arrow-down-1-9"></i>
+                    </span>
+                    <div>
+                        <small>Display Order</small>
+                        <strong id="topOrderText">—</strong>
+                    </div>
+                </div>
+
+                <div class="asm-create-kpi">
+                    <span class="asm-create-kpi-icon purple">
+                        <i class="fa-solid fa-link"></i>
+                    </span>
+                    <div>
+                        <small>Slug</small>
+                        <strong id="topSlugText">Not specified</strong>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="hero-actions">
-
+        <div class="asm-create-command-actions">
             <a asp-action="Index"
-               class="btn category-btn category-btn-light">
-                <i class="fa-solid fa-arrow-left me-2"></i>
-                Back
+               class="btn asm-create-btn asm-create-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Categories
             </a>
 
+            <a asp-action="Create"
+               class="btn asm-create-btn asm-create-btn-outline">
+                <i class="fa-solid fa-rotate-right"></i>
+                Clear Form
+            </a>
+
+            <span class="ms-auto text-muted small fw-bold">
+                <i class="fa-solid fa-shield-halved me-1"></i>
+                Protected admin form
+            </span>
         </div>
+    </section>
 
-    </div>
+    <form asp-action="Create"
+          method="post"
+          id="categoryCreateForm">
 
-    <div class="row justify-content-center">
+        @Html.AntiForgeryToken()
 
-        <div class="col-12 col-xxl-10">
+        <div class="asm-create-grid">
+            <section class="asm-create-form-card">
+                <div class="asm-create-card-head">
+                    <div class="asm-create-card-title">
+                        <i class="fa-solid fa-sliders"></i>
+                        Category Information
+                    </div>
 
-            <form asp-action="Create"
-                  method="post"
-                  id="categoryCreateForm">
-
-                @Html.AntiForgeryToken()
-
-                <div asp-validation-summary="ModelOnly"
-                     class="alert alert-danger validation-summary d-none"
-                     id="valSummary">
+                    <span class="asm-create-required-note">
+                        Fields marked with * are required
+                    </span>
                 </div>
 
-                <partial name="_CategoryForm" model="Model" />
+                <div class="asm-create-form-body">
+                    <div asp-validation-summary="ModelOnly"
+                         class="asm-create-validation d-none"
+                         id="valSummary"
+                         role="alert">
+                    </div>
 
-                <div class="category-actions">
-
-                    <a asp-action="Index"
-                       class="btn category-btn category-btn-light border">
-                        <i class="fa-solid fa-xmark me-2"></i>
-                        Cancel
-                    </a>
-
-                    <button type="submit"
-                            class="btn category-btn category-btn-primary">
-                        <i class="fa-solid fa-floppy-disk me-2"></i>
-                        Save Category
-                    </button>
-
+                    <partial name="_CategoryForm" model="Model" />
                 </div>
 
-            </form>
+                <div class="asm-create-actions">
+                    <div class="asm-create-save-note">
+                        <i class="fa-solid fa-circle-check me-1"></i>
+                        The category will be validated before creation.
+                    </div>
 
+                    <div class="asm-create-action-buttons">
+                        <a asp-action="Index"
+                           class="btn asm-create-btn asm-create-btn-outline">
+                            <i class="fa-solid fa-xmark"></i>
+                            Cancel
+                        </a>
+
+                        <button type="submit"
+                                id="saveCategoryButton"
+                                class="btn asm-create-btn asm-create-btn-primary">
+                            <span class="spinner-border spinner-border-sm asm-create-spinner"
+                                  aria-hidden="true"></span>
+
+                            <i class="fa-solid fa-floppy-disk asm-create-save-icon"></i>
+
+                            <span class="asm-create-save-text">
+                                Create Category
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="asm-create-sidebar">
+                <section class="asm-create-side-card">
+                    <div class="asm-create-side-title">
+                        <i class="fa-solid fa-chart-simple"></i>
+                        Live Preview
+                    </div>
+
+                    <div class="asm-create-preview-list">
+                        <div class="asm-create-preview-row">
+                            <small>Name</small>
+                            <strong id="namePreview">Not specified</strong>
+                        </div>
+
+                        <div class="asm-create-preview-row">
+                            <small>Slug</small>
+                            <strong id="slugPreview">Not specified</strong>
+                        </div>
+
+                        <div class="asm-create-preview-row">
+                            <small>Parent</small>
+                            <strong id="parentPreview">None</strong>
+                        </div>
+
+                        <div class="asm-create-preview-row">
+                            <small>Order</small>
+                            <strong id="orderPreview">—</strong>
+                        </div>
+
+                        <div class="asm-create-preview-row">
+                            <small>Status</small>
+
+                            <span id="statusPreview"
+                                  class="asm-create-status-preview">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Active
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="asm-create-side-card">
+                    <div class="asm-create-side-title">
+                        <i class="fa-solid fa-list-check"></i>
+                        Creation Checklist
+                    </div>
+
+                    <div class="asm-create-progress">
+                        <div class="asm-create-progress-step">
+                            <span class="asm-create-step-number">1</span>
+                            <span>Enter a clear category name.</span>
+                        </div>
+
+                        <div class="asm-create-progress-step">
+                            <span class="asm-create-step-number">2</span>
+                            <span>Add an SEO-friendly slug.</span>
+                        </div>
+
+                        <div class="asm-create-progress-step">
+                            <span class="asm-create-step-number">3</span>
+                            <span>Select hierarchy and display order.</span>
+                        </div>
+
+                        <div class="asm-create-progress-step">
+                            <span class="asm-create-step-number">4</span>
+                            <span>Review status and save.</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="asm-create-side-card">
+                    <div class="asm-create-side-title">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        Category Guidance
+                    </div>
+
+                    <ul class="asm-create-tip-list">
+                        <li>
+                            <i class="fa-solid fa-check"></i>
+                            <span>Use a concise customer-facing category name.</span>
+                        </li>
+
+                        <li>
+                            <i class="fa-solid fa-check"></i>
+                            <span>Keep the slug lowercase and descriptive.</span>
+                        </li>
+
+                        <li>
+                            <i class="fa-solid fa-check"></i>
+                            <span>Select a parent only for a subcategory.</span>
+                        </li>
+
+                        <li>
+                            <i class="fa-solid fa-check"></i>
+                            <span>Use display order to control storefront position.</span>
+                        </li>
+                    </ul>
+                </section>
+            </aside>
         </div>
-
-    </div>
-
+    </form>
 </div>
 
 @section Scripts {
-
     <partial name="_ValidationScriptsPartial" />
 
     <script>
         (function () {
+            'use strict';
 
+            const form = document.getElementById('categoryCreateForm');
             const summary = document.getElementById('valSummary');
+            const saveButton = document.getElementById('saveCategoryButton');
 
-            if (!summary) return;
-
-            const hasText = (summary.innerText || '').trim().length > 0;
-
-            if (hasText) {
-                summary.classList.remove('d-none');
+            if (!form) {
+                return;
             }
 
+            const byName = function (name) {
+                return form.querySelector('[name="' + name + '"]');
+            };
+
+            const nameInput = byName('Name');
+            const slugInput = byName('Slug');
+            const activeInput = byName('IsActive');
+            const orderInput = byName('DisplayOrder');
+            const parentInput = byName('ParentCategoryId');
+
+            const namePreview = document.getElementById('namePreview');
+            const slugPreview = document.getElementById('slugPreview');
+            const parentPreview = document.getElementById('parentPreview');
+            const orderPreview = document.getElementById('orderPreview');
+            const statusPreview = document.getElementById('statusPreview');
+
+            const topNameText = document.getElementById('topNameText');
+            const topStatusText = document.getElementById('topStatusText');
+            const topOrderText = document.getElementById('topOrderText');
+            const topSlugText = document.getElementById('topSlugText');
+
+            function valueOr(input, fallback) {
+                if (!input) {
+                    return fallback;
+                }
+
+                const value = String(input.value || '').trim();
+                return value || fallback;
+            }
+
+            function isActive() {
+                if (!activeInput) {
+                    return true;
+                }
+
+                return activeInput.type === 'checkbox'
+                    ? activeInput.checked
+                    : String(activeInput.value).toLowerCase() === 'true';
+            }
+
+            function selectedText(select) {
+                if (!select || select.tagName !== 'SELECT') {
+                    return 'None';
+                }
+
+                const option = select.options[select.selectedIndex];
+
+                return option && option.value
+                    ? option.text.trim()
+                    : 'None';
+            }
+
+            function updatePreview() {
+                const name = valueOr(nameInput, 'Not specified');
+                const slug = valueOr(slugInput, 'Not specified');
+                const order = valueOr(orderInput, '—');
+                const active = isActive();
+
+                if (namePreview) {
+                    namePreview.textContent = name;
+                    namePreview.title = name;
+                }
+
+                if (slugPreview) {
+                    slugPreview.textContent = slug;
+                    slugPreview.title = slug;
+                }
+
+                if (parentPreview) {
+                    parentPreview.textContent = selectedText(parentInput);
+                }
+
+                if (orderPreview) {
+                    orderPreview.textContent = order;
+                }
+
+                if (topNameText) {
+                    topNameText.textContent = name;
+                    topNameText.title = name;
+                }
+
+                if (topSlugText) {
+                    topSlugText.textContent = slug;
+                    topSlugText.title = slug;
+                }
+
+                if (topOrderText) {
+                    topOrderText.textContent = order;
+                }
+
+                if (topStatusText) {
+                    topStatusText.textContent = active ? 'Active' : 'Inactive';
+                }
+
+                if (statusPreview) {
+                    statusPreview.classList.toggle('inactive', !active);
+
+                    statusPreview.innerHTML = active
+                        ? '<i class="fa-solid fa-circle-check"></i> Active'
+                        : '<i class="fa-solid fa-circle-xmark"></i> Inactive';
+                }
+            }
+
+            function showValidationSummary() {
+                if (!summary) {
+                    return;
+                }
+
+                const hasError =
+                    summary.querySelector('li') !== null ||
+                    (summary.innerText || '').trim().length > 0;
+
+                summary.classList.toggle('d-none', !hasError);
+            }
+
+            function focusFirstInvalidField() {
+                const invalidField = form.querySelector(
+                    '.input-validation-error, .form-control.is-invalid, .form-select.is-invalid'
+                );
+
+                if (!invalidField) {
+                    return;
+                }
+
+                invalidField.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+
+                window.setTimeout(function () {
+                    invalidField.focus({
+                        preventScroll: true
+                    });
+                }, 300);
+            }
+
+            [nameInput, slugInput, activeInput, orderInput, parentInput]
+                .forEach(function (input) {
+                    if (!input) {
+                        return;
+                    }
+
+                    input.addEventListener('input', updatePreview);
+                    input.addEventListener('change', updatePreview);
+                });
+
+            form.addEventListener('submit', function (event) {
+                showValidationSummary();
+
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    focusFirstInvalidField();
+                    return;
+                }
+
+                if (saveButton) {
+                    saveButton.disabled = true;
+                    saveButton.classList.add('asm-create-submitting');
+
+                    const text = saveButton.querySelector('.asm-create-save-text');
+
+                    if (text) {
+                        text.textContent = 'Creating...';
+                    }
+                }
+            });
+
+            updatePreview();
+            showValidationSummary();
+
+            window.setTimeout(focusFirstInvalidField, 100);
         })();
     </script>
-
 }

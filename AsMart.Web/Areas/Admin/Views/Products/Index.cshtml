@@ -2,10 +2,16 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var totalProducts = Model?.Count() ?? 0;
-    var activeProducts = Model?.Count(x => x.IsActive) ?? 0;
-    var featuredProducts = Model?.Count(x => x.IsFeatured) ?? 0;
-    var dealProducts = Model?.Count(x => x.IsDealOfTheDay) ?? 0;
+    var products = Model?.ToList()
+        ?? new List<AsMart.Web.Models.DTOs.ProductListItemDto>();
+
+    var totalProducts = products.Count;
+    var activeProducts = products.Count(product => product.IsActive);
+    var inactiveProducts = products.Count(product => !product.IsActive);
+    var featuredProducts = products.Count(product => product.IsFeatured);
+    var dealProducts = products.Count(product => product.IsDealOfTheDay);
+    var totalClicks = products.Sum(product => (long)product.ClickCount);
+    var pricedProducts = products.Count(product => product.Price.HasValue);
 }
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
@@ -14,171 +20,245 @@
     <style>
         .as-products-page {
             min-height: calc(100vh - 76px);
-            padding: 24px;
-            background: radial-gradient(900px 420px at 8% 0%, rgba(37, 99, 235, .12), transparent 60%), radial-gradient(760px 380px at 100% 8%, rgba(14, 165, 233, .10), transparent 60%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            padding: 12px 0 34px;
+            background: radial-gradient(circle at 6% 0%, rgba(37, 99, 235, .09), transparent 28%), radial-gradient(circle at 94% 2%, rgba(139, 92, 246, .07), transparent 27%), linear-gradient(180deg, #f8fafc 0%, #ffffff 48%, #f1f5f9 100%);
         }
 
         .as-products-shell {
             width: 100%;
-            max-width: 1580px;
+            max-width: 1640px;
             margin: 0 auto;
+            padding: 0 14px;
         }
 
-        .as-products-hero,
-        .as-products-card,
-        .as-stat-card {
-            border: 1px solid rgba(15, 23, 42, .08);
-            background: rgba(255, 255, 255, .86);
-            box-shadow: 0 18px 50px rgba(15, 23, 42, .08);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
+        .as-products-dashboard {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 14px;
+            padding: 18px 20px;
+            border: 1px solid rgba(37, 99, 235, .12);
+            border-radius: 22px;
+            background: radial-gradient(430px 180px at 2% 0%, rgba(37, 99, 235, .15), transparent 65%), radial-gradient(390px 170px at 98% 0%, rgba(139, 92, 246, .11), transparent 65%), linear-gradient(125deg, rgba(255, 255, 255, .98), rgba(239, 246, 255, .95) 55%, rgba(245, 243, 255, .92));
+            box-shadow: 0 15px 38px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
         }
 
-        .as-products-hero {
+            .as-products-dashboard::before,
+            .as-products-dashboard::after {
+                position: absolute;
+                content: "";
+                border-radius: 999px;
+                pointer-events: none;
+            }
+
+            .as-products-dashboard::before {
+                top: -74px;
+                right: -44px;
+                width: 168px;
+                height: 168px;
+                background: rgba(37, 99, 235, .06);
+            }
+
+            .as-products-dashboard::after {
+                bottom: -104px;
+                left: 38%;
+                width: 208px;
+                height: 208px;
+                background: rgba(139, 92, 246, .05);
+            }
+
+        .as-products-dashboard-main,
+        .as-products-dashboard-nav {
+            position: relative;
+            z-index: 2;
+        }
+
+        .as-products-dashboard-main {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .as-products-dashboard-icon {
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 18px;
-            padding: 24px;
-            border-radius: 30px;
-            margin-bottom: 18px;
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            border: 1px solid rgba(37, 99, 235, .16);
+            border-radius: 17px;
+            background: linear-gradient(145deg, rgba(37, 99, 235, .15), rgba(139, 92, 246, .08));
+            color: #2563eb;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, .11);
+            font-size: 20px;
+        }
+
+        .as-products-dashboard-copy {
+            min-width: 0;
         }
 
         .as-products-kicker {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 7px 12px;
-            margin-bottom: 12px;
-            border-radius: 999px;
-            background: rgba(37, 99, 235, .10);
-            color: #1d4ed8;
-            font-size: 12px;
+            gap: 6px;
+            margin-bottom: 4px;
+            color: #2563eb;
+            font-size: 9.5px;
             font-weight: 900;
-            letter-spacing: .08em;
+            letter-spacing: .07em;
             text-transform: uppercase;
         }
 
         .as-products-title {
             margin: 0;
             color: #0f172a;
-            font-size: clamp(26px, 3vw, 42px);
+            font-size: clamp(24px, 3vw, 38px);
             font-weight: 950;
-            letter-spacing: -.055em;
-            line-height: 1.05;
+            line-height: 1.08;
+            letter-spacing: -.04em;
+        }
+
+        .as-products-title-accent {
+            background: linear-gradient(100deg, #2563eb, #7c3aed);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
         }
 
         .as-products-subtitle {
-            max-width: 760px;
-            margin: 10px 0 0;
+            max-width: 820px;
+            margin: 7px 0 0;
             color: #64748b;
-            font-size: 14px;
-            line-height: 1.75;
+            font-size: 12px;
+            font-weight: 650;
+            line-height: 1.55;
         }
 
-        .as-products-actions {
+        .as-products-dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(104px, 1fr));
+            gap: 7px;
+        }
+
+        .as-stat-card {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 46px;
+            padding: 7px 9px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .80);
+            box-shadow: 0 7px 18px rgba(15, 23, 42, .045);
+        }
+
+        .as-stat-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 29px;
+            height: 29px;
+            min-width: 29px;
+            border-radius: 9px;
+            font-size: 11px;
+        }
+
+        .as-stat-blue {
+            background: rgba(37, 99, 235, .09);
+            color: #2563eb;
+        }
+
+        .as-stat-green {
+            background: rgba(16, 185, 129, .10);
+            color: #047857;
+        }
+
+        .as-stat-slate {
+            background: rgba(100, 116, 139, .10);
+            color: #475569;
+        }
+
+        .as-stat-amber {
+            background: rgba(245, 158, 11, .12);
+            color: #d97706;
+        }
+
+        .as-stat-sky {
+            background: rgba(14, 165, 233, .10);
+            color: #0284c7;
+        }
+
+        .as-stat-violet {
+            background: rgba(139, 92, 246, .10);
+            color: #7c3aed;
+        }
+
+        .as-stat-value {
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 950;
+            line-height: 1;
+        }
+
+        .as-stat-label {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 8.5px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .as-products-dashboard-nav {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 7px;
+            margin-top: 12px;
+            padding-top: 11px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
         }
 
         .as-action-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            min-height: 42px;
-            padding: .62rem 1rem;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 850;
-        }
-
-        .as-stat-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 14px;
-            margin-bottom: 18px;
-        }
-
-        .as-stat-card {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 16px;
-            border-radius: 24px;
-        }
-
-        .as-stat-icon {
-            display: inline-grid;
-            width: 48px;
-            height: 48px;
-            min-width: 48px;
-            place-items: center;
-            border-radius: 18px;
-            font-size: 18px;
-        }
-
-        .as-stat-blue {
-            background: rgba(37,99,235,.10);
-            color: #1d4ed8;
-        }
-
-        .as-stat-green {
-            background: rgba(22,163,74,.10);
-            color: #15803d;
-        }
-
-        .as-stat-amber {
-            background: rgba(245,158,11,.16);
-            color: #92400e;
-        }
-
-        .as-stat-sky {
-            background: rgba(14,165,233,.12);
-            color: #0369a1;
-        }
-
-        .as-stat-label {
-            color: #64748b;
-            font-size: 12px;
+            gap: 6px;
+            min-height: 35px;
+            padding: 0 11px;
+            border-radius: 10px;
+            font-size: 10.5px;
             font-weight: 900;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-        }
-
-        .as-stat-value {
-            color: #0f172a;
-            font-size: 25px;
-            font-weight: 950;
-            letter-spacing: -.04em;
-            line-height: 1.1;
+            white-space: nowrap;
         }
 
         .as-products-card {
             overflow: hidden;
-            border-radius: 30px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .95);
+            box-shadow: 0 14px 40px rgba(15, 23, 42, .065);
         }
 
         .as-card-header {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
-            gap: 14px;
-            padding: 20px 22px;
+            gap: 12px;
+            padding: 14px 16px;
             border-bottom: 1px solid rgba(15, 23, 42, .08);
-            background: rgba(255,255,255,.68);
+            background: rgba(248, 250, 252, .80);
         }
 
         .as-card-title {
             display: flex;
             align-items: center;
-            gap: 9px;
+            gap: 8px;
             margin: 0;
             color: #0f172a;
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 950;
-            letter-spacing: -.03em;
+            letter-spacing: -.025em;
         }
 
             .as-card-title i {
@@ -186,27 +266,28 @@
             }
 
         .as-card-subtitle {
-            margin: 6px 0 0;
+            margin: 4px 0 0;
             color: #64748b;
-            font-size: 13px;
+            font-size: 11px;
         }
 
         .as-card-pill {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            border: 1px solid rgba(15,23,42,.08);
+            gap: 6px;
+            min-height: 31px;
+            padding: 0 9px;
+            border: 1px solid rgba(15, 23, 42, .08);
             border-radius: 999px;
-            background: #f8fafc;
+            background: #ffffff;
             color: #475569;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 900;
             white-space: nowrap;
         }
 
         .as-card-body {
-            padding: 16px;
+            padding: 10px;
         }
 
         .as-table-wrap {
@@ -216,49 +297,49 @@
 
         .as-products-table {
             width: 100% !important;
-            min-width: 1120px;
+            min-width: 1080px;
             margin: 0 !important;
             border-collapse: separate;
-            border-spacing: 0 10px;
+            border-spacing: 0 8px;
         }
 
             .as-products-table thead th {
-                padding: 10px 12px;
+                padding: 8px 10px;
                 border: 0 !important;
                 color: #64748b;
-                font-size: 12px;
+                font-size: 10px;
                 font-weight: 950;
-                letter-spacing: .06em;
+                letter-spacing: .05em;
                 text-transform: uppercase;
                 white-space: nowrap;
             }
 
             .as-products-table tbody tr {
-                background: #fff;
-                box-shadow: 0 8px 24px rgba(15,23,42,.045);
+                background: #ffffff;
+                box-shadow: 0 6px 18px rgba(15, 23, 42, .04);
             }
 
             .as-products-table tbody td {
-                padding: 13px 12px;
-                border-top: 1px solid rgba(15,23,42,.07);
-                border-bottom: 1px solid rgba(15,23,42,.07);
+                padding: 10px;
+                border-top: 1px solid rgba(15, 23, 42, .07);
+                border-bottom: 1px solid rgba(15, 23, 42, .07);
                 color: #0f172a;
-                font-size: 13px;
+                font-size: 11.5px;
                 vertical-align: middle !important;
             }
 
                 .as-products-table tbody td:first-child {
-                    border-left: 1px solid rgba(15,23,42,.07);
-                    border-radius: 18px 0 0 18px;
+                    border-left: 1px solid rgba(15, 23, 42, .07);
+                    border-radius: 14px 0 0 14px;
                 }
 
                 .as-products-table tbody td:last-child {
-                    border-right: 1px solid rgba(15,23,42,.07);
-                    border-radius: 0 18px 18px 0;
+                    border-right: 1px solid rgba(15, 23, 42, .07);
+                    border-radius: 0 14px 14px 0;
                 }
 
             .as-products-table tbody tr:hover td {
-                background: rgba(37,99,235,.035);
+                background: rgba(37, 99, 235, .03);
             }
 
         .as-id-pill,
@@ -267,29 +348,29 @@
         .as-date {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
+            gap: 6px;
             border-radius: 999px;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 850;
             white-space: nowrap;
         }
 
         .as-id-pill {
-            padding: 7px 10px;
+            padding: 6px 8px;
             background: #f1f5f9;
             color: #334155;
         }
 
         .as-soft-pill {
-            padding: 7px 10px;
-            border: 1px solid rgba(15,23,42,.08);
+            padding: 6px 8px;
+            border: 1px solid rgba(15, 23, 42, .08);
             background: #f8fafc;
             color: #475569;
         }
 
         .as-click-pill {
-            padding: 7px 10px;
-            background: rgba(37,99,235,.08);
+            padding: 6px 8px;
+            background: rgba(37, 99, 235, .08);
             color: #1d4ed8;
         }
 
@@ -300,26 +381,26 @@
         .as-thumb-wrap {
             position: relative;
             display: grid;
-            width: 76px;
-            height: 76px;
+            width: 60px;
+            height: 60px;
             place-items: center;
             overflow: hidden;
-            border: 1px solid rgba(15,23,42,.08);
-            border-radius: 18px;
-            background: #fff;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 14px;
+            background: #ffffff;
         }
 
         .as-thumb {
             width: 100%;
             height: 100%;
+            padding: 5px;
             object-fit: contain;
-            padding: 6px;
         }
 
         .as-thumb-fallback {
             display: none;
             color: #94a3b8;
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .as-thumb-missing .as-thumb-fallback,
@@ -328,77 +409,72 @@
         }
 
         .as-product-cell {
-            min-width: 330px;
-            max-width: 560px;
+            min-width: 300px;
+            max-width: 520px;
         }
 
         .as-product-name {
+            display: -webkit-box;
+            overflow: hidden;
             color: #0f172a;
-            font-size: 13px;
-            font-weight: 900;
-            line-height: 1.35;
-        }
-
-        .as-product-slug {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 5px;
-            color: #64748b;
             font-size: 12px;
-            font-weight: 700;
-            overflow-wrap: anywhere;
+            font-weight: 900;
+            line-height: 1.45;
+            text-align: justify;
+            text-justify: inter-word;
             word-break: break-word;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
         }
 
         .as-price {
             color: #0f172a;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 950;
             white-space: nowrap;
         }
 
         .as-currency {
             color: #64748b;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 800;
         }
 
         .as-status-stack {
             display: flex;
             flex-direction: column;
-            gap: 6px;
             align-items: flex-start;
+            gap: 5px;
         }
 
         .as-status-chip {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            padding: 6px 9px;
+            gap: 5px;
+            padding: 5px 7px;
             border-radius: 999px;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 850;
             white-space: nowrap;
         }
 
             .as-status-chip.is-on {
-                background: rgba(22,163,74,.10);
+                background: rgba(22, 163, 74, .10);
                 color: #15803d;
             }
 
             .as-status-chip.is-off {
-                background: rgba(100,116,139,.10);
+                background: rgba(100, 116, 139, .10);
                 color: #64748b;
             }
 
             .as-status-chip.is-featured {
-                background: rgba(245,158,11,.16);
+                background: rgba(245, 158, 11, .14);
                 color: #92400e;
             }
 
             .as-status-chip.is-deal {
-                background: rgba(14,165,233,.12);
+                background: rgba(14, 165, 233, .12);
                 color: #0369a1;
             }
 
@@ -406,44 +482,44 @@
             display: inline-flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 7px;
+            gap: 6px;
             white-space: nowrap;
         }
 
         .as-icon-btn {
             display: inline-grid;
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             place-items: center;
             padding: 0;
-            border-radius: 13px;
-            font-size: 13px;
+            border-radius: 10px;
+            font-size: 11px;
         }
 
         .as-delete-modal-content {
             overflow: hidden;
             border: 0;
-            border-radius: 26px;
+            border-radius: 22px;
             box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
         }
 
         .as-delete-modal-header {
             position: relative;
-            padding: 24px 24px 10px;
+            padding: 20px 20px 9px;
             border-bottom: 0;
-            background: radial-gradient(520px 220px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
+            background: radial-gradient(500px 210px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
         }
 
         .as-delete-icon {
             display: inline-grid;
-            width: 54px;
-            height: 54px;
+            width: 48px;
+            height: 48px;
             place-items: center;
-            margin-bottom: 14px;
-            border-radius: 18px;
+            margin-bottom: 12px;
+            border-radius: 15px;
             background: rgba(220, 38, 38, .10);
             color: #dc2626;
-            font-size: 22px;
+            font-size: 20px;
         }
 
         .as-delete-title {
@@ -454,162 +530,283 @@
 
         .as-delete-text {
             max-width: 420px;
-            margin: 8px 0 0;
+            margin: 7px 0 0;
             color: #64748b;
-            font-size: 14px;
-            line-height: 1.7;
+            font-size: 13px;
+            line-height: 1.65;
         }
 
         .as-delete-modal-footer {
-            gap: 10px;
-            padding: 18px 24px 24px;
+            gap: 8px;
+            padding: 15px 20px 20px;
             border-top: 0;
             background: #f8fafc;
         }
 
         div.dataTables_wrapper div.dataTables_filter input,
         div.dataTables_wrapper div.dataTables_length select {
-            border-radius: 12px;
-            border: 1px solid rgba(15,23,42,.14);
-            min-height: 38px;
+            min-height: 35px;
+            border: 1px solid rgba(15, 23, 42, .14);
+            border-radius: 10px;
+            font-size: 11px;
         }
 
             div.dataTables_wrapper div.dataTables_filter input:focus,
             div.dataTables_wrapper div.dataTables_length select:focus {
-                border-color: rgba(37,99,235,.62);
-                box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
+                border-color: rgba(37, 99, 235, .62);
+                box-shadow: 0 0 0 .18rem rgba(37, 99, 235, .10);
             }
 
         .page-link {
-            border-radius: 12px !important;
             margin: 0 2px;
+            border-radius: 10px !important;
+            font-size: 11px;
             font-weight: 800;
         }
 
         @@media (max-width: 1199.98px) {
-            .as-stat-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+            .as-products-dashboard-main {
+                grid-template-columns: 54px minmax(0, 1fr);
+            }
+
+            .as-products-dashboard-stats {
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .as-products-dashboard-stats {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
 
         @@media (max-width: 767.98px) {
             .as-products-page {
-                padding: 12px;
+                padding: 10px 0 28px;
             }
 
-            .as-products-hero {
-                flex-direction: column;
-                padding: 18px;
-                border-radius: 24px;
+            .as-products-shell {
+                padding: 0 10px;
             }
 
-            .as-products-actions,
-            .as-products-actions .btn {
+            .as-products-dashboard {
+                padding: 15px;
+                border-radius: 19px;
+            }
+
+            .as-products-dashboard-main {
+                grid-template-columns: 44px minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .as-products-dashboard-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+                font-size: 17px;
+            }
+
+            .as-products-title {
+                font-size: 26px;
+            }
+
+            .as-products-subtitle {
+                grid-column: 1 / -1;
+            }
+
+            .as-products-dashboard-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .as-products-dashboard-nav {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .as-action-btn {
                 width: 100%;
-            }
-
-            .as-stat-grid {
-                grid-template-columns: 1fr;
             }
 
             .as-card-header {
+                align-items: stretch;
                 flex-direction: column;
-                padding: 18px;
             }
 
             .as-card-pill {
-                width: 100%;
-                justify-content: center;
+                width: fit-content;
             }
 
             .as-card-body {
-                padding: 10px;
-            }
-
-            .as-thumb-wrap {
-                width: 58px;
-                height: 58px;
-                border-radius: 16px;
+                padding: 8px;
             }
 
             .as-delete-modal-footer {
-                flex-direction: column-reverse;
                 align-items: stretch;
+                flex-direction: column-reverse;
             }
 
                 .as-delete-modal-footer .btn {
                     width: 100%;
                 }
         }
+
+        @@media (max-width: 390px) {
+            .as-products-dashboard-stats,
+            .as-products-dashboard-nav {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 }
+
 
 <div class="as-products-page">
     <div class="as-products-shell">
 
-        <div class="as-products-hero">
-            <div>
-                <div class="as-products-kicker">
+        <header class="as-products-dashboard">
+
+            <div class="as-products-dashboard-main">
+
+                <div class="as-products-dashboard-icon" aria-hidden="true">
                     <i class="fa-solid fa-boxes-stacked"></i>
-                    Product Catalog
                 </div>
 
-                <h1 class="as-products-title">Products</h1>
+                <div class="as-products-dashboard-copy">
+                    <div class="as-products-kicker">
+                        <i class="fa-solid fa-sparkles"></i>
+                        Admin Product Management
+                    </div>
 
-                <p class="as-products-subtitle">
-                    Manage catalog items, product status, featured/deal flags, clicks, pricing, public pages, and admin actions.
-                </p>
+                    <h1 class="as-products-title">
+                        Manage
+                        <span class="as-products-title-accent">
+                            product catalog
+                        </span>
+                    </h1>
+
+                    <p class="as-products-subtitle">
+                        Review catalog records, pricing, clicks, visibility,
+                        featured status and deal flags from one responsive admin
+                        dashboard.
+                    </p>
+                </div>
+
+                <div class="as-products-dashboard-stats"
+                     aria-label="Product statistics">
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-stat-blue">
+                            <i class="fa-solid fa-box"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-value">@totalProducts.ToString("N0")</div>
+                            <div class="as-stat-label">Total</div>
+                        </div>
+                    </div>
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-stat-green">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-value">@activeProducts.ToString("N0")</div>
+                            <div class="as-stat-label">Active</div>
+                        </div>
+                    </div>
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-stat-slate">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-value">@inactiveProducts.ToString("N0")</div>
+                            <div class="as-stat-label">Inactive</div>
+                        </div>
+                    </div>
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-stat-amber">
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-value">@featuredProducts.ToString("N0")</div>
+                            <div class="as-stat-label">Featured</div>
+                        </div>
+                    </div>
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-stat-sky">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-value">@dealProducts.ToString("N0")</div>
+                            <div class="as-stat-label">Deals</div>
+                        </div>
+                    </div>
+
+                    <div class="as-stat-card">
+                        <div class="as-stat-icon as-stat-violet">
+                            <i class="fa-solid fa-eye"></i>
+                        </div>
+                        <div>
+                            <div class="as-stat-value">@totalClicks.ToString("N0")</div>
+                            <div class="as-stat-label">Clicks</div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <div class="as-products-actions">
-                <a asp-action="Create" class="btn btn-primary as-action-btn">
+            <nav class="as-products-dashboard-nav"
+                 aria-label="Product administration navigation">
+
+                <a asp-action="Create"
+                   class="btn btn-primary as-action-btn">
                     <i class="fa-solid fa-plus"></i>
                     Create Product
                 </a>
-            </div>
-        </div>
 
-        <div class="as-stat-grid">
-            <div class="as-stat-card">
-                <div class="as-stat-icon as-stat-blue">
-                    <i class="fa-solid fa-box"></i>
-                </div>
-                <div>
-                    <div class="as-stat-label">Total Products</div>
-                    <div class="as-stat-value">@totalProducts</div>
-                </div>
-            </div>
+                <a asp-area=""
+                   asp-controller="Catalog"
+                   asp-action="Index"
+                   class="btn btn-outline-primary as-action-btn">
+                    <i class="fa-solid fa-store"></i>
+                    Public Catalog
+                </a>
 
-            <div class="as-stat-card">
-                <div class="as-stat-icon as-stat-green">
-                    <i class="fa-solid fa-circle-check"></i>
-                </div>
-                <div>
-                    <div class="as-stat-label">Active</div>
-                    <div class="as-stat-value">@activeProducts</div>
-                </div>
-            </div>
-
-            <div class="as-stat-card">
-                <div class="as-stat-icon as-stat-amber">
+                <a asp-area=""
+                   asp-controller="Home"
+                   asp-action="Index"
+                   class="btn btn-outline-primary as-action-btn">
                     <i class="fa-solid fa-star"></i>
-                </div>
-                <div>
-                    <div class="as-stat-label">Featured</div>
-                    <div class="as-stat-value">@featuredProducts</div>
-                </div>
-            </div>
+                    Featured
+                </a>
 
-            <div class="as-stat-card">
-                <div class="as-stat-icon as-stat-sky">
+                <a asp-area=""
+                   asp-controller="Home"
+                   asp-action="Deals"
+                   class="btn btn-outline-primary as-action-btn">
                     <i class="fa-solid fa-bolt"></i>
-                </div>
-                <div>
-                    <div class="as-stat-label">Deals</div>
-                    <div class="as-stat-value">@dealProducts</div>
-                </div>
-            </div>
-        </div>
+                    Deals
+                </a>
+
+                <a asp-area=""
+                   asp-controller="Home"
+                   asp-action="TopVisited"
+                   class="btn btn-outline-primary as-action-btn">
+                    <i class="fa-solid fa-chart-line"></i>
+                    Top Visited
+                </a>
+
+                <span class="btn btn-light as-action-btn disabled">
+                    <i class="fa-solid fa-dollar-sign"></i>
+                    @pricedProducts.ToString("N0") Priced
+                </span>
+
+            </nav>
+
+        </header>
 
         <div class="as-products-card">
             <div class="as-card-header">
@@ -645,7 +842,7 @@
                         </thead>
 
                         <tbody>
-                            @foreach (var item in Model ?? Enumerable.Empty<AsMart.Web.Models.DTOs.ProductListItemDto>())
+                            @foreach (var item in products)
                             {
                                 <tr>
                                     <td>
@@ -670,15 +867,15 @@
                                     </td>
 
                                     <td class="as-product-cell">
-                                        <div class="as-product-name">@item.Title</div>
+                                        <div class="as-product-name text-justify">@item.Title</div>
 
-                                        @if (!string.IsNullOrWhiteSpace(item.Slug))
+                                        @* @if (!string.IsNullOrWhiteSpace(item.Slug))
                                         {
                                             <div class="as-product-slug">
                                                 <i class="fa-solid fa-link"></i>
                                                 @item.Slug
                                             </div>
-                                        }
+                                        } *@
                                     </td>
 
                                     <td>

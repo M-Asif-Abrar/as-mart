@@ -211,17 +211,17 @@
             margin: 0 auto;
         }
 
-        /* Hero */
+        /* Compact modern hero */
 
         .gallery-hero {
             position: relative;
             isolation: isolate;
             overflow: hidden;
-            padding: clamp(24px, 4vw, 46px);
+            padding: 20px 22px;
             border: 1px solid rgba(99, 102, 241, .14);
-            border-radius: 30px;
-            background: radial-gradient(700px 300px at 3% 0%, rgba(59, 130, 246, .20), transparent 62%), radial-gradient(620px 300px at 95% 5%, rgba(236, 72, 153, .16), transparent 60%), radial-gradient(500px 260px at 55% 110%, rgba(6, 182, 212, .14), transparent 62%), linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(248, 250, 255, .92));
-            box-shadow: 0 28px 70px rgba(15, 23, 42, .10);
+            border-radius: 24px;
+            background: radial-gradient(460px 180px at 2% 0%, rgba(59, 130, 246, .15), transparent 64%), radial-gradient(420px 180px at 98% 0%, rgba(236, 72, 153, .12), transparent 64%), radial-gradient(340px 150px at 58% 115%, rgba(6, 182, 212, .10), transparent 65%), linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(248, 250, 255, .94));
+            box-shadow: 0 16px 42px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
         }
 
             .gallery-hero::before,
@@ -230,55 +230,77 @@
                 z-index: -1;
                 content: "";
                 border-radius: 999px;
-                filter: blur(2px);
                 pointer-events: none;
             }
 
             .gallery-hero::before {
-                top: -90px;
-                right: -65px;
-                width: 230px;
-                height: 230px;
-                background: rgba(99, 102, 241, .10);
+                top: -70px;
+                right: -45px;
+                width: 165px;
+                height: 165px;
+                background: rgba(99, 102, 241, .08);
             }
 
             .gallery-hero::after {
-                bottom: -110px;
-                left: 22%;
-                width: 260px;
-                height: 260px;
-                background: rgba(6, 182, 212, .09);
+                bottom: -88px;
+                left: 30%;
+                width: 185px;
+                height: 185px;
+                background: rgba(6, 182, 212, .07);
             }
+
+        .gallery-hero-main {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .gallery-hero-icon {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            width: 58px;
+            height: 58px;
+            border: 1px solid rgba(79, 70, 229, .16);
+            border-radius: 18px;
+            background: linear-gradient( 145deg, rgba(79, 70, 229, .14), rgba(37, 99, 235, .08));
+            color: #4f46e5;
+            box-shadow: 0 10px 24px rgba(79, 70, 229, .11);
+            font-size: 23px;
+        }
+
+        .gallery-hero-text {
+            min-width: 0;
+            flex: 1;
+        }
 
         .gallery-eyebrow {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 13px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(79, 70, 229, .14);
-            border-radius: 999px;
-            background: rgba(255, 255, 255, .72);
+            gap: 7px;
+            margin-bottom: 4px;
             color: #4338ca;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 900;
-            letter-spacing: .08em;
+            letter-spacing: .07em;
             text-transform: uppercase;
-            box-shadow: 0 10px 26px rgba(79, 70, 229, .08);
         }
 
         .gallery-title {
-            max-width: 800px;
+            max-width: none;
             margin: 0;
             color: var(--gallery-text);
-            font-size: clamp(2rem, 5vw, 4rem);
+            font-size: clamp(26px, 2.8vw, 39px);
             font-weight: 950;
-            line-height: .98;
-            letter-spacing: -.055em;
+            line-height: 1.04;
+            letter-spacing: -.045em;
         }
 
         .gallery-title-gradient {
-            background: linear-gradient(100deg, #2563eb, #7c3aed 50%, #db2777);
+            background: linear-gradient( 100deg, #2563eb, #7c3aed 50%, #db2777);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
@@ -287,38 +309,56 @@
 
         .gallery-description {
             max-width: 760px;
-            margin: 17px 0 0;
+            margin: 6px 0 0;
             color: var(--gallery-muted);
-            font-size: clamp(.96rem, 1.4vw, 1.08rem);
-            font-weight: 600;
-            line-height: 1.75;
+            font-size: 13px;
+            font-weight: 650;
+            line-height: 1.5;
         }
 
         .gallery-stat-row {
             display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: flex-end;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 24px;
+            gap: 7px;
+            max-width: 500px;
         }
 
         .gallery-stat {
             display: inline-flex;
             align-items: center;
-            gap: 9px;
-            min-height: 44px;
-            padding: 9px 14px;
+            gap: 7px;
+            min-height: 38px;
+            padding: 6px 10px;
             border: 1px solid rgba(15, 23, 42, .09);
-            border-radius: 999px;
-            background: rgba(255, 255, 255, .78);
-            color: #334155;
-            font-size: 13px;
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .80);
+            color: #475569;
+            box-shadow: 0 7px 18px rgba(15, 23, 42, .045);
+            font-size: 10.5px;
             font-weight: 800;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
+            white-space: nowrap;
+            backdrop-filter: blur(10px);
         }
 
             .gallery-stat i {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 23px;
+                height: 23px;
+                border-radius: 7px;
+                background: rgba(99, 102, 241, .09);
                 color: #6366f1;
+                font-size: 10px;
+            }
+
+            .gallery-stat strong {
+                color: #0f172a;
+                font-size: 13px;
+                font-weight: 950;
             }
 
         /* Filters */
@@ -1019,6 +1059,18 @@
         }
 
         @@media (max-width: 1199.98px) {
+            .gallery-hero-main {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .gallery-stat-row {
+                width: 100%;
+                max-width: none;
+                justify-content: flex-start;
+                padding-left: 74px;
+            }
+
             .gallery-grid {
                 grid-template-columns: repeat(4, minmax(0, 1fr));
             }
@@ -1049,7 +1101,27 @@
 
         @@media (max-width: 767.98px) {
             .gallery-hero {
-                border-radius: 24px;
+                padding: 17px;
+                border-radius: 21px;
+            }
+
+            .gallery-hero-main {
+                gap: 13px;
+            }
+
+            .gallery-hero-icon {
+                width: 50px;
+                height: 50px;
+                border-radius: 16px;
+                font-size: 20px;
+            }
+
+            .gallery-title {
+                font-size: 29px;
+            }
+
+            .gallery-stat-row {
+                padding-left: 63px;
             }
 
             .gallery-search-grid {
@@ -1104,6 +1176,49 @@
         }
 
         @@media (max-width: 479.98px) {
+            .gallery-hero {
+                padding: 15px;
+                border-radius: 19px;
+            }
+
+            .gallery-hero-main {
+                display: grid;
+                grid-template-columns: 44px minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .gallery-hero-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+                font-size: 18px;
+            }
+
+            .gallery-title {
+                font-size: 26px;
+            }
+
+            .gallery-description {
+                grid-column: 1 / -1;
+                margin-top: 6px;
+                font-size: 12.5px;
+            }
+
+            .gallery-stat-row {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                width: 100%;
+                padding-left: 0;
+            }
+
+            .gallery-stat {
+                justify-content: flex-start;
+                min-width: 0;
+                min-height: 37px;
+                padding: 6px 8px;
+            }
+
             .gallery-search-grid {
                 grid-template-columns: 1fr;
             }
@@ -1150,6 +1265,12 @@
             }
         }
 
+        @@media (max-width: 390px) {
+            .gallery-stat-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @@media (prefers-reduced-motion: reduce) {
             .gallery-page *,
             .gallery-page *::before,
@@ -1174,41 +1295,83 @@
         }
 
         <header class="gallery-hero">
-            <span class="gallery-eyebrow">
-                <i class="fa-regular fa-images"></i>
-                As-Mart Visual Collection
-            </span>
+            <div class="gallery-hero-main">
 
-            <h1 class="gallery-title">
-                Explore our
-                <span class="gallery-title-gradient">product gallery</span>
-            </h1>
-
-            <p class="gallery-description">
-                Browse main and additional product images, filter by category,
-                preview images instantly, and open the related product page.
-            </p>
-
-            <div class="gallery-stat-row" aria-label="Gallery statistics">
-                <span class="gallery-stat">
+                <div class="gallery-hero-icon"
+                     aria-hidden="true">
                     <i class="fa-regular fa-images"></i>
-                    <strong>@Model.TotalImages.ToString("N0")</strong> images
-                </span>
+                </div>
 
-                <span class="gallery-stat">
-                    <i class="fa-solid fa-box-open"></i>
-                    <strong>@Model.TotalProducts.ToString("N0")</strong> products
-                </span>
+                <div class="gallery-hero-text">
 
-                <span class="gallery-stat">
-                    <i class="fa-regular fa-image"></i>
-                    <strong>@Model.MainImageCount.ToString("N0")</strong> main images
-                </span>
+                    <div class="gallery-eyebrow">
+                        <i class="fa-solid fa-sparkles"></i>
+                        As-Mart Visual Collection
+                    </div>
 
-                <span class="gallery-stat">
-                    <i class="fa-solid fa-layer-group"></i>
-                    <strong>@Model.AdditionalImageCount.ToString("N0")</strong> additional
-                </span>
+                    <h1 class="gallery-title">
+                        Explore our
+                        <span class="gallery-title-gradient">
+                            product gallery
+                        </span>
+                    </h1>
+
+                    <p class="gallery-description">
+                        Browse main and additional product images, filter by category,
+                        preview images instantly and open the related product page.
+                    </p>
+
+                </div>
+
+                <div class="gallery-stat-row"
+                     aria-label="Gallery statistics">
+
+                    <span class="gallery-stat">
+                        <i class="fa-regular fa-images"
+                           aria-hidden="true"></i>
+
+                        <strong>
+                            @Model.TotalImages.ToString("N0")
+                        </strong>
+
+                        <span>Images</span>
+                    </span>
+
+                    <span class="gallery-stat">
+                        <i class="fa-solid fa-box-open"
+                           aria-hidden="true"></i>
+
+                        <strong>
+                            @Model.TotalProducts.ToString("N0")
+                        </strong>
+
+                        <span>Products</span>
+                    </span>
+
+                    <span class="gallery-stat">
+                        <i class="fa-regular fa-image"
+                           aria-hidden="true"></i>
+
+                        <strong>
+                            @Model.MainImageCount.ToString("N0")
+                        </strong>
+
+                        <span>Main</span>
+                    </span>
+
+                    <span class="gallery-stat">
+                        <i class="fa-solid fa-layer-group"
+                           aria-hidden="true"></i>
+
+                        <strong>
+                            @Model.AdditionalImageCount.ToString("N0")
+                        </strong>
+
+                        <span>Additional</span>
+                    </span>
+
+                </div>
+
             </div>
         </header>
 

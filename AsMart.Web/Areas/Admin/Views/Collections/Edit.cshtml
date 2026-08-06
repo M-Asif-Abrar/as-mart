@@ -2,607 +2,962 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var totalProducts = Model.AllProducts?.Count ?? 0;
+    var selectedProducts = Model.AllProducts?.Count(x => x.IsSelected) ?? 0;
+    var totalCategories = Model.AllCategories?.Count ?? 0;
+    var selectedCategories = Model.AllCategories?.Count(x => x.IsSelected) ?? 0;
 }
 
 @section Styles {
     <style>
-        .collection-page {
-            min-height: calc(100vh - 80px);
-            background: linear-gradient(135deg,#f8fafc 0%,#eef4ff 45%,#ffffff 100%);
+
+        .asm-collection-page {
+            --ac-blue: #146cff;
+            --ac-indigo: #5b4bff;
+            --ac-green: #159447;
+            --ac-orange: #b76312;
+            --ac-red: #d93a3a;
+            --ac-ink: #111a2e;
+            --ac-text: #33415c;
+            --ac-muted: #71809d;
+            --ac-border: rgba(99,116,150,.15);
+            min-height: calc(100vh - 70px);
+            padding: 1.25rem;
+            background: radial-gradient(circle at 8% 2%, rgba(37,99,235,.10), transparent 30rem), radial-gradient(circle at 96% 10%, rgba(124,58,237,.10), transparent 28rem), linear-gradient(135deg,#eef5ff 0%,#f8fbff 50%,#f3f1ff 100%);
         }
 
-        .collection-hero {
-            border-radius: 30px;
-            padding: 2rem;
-            background: linear-gradient(135deg,#0f172a,#2563eb);
-            color: #fff;
-            box-shadow: 0 18px 45px rgba(15,23,42,.16);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
+        .asm-collection-command,
+        .asm-collection-form-card,
+        .asm-collection-products-card,
+        .asm-collection-side-card {
+            border: 1px solid var(--ac-border);
+            border-radius: 26px;
+            background: rgba(255,255,255,.92);
+            box-shadow: 0 16px 42px rgba(33,54,92,.09);
+            backdrop-filter: blur(14px);
         }
 
-        .collection-kicker {
-            text-transform: uppercase;
-            letter-spacing: .14em;
-            color: #bfdbfe;
-            font-size: .78rem;
-            font-weight: 900;
-        }
-
-        .collection-hero h1 {
-            font-size: clamp(1.9rem,4vw,2.9rem);
-            font-weight: 900;
-            margin: .35rem 0;
-            line-height: 1.1;
-        }
-
-        .collection-hero p {
-            margin: 0;
-            max-width: 760px;
-            color: rgba(255,255,255,.78);
-            font-weight: 500;
-            line-height: 1.6;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: .75rem;
-            flex-wrap: wrap;
-        }
-
-        .collection-card {
-            border-radius: 28px;
-            background: rgba(255,255,255,.96);
-            border: 1px solid rgba(15,23,42,.08);
-            box-shadow: 0 18px 45px rgba(15,23,42,.08);
-            padding: 1.5rem;
-            overflow: hidden;
-        }
-
-        .sticky-panel {
-            position: sticky;
-            top: 90px;
-        }
-
-        .card-section-title {
-            color: #0f172a;
-            font-size: 1.05rem;
-            font-weight: 900;
-            margin-bottom: 1.25rem;
-        }
-
-        .section-subtext {
-            color: #64748b;
-            font-size: .92rem;
-        }
-
-        .collection-label {
-            display: block;
-            font-weight: 900;
-            color: #0f172a;
-            margin-bottom: .55rem;
-        }
-
-        .collection-input-wrap {
-            display: flex;
-            border-radius: 16px;
-            border: 1px solid rgba(15,23,42,.12);
-            background: #fff;
-            overflow: hidden;
-            transition: .2s ease;
-        }
-
-            .collection-input-wrap:focus-within {
-                border-color: rgba(37,99,235,.45);
-                box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
-            }
-
-            .collection-input-wrap > span {
-                width: 52px;
-                min-width: 52px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: #64748b;
-                background: #f8fafc;
-                border-right: 1px solid rgba(15,23,42,.08);
-            }
-
-        .collection-control {
-            min-height: 50px;
-            border: 0 !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-        }
-
-        .collection-select {
-            border-radius: 16px;
-            border: 1px solid rgba(15,23,42,.12);
-            box-shadow: none !important;
-            min-height: 230px;
-            padding: .75rem;
-        }
-
-            .collection-select:focus {
-                border-color: rgba(37,99,235,.45);
-                box-shadow: 0 0 0 .22rem rgba(37,99,235,.12) !important;
-            }
-
-        .collection-help {
-            color: #64748b;
-            font-size: .84rem;
-            margin-top: .5rem;
-        }
-
-        .soft-divider {
-            height: 1px;
-            background: rgba(15,23,42,.08);
-            margin: 1.25rem 0;
-        }
-
-        .collection-switch-box {
-            border-radius: 18px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: #f8fafc;
-            padding: 1rem;
-        }
-
-        .collection-switch {
-            width: 3rem !important;
-            height: 1.5rem !important;
-        }
-
-        .collection-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: .75rem;
-            flex-wrap: wrap;
-        }
-
-        .collection-btn {
-            border-radius: 16px;
-            padding: .78rem 1.15rem;
-            font-weight: 900;
-            transition: .2s ease;
-        }
-
-            .collection-btn:hover {
-                transform: translateY(-2px);
-            }
-
-        .collection-btn-primary {
-            color: #fff;
-            background: linear-gradient(135deg,#2563eb,#1d4ed8);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(37,99,235,.24);
-        }
-
-            .collection-btn-primary:hover {
-                color: #fff;
-            }
-
-        .collection-btn-light {
-            background: #fff;
-            color: #0f172a;
-        }
-
-        .collection-btn-outline {
-            color: #2563eb;
-            background: rgba(37,99,235,.08);
-            border: 1px solid rgba(37,99,235,.18);
-        }
-
-        .products-head {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-            border-bottom: 1px solid rgba(15,23,42,.08);
-            padding-bottom: 1.25rem;
-            margin-bottom: 1rem;
-        }
-
-        .products-toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: .85rem;
-            flex-wrap: wrap;
-            margin-bottom: 1rem;
-        }
-
-        .product-search {
+        .asm-collection-command {
             position: relative;
-            flex: 1 1 320px;
+            overflow: hidden;
+            padding: 2rem 1.5rem 1.25rem;
         }
 
-            .product-search i {
+            .asm-collection-command::after {
                 position: absolute;
-                left: 1rem;
-                top: 50%;
-                transform: translateY(-50%);
-                color: #94a3b8;
+                top: -100px;
+                right: -45px;
+                width: 245px;
+                height: 245px;
+                content: "";
+                border-radius: 50%;
+                background: rgba(91,75,255,.08);
+                pointer-events: none;
             }
 
-            .product-search input {
-                width: 100%;
-                height: 48px;
-                border-radius: 16px;
-                border: 1px solid rgba(15,23,42,.12);
-                padding: 0 1rem 0 2.8rem;
-                outline: none;
+        .asm-collection-command-main {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(340px,1.2fr) minmax(560px,1.6fr);
+            gap: 1.4rem;
+            align-items: center;
+        }
+
+        .asm-collection-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 0;
+        }
+
+        .asm-collection-title-icon {
+            display: inline-flex;
+            flex: 0 0 68px;
+            width: 68px;
+            height: 68px;
+            align-items: center;
+            justify-content: center;
+            color: #2f63dd;
+            font-size: 1.55rem;
+            border: 1px solid #bdd0ff;
+            border-radius: 22px;
+            background: linear-gradient(145deg,#dce8ff,#eef2ff);
+        }
+
+        .asm-collection-eyebrow {
+            display: block;
+            margin-bottom: .35rem;
+            color: #2459d8;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .asm-collection-title h1 {
+            margin: 0;
+            color: var(--ac-ink);
+            font-size: clamp(2rem,3vw,3rem);
+            font-weight: 950;
+            line-height: 1;
+            letter-spacing: -.045em;
+        }
+
+            .asm-collection-title h1 span {
+                color: var(--ac-indigo);
             }
 
-                .product-search input:focus {
-                    border-color: rgba(37,99,235,.45);
-                    box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
-                }
+        .asm-collection-title p {
+            max-width: 680px;
+            margin: .55rem 0 0;
+            color: var(--ac-muted);
+            font-size: .92rem;
+            line-height: 1.65;
+        }
 
-        .bulk-actions {
+        .asm-collection-kpis {
+            display: grid;
+            grid-template-columns: repeat(5,minmax(110px,1fr));
+            gap: .55rem;
+        }
+
+        .asm-collection-kpi {
+            display: flex;
+            min-width: 0;
+            min-height: 58px;
+            align-items: center;
+            gap: .62rem;
+            padding: .62rem .7rem;
+            border: 1px solid var(--ac-border);
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .asm-collection-kpi-icon {
+            display: inline-flex;
+            flex: 0 0 35px;
+            width: 35px;
+            height: 35px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+            font-size: .85rem;
+        }
+
+            .asm-collection-kpi-icon.blue {
+                color: #2e62dc;
+                background: #e8efff;
+            }
+
+            .asm-collection-kpi-icon.green {
+                color: #148645;
+                background: #e5f5ec;
+            }
+
+            .asm-collection-kpi-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-collection-kpi-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+            .asm-collection-kpi-icon.gray {
+                color: #526079;
+                background: #edf0f5;
+            }
+
+        .asm-collection-kpi small {
+            display: block;
+            color: #697895;
+            font-size: .60rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .asm-collection-kpi strong {
+            display: block;
+            max-width: 125px;
+            margin-top: .05rem;
+            overflow: hidden;
+            color: var(--ac-ink);
+            font-size: .9rem;
+            font-weight: 950;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .asm-collection-command-actions {
+            position: relative;
+            z-index: 1;
             display: flex;
             align-items: center;
             gap: .55rem;
             flex-wrap: wrap;
+            margin-top: 1.15rem;
+            padding-top: .9rem;
+            border-top: 1px solid #e3e9f2;
         }
 
-        .toolbar-btn {
-            border-radius: 14px;
+        .asm-collection-btn {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .65rem 1rem;
+            font-size: .78rem;
+            font-weight: 900;
+            border-radius: 13px;
+            transition: .2s ease;
+        }
+
+            .asm-collection-btn:hover:not(:disabled) {
+                transform: translateY(-2px);
+            }
+
+        .asm-collection-btn-primary {
+            color: #fff;
+            border: 1px solid var(--ac-blue);
+            background: linear-gradient(135deg,var(--ac-blue),#2463eb);
+            box-shadow: 0 9px 20px rgba(20,108,255,.22);
+        }
+
+            .asm-collection-btn-primary:hover {
+                color: #fff;
+            }
+
+        .asm-collection-btn-outline {
+            color: var(--ac-blue);
+            border: 1px solid var(--ac-blue);
             background: #fff;
-            border: 1px solid rgba(15,23,42,.12);
-            color: #0f172a;
-            font-weight: 800;
-            padding: .7rem 1rem;
         }
 
-        .products-scroll {
-            max-height: 620px;
-            overflow-y: auto;
-            border-radius: 22px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: #f8fafc;
+        .asm-collection-layout {
+            display: grid;
+            grid-template-columns: 340px minmax(0,1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: start;
+        }
+
+        .asm-collection-sidebar {
+            position: sticky;
+            top: 1rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .asm-collection-form-card,
+        .asm-collection-products-card {
+            overflow: hidden;
+        }
+
+        .asm-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.15rem;
+            border-bottom: 1px solid #e5eaf2;
+        }
+
+        .asm-card-title {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            color: var(--ac-ink);
+            font-size: 1rem;
+            font-weight: 950;
+        }
+
+            .asm-card-title i {
+                color: #2463eb;
+            }
+
+        .asm-card-subtitle {
+            margin-top: .18rem;
+            color: var(--ac-muted);
+            font-size: .72rem;
+            line-height: 1.5;
+        }
+
+        .asm-card-body {
+            padding: 1.15rem;
+        }
+
+        .asm-field {
+            margin-bottom: 1rem;
+        }
+
+            .asm-field:last-child {
+                margin-bottom: 0;
+            }
+
+        .asm-label {
+            display: block;
+            margin-bottom: .4rem;
+            color: #64718a;
+            font-size: .68rem;
+            font-weight: 900;
+            letter-spacing: .035em;
+            text-transform: uppercase;
+        }
+
+        .asm-input-wrap {
+            display: flex;
+            min-height: 48px;
+            overflow: hidden;
+            border: 1px solid #d8e0ec;
+            border-radius: 13px;
+            background: #fff;
+            transition: .2s ease;
+        }
+
+            .asm-input-wrap:hover {
+                border-color: rgba(20,108,255,.28);
+            }
+
+            .asm-input-wrap:focus-within {
+                border-color: #78a5ff;
+                box-shadow: 0 0 0 .2rem rgba(20,108,255,.10);
+            }
+
+        .asm-input-icon {
+            display: inline-flex;
+            flex: 0 0 48px;
+            width: 48px;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            border-right: 1px solid #e3e9f2;
+            background: #f8faff;
+        }
+
+        .asm-control {
+            min-height: 46px;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+
+        .asm-help {
+            display: flex;
+            align-items: flex-start;
+            gap: .4rem;
+            margin-top: .4rem;
+            color: var(--ac-muted);
+            font-size: .7rem;
+            line-height: 1.5;
+        }
+
+            .asm-help i {
+                margin-top: .12rem;
+                color: #5f76a0;
+            }
+
+        .asm-category-select {
+            min-height: 215px;
+            padding: .65rem;
+            border: 1px solid #d8e0ec;
+            border-radius: 13px;
+            box-shadow: none !important;
+        }
+
+            .asm-category-select:focus {
+                border-color: #78a5ff;
+                box-shadow: 0 0 0 .2rem rgba(20,108,255,.10) !important;
+            }
+
+        .asm-price-grid {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: .65rem;
+        }
+
+        .asm-switch-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+            padding: .8rem;
+            border: 1px solid #e0e6ef;
+            border-radius: 14px;
+            background: #f8faff;
+        }
+
+        .asm-switch-copy {
+            color: var(--ac-ink);
+            font-size: .76rem;
+            font-weight: 900;
+        }
+
+        .asm-switch-help {
+            margin-top: .15rem;
+            color: var(--ac-muted);
+            font-size: .65rem;
+            line-height: 1.45;
+        }
+
+        .asm-switch {
+            flex: 0 0 auto;
+            width: 3rem !important;
+            height: 1.5rem !important;
+            margin: 0 !important;
+            cursor: pointer;
+        }
+
+        .asm-products-toolbar {
+            display: grid;
+            grid-template-columns: minmax(220px,1fr) auto auto auto;
+            gap: .65rem;
+            padding: .9rem 1rem;
+            border-bottom: 1px solid #e5eaf2;
+            background: #fbfcff;
+        }
+
+        .asm-search-wrap {
+            position: relative;
+        }
+
+            .asm-search-wrap i {
+                position: absolute;
+                top: 50%;
+                left: .85rem;
+                color: #8b98af;
+                transform: translateY(-50%);
+            }
+
+        .asm-search-input {
+            width: 100%;
+            min-height: 44px;
+            padding: .6rem .8rem .6rem 2.45rem;
+            border: 1px solid #d8e0ec;
+            border-radius: 12px;
+            outline: none;
+            background: #fff;
+        }
+
+            .asm-search-input:focus {
+                border-color: #78a5ff;
+                box-shadow: 0 0 0 .2rem rgba(20,108,255,.10);
+            }
+
+        .asm-toolbar-btn {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            padding: .6rem .8rem;
+            color: var(--ac-ink);
+            font-size: .72rem;
+            font-weight: 900;
+            border: 1px solid #dce3ee;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+            .asm-toolbar-btn.primary {
+                color: #fff;
+                border-color: var(--ac-blue);
+                background: var(--ac-blue);
+            }
+
+        .asm-products-body {
+            max-height: 650px;
             padding: 1rem;
+            overflow-y: auto;
+            background: #f8faff;
+        }
+
+        .asm-form-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.15rem;
+            border-top: 1px solid #e5eaf2;
+            background: #fbfcff;
+        }
+
+        .asm-form-note {
+            color: var(--ac-muted);
+            font-size: .72rem;
+            font-weight: 800;
+        }
+
+            .asm-form-note i {
+                color: var(--ac-green);
+            }
+
+        .asm-form-action-buttons {
+            display: flex;
+            gap: .55rem;
+        }
+
+        .asm-validation {
+            margin: 0 0 1rem;
+            padding: .8rem;
+            color: #a62929;
+            border: 1px solid #f1cccc;
+            border-radius: 13px;
+            background: #fff5f5;
+        }
+
+        .asm-collection-page .field-validation-error,
+        .asm-collection-page .text-danger {
+            display: block;
+            margin-top: .3rem;
+            color: #c63131 !important;
+            font-size: .7rem;
+            font-weight: 800;
+        }
+
+        .asm-submitting {
+            pointer-events: none;
+            opacity: .72;
+        }
+
+        .asm-spinner {
+            display: none;
+        }
+
+        .asm-submitting .asm-spinner {
+            display: inline-block;
+        }
+
+        .asm-submitting .asm-save-icon {
+            display: none;
+        }
+
+        @@media (max-width:1399.98px) {
+            .asm-collection-command-main {
+                grid-template-columns: 1fr;
+            }
         }
 
         @@media (max-width:1199.98px) {
-            .sticky-panel {
+            .asm-collection-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-collection-sidebar {
                 position: static;
             }
 
-            .products-scroll {
-                max-height: 500px;
+            .asm-products-body {
+                max-height: 520px;
+            }
+        }
+
+        @@media (max-width:991.98px) {
+            .asm-collection-kpis {
+                grid-template-columns: repeat(3,minmax(0,1fr));
+            }
+
+            .asm-products-toolbar {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .asm-search-wrap {
+                grid-column: 1 / -1;
             }
         }
 
         @@media (max-width:767.98px) {
-
-            .collection-hero,
-            .collection-card {
-                border-radius: 22px;
+            .asm-collection-page {
+                padding: .85rem;
             }
 
-            .collection-hero,
-            .collection-card {
-                padding: 1.25rem;
+            .asm-collection-command,
+            .asm-collection-form-card,
+            .asm-collection-products-card,
+            .asm-collection-side-card {
+                border-radius: 20px;
             }
 
-            .hero-actions,
-            .hero-actions .btn,
-            .collection-actions .btn,
-            .bulk-actions,
-            .bulk-actions .btn,
-            #btnFilter {
+            .asm-collection-command {
+                padding: 1.25rem 1rem 1rem;
+            }
+
+            .asm-collection-title {
+                align-items: flex-start;
+            }
+
+            .asm-collection-title-icon {
+                width: 56px;
+                height: 56px;
+                flex-basis: 56px;
+                border-radius: 17px;
+            }
+
+            .asm-collection-kpis {
+                grid-template-columns: repeat(2,minmax(0,1fr));
+            }
+
+            .asm-form-actions {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .asm-form-action-buttons {
                 width: 100%;
             }
 
-            .collection-actions {
+                .asm-form-action-buttons .btn {
+                    flex: 1;
+                }
+        }
+
+        @@media (max-width:575.98px) {
+            .asm-collection-title {
+                flex-direction: column;
+            }
+
+            .asm-collection-kpis,
+            .asm-price-grid,
+            .asm-products-toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-search-wrap {
+                grid-column: auto;
+            }
+
+            .asm-collection-command-actions .btn {
+                width: 100%;
+            }
+
+            .asm-collection-command-actions .ms-auto {
+                width: 100%;
+                margin-left: 0 !important;
+                text-align: center;
+            }
+
+            .asm-form-action-buttons {
                 flex-direction: column-reverse;
             }
 
-            .products-toolbar {
-                align-items: stretch;
-            }
+                .asm-form-action-buttons .btn {
+                    width: 100%;
+                }
 
-            .product-search {
-                flex-basis: 100%;
-            }
-
-            .products-scroll {
-                max-height: 430px;
-                padding: .75rem;
+            .asm-products-body {
+                max-height: 440px;
+                padding: .7rem;
             }
         }
     </style>
 }
 
-<div class="container-fluid py-4 collection-page">
+<div class="asm-collection-page">
 
-    <div class="collection-hero mb-4">
+    <section class="asm-collection-command">
 
-        <div>
-            <span class="collection-kicker">
-                Admin Panel
-            </span>
+        <div class="asm-collection-command-main">
 
-            <h1>Edit Collection</h1>
+            <div class="asm-collection-title">
+                <div class="asm-collection-title-icon">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </div>
 
-            <p>
-                Update collection metadata, manage assigned products,
-                optimize SEO targeting, and refine landing page groupings.
-            </p>
+                <div>
+                    <span class="asm-collection-eyebrow">Merchandising Management</span>
+                    <h1>Edit <span>Collection</span></h1>
+                    <p>Update collection metadata, SEO targeting, category filters, price range, and assigned products.</p>
+                </div>
+            </div>
+
+            <div class="asm-collection-kpis">
+
+                <div class="asm-collection-kpi">
+                    <span class="asm-collection-kpi-icon blue"><i class="fa-solid fa-hashtag"></i></span>
+                    <div><small>Collection ID</small><strong>@Model.Id</strong></div>
+                </div>
+
+                <div class="asm-collection-kpi">
+                    <span class="asm-collection-kpi-icon green"><i class="fa-solid fa-boxes-stacked"></i></span>
+                    <div><small>Selected Products</small><strong id="topSelectedProducts">@selectedProducts</strong></div>
+                </div>
+
+                <div class="asm-collection-kpi">
+                    <span class="asm-collection-kpi-icon purple"><i class="fa-solid fa-box"></i></span>
+                    <div><small>Available Products</small><strong id="topTotalProducts">@totalProducts</strong></div>
+                </div>
+
+                <div class="asm-collection-kpi">
+                    <span class="asm-collection-kpi-icon orange"><i class="fa-solid fa-tags"></i></span>
+                    <div><small>Categories</small><strong id="topSelectedCategories">@selectedCategories / @totalCategories</strong></div>
+                </div>
+
+                <div class="asm-collection-kpi">
+                    <span class="asm-collection-kpi-icon gray"><i class="fa-solid fa-link"></i></span>
+                    <div><small>Slug</small><strong id="topCollectionSlug">Not specified</strong></div>
+                </div>
+            </div>
+
         </div>
 
-        <div class="hero-actions">
-
-            <a asp-action="Index"
-               class="btn collection-btn collection-btn-light">
-                <i class="fa-solid fa-arrow-left me-2"></i>
-                Back
+        <div class="asm-collection-command-actions">
+            <a asp-action="Index" class="btn asm-collection-btn asm-collection-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Collections
             </a>
 
+            <a asp-area=""
+               asp-controller="Collections"
+               asp-action="Details"
+               asp-route-slug="@Model.Slug"
+               target="_blank"
+               rel="noopener"
+               class="btn asm-collection-btn asm-collection-btn-outline">
+                <i class="fa-solid fa-circle-info"></i>
+                View Details
+            </a>
+
+            <span class="ms-auto text-muted small fw-bold">
+                <i class="fa-solid fa-shield-halved me-1"></i>
+                Protected admin form
+            </span>
         </div>
 
-    </div>
+    </section>
 
-    <form asp-action="Edit"
-          method="post"
-          id="collectionEditForm">
-
+    <form asp-action="Edit" method="post" id="collectionForm">
         @Html.AntiForgeryToken()
-
         <input type="hidden" asp-for="Id" />
 
-        <div class="row g-4">
+        <div class="asm-collection-layout">
 
-            <div class="col-12 col-xl-4 col-xxl-3">
+            <aside class="asm-collection-sidebar">
 
-                <div class="collection-card sticky-panel">
+                <section class="asm-collection-form-card">
 
-                    <div class="card-section-title">
-                        Collection Setup
+                    <div class="asm-card-head">
+                        <div>
+                            <div class="asm-card-title">
+                                <i class="fa-solid fa-sliders"></i>
+                                Collection Setup
+                            </div>
+                            <div class="asm-card-subtitle">
+                                Configure metadata and filtering rules.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="asm-card-body">
 
-                        <label asp-for="Name" class="collection-label"></label>
+                        <div asp-validation-summary="ModelOnly"
+                             id="collectionValidationSummary"
+                             class="asm-validation d-none"
+                             role="alert"></div>
 
-                        <div class="collection-input-wrap">
-                            <span>
-                                <i class="fa-solid fa-pen"></i>
-                            </span>
+                        <div class="asm-field">
+                            <label asp-for="Name" class="asm-label"></label>
 
-                            <input asp-for="Name"
-                                   class="form-control collection-control"
-                                   placeholder="e.g. Best Deals"
-                                   autocomplete="off" />
-                        </div>
-
-                        <span asp-validation-for="Name"
-                              class="text-danger small"></span>
-
-                    </div>
-
-                    <div class="mb-4">
-
-                        <label asp-for="Slug" class="collection-label"></label>
-
-                        <div class="collection-input-wrap">
-                            <span>
-                                <i class="fa-solid fa-link"></i>
-                            </span>
-
-                            <input asp-for="Slug"
-                                   class="form-control collection-control"
-                                   placeholder="best-deals"
-                                   autocomplete="off" />
-                        </div>
-
-                        <div class="collection-help">
-                            Unique URL identifier, for example:
-                            <code>best-deals</code>
-                        </div>
-
-                        <span asp-validation-for="Slug"
-                              class="text-danger small"></span>
-
-                    </div>
-
-                    <div class="soft-divider"></div>
-
-                    <div class="mb-4">
-
-                        <label class="collection-label">
-                            <i class="fa-solid fa-tags me-2 text-muted"></i>
-                            Choose Categories
-                        </label>
-
-                        <select class="form-select collection-select"
-                                multiple
-                                size="8"
-                                id="categorySelect"
-                                name="SelectedCategoryIds">
-
-                            @foreach (var c in Model.AllCategories)
-                            {
-                                <option value="@c.Id"
-                                        selected="@(c.IsSelected ? "selected" : null)">
-                                    @c.Name
-                                </option>
-                            }
-
-                        </select>
-
-                        <div class="collection-help">
-                            Hold Ctrl to select multiple categories.
-                        </div>
-
-                    </div>
-
-                    <div class="row g-3 mb-4">
-
-                        <div class="col-6">
-
-                            <label asp-for="MinPrice"
-                                   class="collection-label"></label>
-
-                            <div class="collection-input-wrap">
-
-                                <span>
-                                    <i class="fa-solid fa-dollar-sign"></i>
-                                </span>
-
-                                <input asp-for="MinPrice"
-                                       class="form-control collection-control"
-                                       placeholder="50" />
-
+                            <div class="asm-input-wrap">
+                                <span class="asm-input-icon"><i class="fa-solid fa-pen"></i></span>
+                                <input asp-for="Name"
+                                       class="form-control asm-control"
+                                       placeholder="e.g. Best Deals"
+                                       autocomplete="off" />
                             </div>
 
-                            <span asp-validation-for="MinPrice"
-                                  class="text-danger small"></span>
-
+                            <span asp-validation-for="Name"></span>
                         </div>
 
-                        <div class="col-6">
+                        <div class="asm-field">
+                            <label asp-for="Slug" class="asm-label"></label>
 
-                            <label asp-for="MaxPrice"
-                                   class="collection-label"></label>
-
-                            <div class="collection-input-wrap">
-
-                                <span>
-                                    <i class="fa-solid fa-dollar-sign"></i>
-                                </span>
-
-                                <input asp-for="MaxPrice"
-                                       class="form-control collection-control"
-                                       placeholder="100" />
-
+                            <div class="asm-input-wrap">
+                                <span class="asm-input-icon"><i class="fa-solid fa-link"></i></span>
+                                <input asp-for="Slug"
+                                       class="form-control asm-control"
+                                       placeholder="best-deals"
+                                       autocomplete="off"
+                                       spellcheck="false" />
                             </div>
 
-                            <span asp-validation-for="MaxPrice"
-                                  class="text-danger small"></span>
+                            <div class="asm-help">
+                                <i class="fa-solid fa-circle-info"></i>
+                                <span>Use a unique, lowercase SEO-friendly URL slug.</span>
+                            </div>
 
+                            <span asp-validation-for="Slug"></span>
+                        </div>
+
+                        <div class="asm-field">
+                            <label class="asm-label" for="categorySelect">Choose Categories</label>
+
+                            <select class="form-select asm-category-select"
+                                    multiple
+                                    size="8"
+                                    id="categorySelect"
+                                    name="SelectedCategoryIds">
+                                @foreach (var category in Model.AllCategories)
+                                {
+                                    <option value="@category.Id"
+                                            selected="@(category.IsSelected ? "selected" : null)">
+                                        @category.Name
+                                    </option>
+                                }
+                            </select>
+
+                            <div class="asm-help">
+                                <i class="fa-solid fa-keyboard"></i>
+                                <span>Hold Ctrl to select multiple categories.</span>
+                            </div>
+                        </div>
+
+                        <div class="asm-price-grid">
+                            <div class="asm-field">
+                                <label asp-for="MinPrice" class="asm-label"></label>
+
+                                <div class="asm-input-wrap">
+                                    <span class="asm-input-icon"><i class="fa-solid fa-dollar-sign"></i></span>
+                                    <input asp-for="MinPrice"
+                                           class="form-control asm-control"
+                                           inputmode="decimal"
+                                           placeholder="50" />
+                                </div>
+
+                                <span asp-validation-for="MinPrice"></span>
+                            </div>
+
+                            <div class="asm-field">
+                                <label asp-for="MaxPrice" class="asm-label"></label>
+
+                                <div class="asm-input-wrap">
+                                    <span class="asm-input-icon"><i class="fa-solid fa-dollar-sign"></i></span>
+                                    <input asp-for="MaxPrice"
+                                           class="form-control asm-control"
+                                           inputmode="decimal"
+                                           placeholder="100" />
+                                </div>
+
+                                <span asp-validation-for="MaxPrice"></span>
+                            </div>
+                        </div>
+
+                        <div class="asm-switch-card">
+                            <div>
+                                <label asp-for="AutoAddFilteredProducts" class="asm-switch-copy">
+                                    Auto-add filtered products
+                                </label>
+                                <div class="asm-switch-help">
+                                    Use filtered products when none are selected manually.
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch m-0">
+                                <input asp-for="AutoAddFilteredProducts"
+                                       class="form-check-input asm-switch"
+                                       role="switch" />
+                            </div>
                         </div>
 
                     </div>
 
-                    <div class="collection-switch-box mb-4">
+                </section>
 
-                        <div class="form-check form-switch m-0">
+            </aside>
 
-                            <input class="form-check-input collection-switch"
-                                   asp-for="AutoAddFilteredProducts"
-                                   role="switch" />
+            <section class="asm-collection-products-card">
 
-                            <label class="form-check-label fw-bold"
-                                   asp-for="AutoAddFilteredProducts">
-                                Auto-add filtered products
-                            </label>
-
+                <div class="asm-card-head">
+                    <div>
+                        <div class="asm-card-title">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                            Assign Products
                         </div>
-
-                        <div class="collection-help mb-0">
-                            If no products are selected manually,
-                            filtered products can be added automatically.
+                        <div class="asm-card-subtitle">
+                            Search, filter, and select products for this collection.
                         </div>
-
                     </div>
 
-                    <div class="collection-actions">
+                    <span class="badge rounded-pill text-bg-light border">
+                        <span id="visibleProductCount">@totalProducts</span> visible
+                    </span>
+                </div>
 
+                <div class="asm-products-toolbar">
+
+                    <div class="asm-search-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="search"
+                               id="productSearch"
+                               class="asm-search-input"
+                               placeholder="Search products in this list..."
+                               autocomplete="off" />
+                    </div>
+
+                    <button type="button"
+                            id="btnFilter"
+                            class="asm-toolbar-btn primary">
+                        <i class="fa-solid fa-filter"></i>
+                        Filter Products
+                    </button>
+
+                    <button type="button"
+                            id="btnSelectAll"
+                            class="asm-toolbar-btn">
+                        <i class="fa-regular fa-square-check"></i>
+                        Select Visible
+                    </button>
+
+                    <button type="button"
+                            id="btnClearAll"
+                            class="asm-toolbar-btn">
+                        <i class="fa-regular fa-square"></i>
+                        Clear Visible
+                    </button>
+
+                </div>
+
+                <div class="asm-products-body">
+                    <div id="productsContainer">
+                        <partial name="_CollectionProductCheckboxList"
+                                 model="Model.AllProducts" />
+                    </div>
+                </div>
+
+                <div class="asm-form-actions">
+
+                    <div class="asm-form-note">
+                        <i class="fa-solid fa-circle-check me-1"></i>
+                        Collection data is validated before saving.
+                    </div>
+
+                    <div class="asm-form-action-buttons">
                         <a asp-action="Index"
-                           class="btn collection-btn collection-btn-light border">
-                            <i class="fa-solid fa-xmark me-2"></i>
+                           class="btn asm-collection-btn asm-collection-btn-outline">
+                            <i class="fa-solid fa-xmark"></i>
                             Cancel
                         </a>
 
                         <button type="submit"
-                                class="btn collection-btn collection-btn-primary">
-                            <i class="fa-solid fa-floppy-disk me-2"></i>
-                            Save Changes
-                        </button>
+                                id="saveCollectionButton"
+                                class="btn asm-collection-btn asm-collection-btn-primary">
 
+                            <span class="spinner-border spinner-border-sm asm-spinner"
+                                  aria-hidden="true"></span>
+
+                            <i class="fa-solid fa-floppy-disk asm-save-icon"></i>
+
+                            <span class="asm-save-text">Save Changes</span>
+                        </button>
                     </div>
 
                 </div>
 
-            </div>
-
-            <div class="col-12 col-xl-8 col-xxl-9">
-
-                <div class="collection-card">
-
-                    <div class="products-head">
-
-                        <div>
-
-                            <div class="card-section-title mb-1">
-                                Assign Products
-                            </div>
-
-                            <p class="section-subtext mb-0">
-                                Select products manually or filter by category and price range.
-                            </p>
-
-                        </div>
-
-                        <button type="button"
-                                id="btnFilter"
-                                class="btn collection-btn collection-btn-outline">
-                            <i class="fa-solid fa-filter me-2"></i>
-                            Filter
-                        </button>
-
-                    </div>
-
-                    <div class="products-toolbar">
-
-                        <div class="product-search">
-
-                            <i class="fa-solid fa-magnifying-glass"></i>
-
-                            <input type="text"
-                                   id="productSearch"
-                                   placeholder="Search products in list..."
-                                   autocomplete="off" />
-
-                        </div>
-
-                        <div class="bulk-actions">
-
-                            <button type="button"
-                                    class="btn toolbar-btn"
-                                    id="btnSelectAll">
-                                <i class="fa-regular fa-square-check me-2"></i>
-                                Select visible
-                            </button>
-
-                            <button type="button"
-                                    class="btn toolbar-btn"
-                                    id="btnClearAll">
-                                <i class="fa-regular fa-square me-2"></i>
-                                Clear visible
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    <div class="products-scroll">
-
-                        <div id="productsContainer">
-                            <partial name="_CollectionProductCheckboxList"
-                                     model="Model.AllProducts" />
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
+            </section>
 
         </div>
 
@@ -611,132 +966,310 @@
 </div>
 
 @section Scripts {
-
     <partial name="_ValidationScriptsPartial" />
 
     <script>
         (function () {
+            'use strict';
 
-            const btn = document.getElementById("btnFilter");
-            const container = document.getElementById("productsContainer");
-            const search = document.getElementById("productSearch");
-            const btnSelectAll = document.getElementById("btnSelectAll");
-            const btnClearAll = document.getElementById("btnClearAll");
+            const form = document.getElementById('collectionForm');
+            const filterButton = document.getElementById('btnFilter');
+            const container = document.getElementById('productsContainer');
+            const searchInput = document.getElementById('productSearch');
+            const selectAllButton = document.getElementById('btnSelectAll');
+            const clearAllButton = document.getElementById('btnClearAll');
+            const categorySelect = document.getElementById('categorySelect');
+            const saveButton = document.getElementById('saveCollectionButton');
+            const validationSummary = document.getElementById('collectionValidationSummary');
 
-            function getSelectedCategoryIds() {
+            const nameInput = form?.querySelector('[name="Name"]');
+            const slugInput = form?.querySelector('[name="Slug"]');
+            const topSlug = document.getElementById('topCollectionSlug');
+            const topSelectedProducts = document.getElementById('topSelectedProducts');
+            const topSelectedCategories = document.getElementById('topSelectedCategories');
+            const visibleProductCount = document.getElementById('visibleProductCount');
 
-                const sel = document.getElementById("categorySelect");
-
-                if (!sel) return [];
-
-                return Array.from(sel.selectedOptions).map(o => o.value);
-
+            if (!form || !container) {
+                return;
             }
 
-            function wireLocalSearchAndBulk() {
+            function productRows() {
+                return Array.from(
+                    container.querySelectorAll(
+                        '.asm-cp-item, .cp-item, .product-check'
+                    )
+                );
+            }
 
-                if (!container) return;
+            function productCheckboxes() {
+                return Array.from(
+                    container.querySelectorAll(
+                        'input[type="checkbox"][name="SelectedProductIds"]'
+                    )
+                );
+            }
 
-                const rows = Array.from(container.querySelectorAll(".product-check, .cp-item"));
+            function updateTopSummary() {
+                const selectedProducts =
+                    productCheckboxes().filter(function (checkbox) {
+                        return checkbox.checked;
+                    }).length;
 
-                function applyFilter() {
+                const selectedCategories =
+                    categorySelect
+                        ? categorySelect.selectedOptions.length
+                        : 0;
 
-                    const q = (search?.value || "").trim().toLowerCase();
-
-                    rows.forEach(r => {
-
-                        const txt = (r.innerText || "").toLowerCase();
-
-                        r.style.display = !q || txt.includes(q) ? "" : "none";
-
-                    });
-
+                if (topSelectedProducts) {
+                    topSelectedProducts.textContent = selectedProducts;
                 }
 
-                search?.removeEventListener("input", applyFilter);
-                search?.addEventListener("input", applyFilter);
+                if (topSelectedCategories) {
+                    topSelectedCategories.textContent =
+                        selectedCategories + ' / @totalCategories';
+                }
 
-                btnSelectAll?.addEventListener("click", function () {
+                if (topSlug) {
+                    const slug =
+                        (slugInput?.value || '').trim();
 
-                    const visible = rows.filter(r => r.style.display !== "none");
+                    topSlug.textContent =
+                        slug || 'Not specified';
 
-                    visible.forEach(r => {
-
-                        const cb = r.querySelector('input[type="checkbox"]');
-
-                        if (cb) cb.checked = true;
-
-                    });
-
-                });
-
-                btnClearAll?.addEventListener("click", function () {
-
-                    const visible = rows.filter(r => r.style.display !== "none");
-
-                    visible.forEach(r => {
-
-                        const cb = r.querySelector('input[type="checkbox"]');
-
-                        if (cb) cb.checked = false;
-
-                    });
-
-                });
-
+                    topSlug.title =
+                        topSlug.textContent;
+                }
             }
 
-            wireLocalSearchAndBulk();
+            function applyLocalSearch() {
+                const query =
+                    (searchInput?.value || '')
+                        .trim()
+                        .toLowerCase();
 
-            btn?.addEventListener("click", async function () {
+                let visible = 0;
 
-                const catIds = getSelectedCategoryIds();
-                const minPrice = document.getElementById("MinPrice")?.value;
-                const maxPrice = document.getElementById("MaxPrice")?.value;
+                productRows().forEach(function (row) {
+                    const show =
+                        !query ||
+                        (row.innerText || '')
+                            .toLowerCase()
+                            .includes(query);
 
-                const params = new URLSearchParams();
+                    row.style.display =
+                        show ? '' : 'none';
 
-                catIds.forEach(id => params.append("categoryIds", id));
+                    if (show) {
+                        visible++;
+                    }
+                });
 
-                if (minPrice) params.append("minPrice", minPrice);
-                if (maxPrice) params.append("maxPrice", maxPrice);
+                if (visibleProductCount) {
+                    visibleProductCount.textContent = visible;
+                }
+            }
 
-                const url = `@Url.Action("FilterProducts", "Collections", new { area = "Admin" })?${params.toString()}`;
+            function dispatchCheckboxChange(checkbox) {
+                checkbox.dispatchEvent(
+                    new Event('change', { bubbles: true })
+                );
+            }
 
-                btn.disabled = true;
+            function selectVisible(checked) {
+                productRows()
+                    .filter(function (row) {
+                        return row.style.display !== 'none';
+                    })
+                    .forEach(function (row) {
+                        const checkbox =
+                            row.querySelector(
+                                'input[type="checkbox"]'
+                            );
 
-                btn.innerHTML =
-                    '<i class="fa-solid fa-spinner fa-spin me-2"></i>Filtering';
-
-                try {
-
-                    const res = await fetch(url, {
-                        headers: {
-                            "X-Requested-With": "XMLHttpRequest"
+                        if (!checkbox) {
+                            return;
                         }
+
+                        checkbox.checked = checked;
+                        dispatchCheckboxChange(checkbox);
                     });
 
-                    if (!res.ok) return;
+                updateTopSummary();
+            }
 
-                    container.innerHTML = await res.text();
+            function wireProducts() {
+                searchInput?.addEventListener(
+                    'input',
+                    applyLocalSearch
+                );
 
-                    if (search) search.value = "";
+                productCheckboxes().forEach(function (checkbox) {
+                    checkbox.addEventListener(
+                        'change',
+                        updateTopSummary
+                    );
+                });
 
-                    wireLocalSearchAndBulk();
+                applyLocalSearch();
+                updateTopSummary();
+            }
 
+            selectAllButton?.addEventListener(
+                'click',
+                function () {
+                    selectVisible(true);
                 }
-                finally {
+            );
 
-                    btn.disabled = false;
-
-                    btn.innerHTML =
-                        '<i class="fa-solid fa-filter me-2"></i>Filter';
-
+            clearAllButton?.addEventListener(
+                'click',
+                function () {
+                    selectVisible(false);
                 }
+            );
 
-            });
+            categorySelect?.addEventListener(
+                'change',
+                updateTopSummary
+            );
 
+            slugInput?.addEventListener(
+                'input',
+                updateTopSummary
+            );
+
+            filterButton?.addEventListener(
+                'click',
+                async function () {
+                    const params =
+                        new URLSearchParams();
+
+                    if (categorySelect) {
+                        Array.from(
+                            categorySelect.selectedOptions
+                        ).forEach(function (option) {
+                            params.append(
+                                'categoryIds',
+                                option.value
+                            );
+                        });
+                    }
+
+                    const minPrice =
+                        document.getElementById('MinPrice')?.value;
+
+                    const maxPrice =
+                        document.getElementById('MaxPrice')?.value;
+
+                    if (minPrice) {
+                        params.append('minPrice', minPrice);
+                    }
+
+                    if (maxPrice) {
+                        params.append('maxPrice', maxPrice);
+                    }
+
+                    const url =
+                        `@Url.Action("FilterProducts", "Collections", new { area = "Admin" })?${params.toString()}`;
+
+                    filterButton.disabled = true;
+                    filterButton.innerHTML =
+                        '<i class="fa-solid fa-spinner fa-spin"></i> Filtering';
+
+                    try {
+                        const response = await fetch(url, {
+                            headers: {
+                                'X-Requested-With':
+                                    'XMLHttpRequest'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(
+                                'Unable to load filtered products.'
+                            );
+                        }
+
+                        container.innerHTML =
+                            await response.text();
+
+                        if (searchInput) {
+                            searchInput.value = '';
+                        }
+
+                        wireProducts();
+                    }
+                    catch (error) {
+                        console.error(error);
+                    }
+                    finally {
+                        filterButton.disabled = false;
+                        filterButton.innerHTML =
+                            '<i class="fa-solid fa-filter"></i> Filter Products';
+                    }
+                }
+            );
+
+            form.addEventListener(
+                'submit',
+                function (event) {
+                    const hasSummaryErrors =
+                        validationSummary &&
+                        (
+                            validationSummary.querySelector('li') ||
+                            (validationSummary.innerText || '').trim()
+                        );
+
+                    if (validationSummary) {
+                        validationSummary.classList.toggle(
+                            'd-none',
+                            !hasSummaryErrors
+                        );
+                    }
+
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        const invalid =
+                            form.querySelector(
+                                '.input-validation-error,' +
+                                '.form-control.is-invalid,' +
+                                '.form-select.is-invalid'
+                            );
+
+                        invalid?.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+
+                        invalid?.focus({
+                            preventScroll: true
+                        });
+
+                        return;
+                    }
+
+                    if (saveButton) {
+                        saveButton.disabled = true;
+                        saveButton.classList.add(
+                            'asm-submitting'
+                        );
+
+                        const text =
+                            saveButton.querySelector(
+                                '.asm-save-text'
+                            );
+
+                        if (text) {
+                            text.textContent = 'Saving...';
+                        }
+                    }
+                }
+            );
+
+            wireProducts();
+            updateTopSummary();
         })();
     </script>
-
 }

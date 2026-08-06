@@ -2,489 +2,1132 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var hasDescription = !string.IsNullOrWhiteSpace(Model.Description);
+    var dependencyCount = Model.ChildCount + Model.ProductCount;
 }
 
 @section Styles {
     <style>
-        .parent-details-page {
-            min-height: calc(100vh - 80px);
-            background: linear-gradient(135deg,#f8fafc 0%,#eef4ff 45%,#ffffff 100%);
+        .asm-parent-details-page {
+            --pd-blue: #146cff;
+            --pd-blue-dark: #0d57d8;
+            --pd-indigo: #5b4bff;
+            --pd-green: #159447;
+            --pd-orange: #b76312;
+            --pd-red: #d93a3a;
+            --pd-ink: #111a2e;
+            --pd-text: #33415c;
+            --pd-muted: #71809d;
+            --pd-border: rgba(99, 116, 150, .15);
+            min-height: calc(100vh - 70px);
+            padding: 1.25rem;
+            background: radial-gradient( circle at 8% 2%, rgba(37, 99, 235, .10), transparent 30rem ), radial-gradient( circle at 96% 10%, rgba(124, 58, 237, .10), transparent 28rem ), linear-gradient( 135deg, #eef5ff 0%, #f8fbff 50%, #f3f1ff 100% );
         }
 
-        .parent-hero {
-            border-radius: 30px;
-            padding: 2rem;
-            background: linear-gradient(135deg,#0f172a,#2563eb);
-            color: #fff;
-            box-shadow: 0 18px 45px rgba(15,23,42,.16);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
+        .asm-parent-details-command,
+        .asm-parent-details-main-card,
+        .asm-parent-details-side-card {
+            border: 1px solid var(--pd-border);
+            border-radius: 26px;
+            background: rgba(255, 255, 255, .92);
+            box-shadow: 0 16px 42px rgba(33, 54, 92, .09);
+            backdrop-filter: blur(14px);
         }
 
-        .parent-kicker {
-            text-transform: uppercase;
-            letter-spacing: .14em;
-            color: #bfdbfe;
-            font-size: .78rem;
-            font-weight: 900;
-        }
+        /* Header dashboard */
 
-        .parent-hero h1 {
-            font-size: clamp(1.9rem,4vw,2.9rem);
-            font-weight: 900;
-            margin: .35rem 0;
-            line-height: 1.1;
-        }
-
-        .parent-hero p {
-            margin: 0;
-            max-width: 760px;
-            color: rgba(255,255,255,.78);
-            font-weight: 500;
-            line-height: 1.6;
-        }
-
-        .parent-hero-actions {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            flex-wrap: wrap;
-        }
-
-        .parent-card,
-        .side-card {
-            border-radius: 28px;
-            background: rgba(255,255,255,.96);
-            border: 1px solid rgba(15,23,42,.08);
-            box-shadow: 0 18px 45px rgba(15,23,42,.08);
-            padding: 1.5rem;
+        .asm-parent-details-command {
+            position: relative;
             overflow: hidden;
+            padding: 2rem 1.5rem 1.25rem;
         }
 
-        .parent-card-head {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-            padding-bottom: 1.4rem;
-            margin-bottom: 1.4rem;
-            border-bottom: 1px solid rgba(15,23,42,.08);
-        }
-
-        .details-label {
-            color: #64748b;
-            font-size: .78rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-        }
-
-        .details-title {
-            color: #0f172a;
-            font-weight: 900;
-            font-size: clamp(1.45rem,3vw,2.1rem);
-            margin: .35rem 0;
-            overflow-wrap: anywhere;
-        }
-
-        .details-slug {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: .5rem .85rem;
-            background: rgba(37,99,235,.08);
-            border: 1px solid rgba(37,99,235,.18);
-            color: #2563eb;
-            font-weight: 800;
-            overflow-wrap: anywhere;
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: .55rem .9rem;
-            font-size: .8rem;
-            font-weight: 900;
-            white-space: nowrap;
-        }
-
-            .status-badge.active {
-                color: #166534;
-                background: rgba(22,101,52,.08);
-                border: 1px solid rgba(22,101,52,.18);
+            .asm-parent-details-command::after {
+                position: absolute;
+                top: -100px;
+                right: -45px;
+                width: 245px;
+                height: 245px;
+                content: "";
+                pointer-events: none;
+                border-radius: 50%;
+                background: rgba(91, 75, 255, .08);
             }
 
-            .status-badge.inactive {
-                color: #dc2626;
-                background: rgba(220,38,38,.08);
-                border: 1px solid rgba(220,38,38,.16);
-            }
-
-        .details-grid {
+        .asm-parent-details-command-main {
+            position: relative;
+            z-index: 1;
             display: grid;
-            grid-template-columns: repeat(3,minmax(0,1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: minmax(340px, 1.2fr) minmax(540px, 1.6fr);
+            gap: 1.4rem;
+            align-items: center;
         }
 
-        .details-box {
-            border-radius: 22px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: #fff;
-            padding: 1rem;
+        .asm-parent-details-title {
             display: flex;
             align-items: center;
-            gap: .85rem;
+            gap: 1rem;
             min-width: 0;
         }
 
-        .details-box-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
+        .asm-parent-details-title-icon {
             display: inline-flex;
+            flex: 0 0 68px;
+            width: 68px;
+            height: 68px;
             align-items: center;
             justify-content: center;
-            flex: 0 0 auto;
+            color: #2f63dd;
+            font-size: 1.55rem;
+            border: 1px solid #bdd0ff;
+            border-radius: 22px;
+            background: linear-gradient( 145deg, #dce8ff, #eef2ff );
         }
 
-            .details-box-icon.blue {
-                background: rgba(37,99,235,.08);
-                color: #2563eb;
-            }
-
-            .details-box-icon.purple {
-                background: rgba(124,58,237,.08);
-                color: #7c3aed;
-            }
-
-            .details-box-icon.green {
-                background: rgba(22,101,52,.08);
-                color: #16a34a;
-            }
-
-        .details-value {
-            color: #0f172a;
+        .asm-parent-details-eyebrow {
+            display: block;
+            margin-bottom: .35rem;
+            color: #2459d8;
+            font-size: .72rem;
             font-weight: 900;
-            font-size: 1.1rem;
-            overflow-wrap: anywhere;
+            letter-spacing: .1em;
+            text-transform: uppercase;
         }
 
-        .description-section {
-            border-top: 1px solid rgba(15,23,42,.08);
-            padding-top: 1.4rem;
+        .asm-parent-details-title h1 {
+            margin: 0;
+            color: var(--pd-ink);
+            font-size: clamp(2rem, 3vw, 3rem);
+            font-weight: 950;
+            line-height: 1;
+            letter-spacing: -.045em;
         }
 
-        .section-title,
-        .side-title {
-            color: #0f172a;
-            font-size: 1.05rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-        }
-
-        .description-box,
-        .empty-box {
-            border-radius: 20px;
-            border: 1px solid rgba(15,23,42,.08);
-            background: #f8fafc;
-            padding: 1rem;
-            color: #0f172a;
-            line-height: 1.7;
-            overflow-wrap: anywhere;
-        }
-
-        .empty-box {
-            color: #64748b;
-            border-style: dashed;
-            font-weight: 600;
-        }
-
-        .status-summary {
-            display: flex;
-            align-items: flex-start;
-            gap: .85rem;
-        }
-
-        .status-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex: 0 0 auto;
-        }
-
-            .status-icon.active {
-                color: #16a34a;
-                background: rgba(22,101,52,.08);
+            .asm-parent-details-title h1 span {
+                color: var(--pd-indigo);
             }
 
-            .status-icon.inactive {
-                color: #dc2626;
-                background: rgba(220,38,38,.08);
-            }
-
-        .status-title {
-            color: #0f172a;
-            font-weight: 900;
-            margin-bottom: .25rem;
-        }
-
-        .status-text {
-            color: #64748b;
-            line-height: 1.55;
+        .asm-parent-details-title p {
+            max-width: 680px;
+            margin: .55rem 0 0;
+            color: var(--pd-muted);
             font-size: .92rem;
+            line-height: 1.65;
         }
 
-        .quick-actions {
+        /* Header KPIs */
+
+        .asm-parent-details-kpis {
             display: grid;
-            gap: .85rem;
+            grid-template-columns: repeat(5, minmax(110px, 1fr));
+            gap: .55rem;
         }
 
-        .parent-btn {
+        .asm-parent-details-kpi {
+            display: flex;
+            min-width: 0;
+            min-height: 58px;
+            align-items: center;
+            gap: .62rem;
+            padding: .62rem .7rem;
+            border: 1px solid var(--pd-border);
             border-radius: 16px;
-            padding: .82rem 1.2rem;
+            background: #fff;
+        }
+
+        .asm-parent-details-kpi-icon {
+            display: inline-flex;
+            flex: 0 0 35px;
+            width: 35px;
+            height: 35px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+            font-size: .85rem;
+        }
+
+            .asm-parent-details-kpi-icon.blue {
+                color: #2e62dc;
+                background: #e8efff;
+            }
+
+            .asm-parent-details-kpi-icon.green {
+                color: #148645;
+                background: #e5f5ec;
+            }
+
+            .asm-parent-details-kpi-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-parent-details-kpi-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+            .asm-parent-details-kpi-icon.gray {
+                color: #526079;
+                background: #edf0f5;
+            }
+
+        .asm-parent-details-kpi small {
+            display: block;
+            color: #697895;
+            font-size: .60rem;
             font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .asm-parent-details-kpi strong {
+            display: block;
+            max-width: 130px;
+            margin-top: .05rem;
+            overflow: hidden;
+            color: var(--pd-ink);
+            font-size: .9rem;
+            font-weight: 950;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Buttons */
+
+        .asm-parent-details-command-actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            flex-wrap: wrap;
+            margin-top: 1.15rem;
+            padding-top: .9rem;
+            border-top: 1px solid #e3e9f2;
+        }
+
+        .asm-parent-details-btn {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .65rem 1rem;
+            font-size: .78rem;
+            font-weight: 900;
+            border-radius: 13px;
             transition: .2s ease;
         }
 
-            .parent-btn:hover {
+            .asm-parent-details-btn:hover {
                 transform: translateY(-2px);
             }
 
-        .parent-btn-primary {
+        .asm-parent-details-btn-primary {
             color: #fff;
-            background: linear-gradient(135deg,#2563eb,#1d4ed8);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(37,99,235,.24);
+            border: 1px solid var(--pd-blue);
+            background: linear-gradient( 135deg, var(--pd-blue), #2463eb );
+            box-shadow: 0 9px 20px rgba(20, 108, 255, .22);
         }
 
-            .parent-btn-primary:hover {
+            .asm-parent-details-btn-primary:hover {
                 color: #fff;
             }
 
-        .parent-btn-light {
+        .asm-parent-details-btn-outline {
+            color: var(--pd-blue);
+            border: 1px solid var(--pd-blue);
             background: #fff;
-            color: #0f172a;
         }
 
-        @@media (max-width: 991.98px) {
-            .details-grid {
+        /* Main layout */
+
+        .asm-parent-details-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: start;
+        }
+
+        .asm-parent-details-main-card {
+            overflow: hidden;
+        }
+
+        .asm-parent-details-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.15rem;
+            border-bottom: 1px solid #e5eaf2;
+        }
+
+        .asm-parent-details-card-title {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            color: var(--pd-ink);
+            font-size: 1rem;
+            font-weight: 950;
+        }
+
+            .asm-parent-details-card-title i {
+                color: #2463eb;
+            }
+
+        .asm-parent-details-status {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .38rem .65rem;
+            font-size: .7rem;
+            font-weight: 900;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+            .asm-parent-details-status.active {
+                color: #147a3f;
+                border: 1px solid #cce8d7;
+                background: #e4f5eb;
+            }
+
+            .asm-parent-details-status.inactive {
+                color: #b22f2f;
+                border: 1px solid #f2caca;
+                background: #fdeaea;
+            }
+
+        .asm-parent-details-body {
+            padding: 1.15rem;
+        }
+
+        /* Category summary */
+
+        .asm-parent-details-summary {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid #e3e9f2;
+            border-radius: 16px;
+            background: #f8faff;
+        }
+
+        .asm-parent-details-summary-label {
+            display: block;
+            color: #71809d;
+            font-size: .66rem;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .asm-parent-details-summary h2 {
+            margin: .25rem 0 .35rem;
+            color: var(--pd-ink);
+            font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+            font-weight: 950;
+            overflow-wrap: anywhere;
+        }
+
+        .asm-parent-details-slug {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            gap: .4rem;
+            color: #2459d8;
+            font-size: .78rem;
+            font-weight: 850;
+            overflow-wrap: anywhere;
+        }
+
+        .asm-parent-details-id {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .38rem .65rem;
+            color: #536079;
+            font-size: .72rem;
+            font-weight: 900;
+            white-space: nowrap;
+            border: 1px solid #dde4ee;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        /* Metrics */
+
+        .asm-parent-details-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: .75rem;
+            margin-top: .9rem;
+        }
+
+        .asm-parent-details-metric {
+            display: flex;
+            min-height: 82px;
+            align-items: center;
+            gap: .75rem;
+            padding: .9rem;
+            border: 1px solid #e4e9f1;
+            border-radius: 15px;
+            background: #fff;
+        }
+
+        .asm-parent-details-metric-icon {
+            display: inline-flex;
+            flex: 0 0 42px;
+            width: 42px;
+            height: 42px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+        }
+
+            .asm-parent-details-metric-icon.blue {
+                color: #2e62dc;
+                background: #e8efff;
+            }
+
+            .asm-parent-details-metric-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-parent-details-metric-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+            .asm-parent-details-metric-icon.green {
+                color: #148645;
+                background: #e5f5ec;
+            }
+
+        .asm-parent-details-metric small {
+            display: block;
+            color: #71809d;
+            font-size: .64rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .asm-parent-details-metric strong {
+            display: block;
+            margin-top: .08rem;
+            color: var(--pd-ink);
+            font-size: .92rem;
+            font-weight: 950;
+            overflow-wrap: anywhere;
+        }
+
+        /* Description */
+
+        .asm-parent-details-section {
+            margin-top: .9rem;
+            padding: 1rem;
+            border: 1px solid #e4e9f1;
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .asm-parent-details-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: .8rem;
+        }
+
+        .asm-parent-details-section-title {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            color: var(--pd-ink);
+            font-size: .9rem;
+            font-weight: 950;
+        }
+
+            .asm-parent-details-section-title i {
+                color: #2463eb;
+            }
+
+        .asm-parent-details-section-state {
+            display: inline-flex;
+            min-height: 28px;
+            align-items: center;
+            justify-content: center;
+            padding: .28rem .55rem;
+            color: #536079;
+            font-size: .67rem;
+            font-weight: 900;
+            border-radius: 999px;
+            background: #edf1f6;
+        }
+
+        .asm-parent-details-description {
+            color: var(--pd-text);
+            font-size: .84rem;
+            line-height: 1.75;
+            overflow-wrap: anywhere;
+            white-space: pre-line;
+        }
+
+        .asm-parent-details-empty {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .8rem;
+            color: #71809d;
+            font-size: .78rem;
+            font-weight: 800;
+            border: 1px dashed #d7deea;
+            border-radius: 13px;
+            background: #f8faff;
+        }
+
+        /* Sidebar */
+
+        .asm-parent-details-sidebar {
+            position: sticky;
+            top: 1rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .asm-parent-details-side-card {
+            padding: 1rem;
+        }
+
+        .asm-parent-details-side-title {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: .8rem;
+            color: var(--pd-ink);
+            font-size: .9rem;
+            font-weight: 950;
+        }
+
+            .asm-parent-details-side-title i {
+                color: #6846d8;
+            }
+
+        .asm-parent-details-status-summary {
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+            padding: .75rem;
+            border: 1px solid #e4e9f1;
+            border-radius: 14px;
+            background: #f8faff;
+        }
+
+        .asm-parent-details-status-icon {
+            display: inline-flex;
+            flex: 0 0 42px;
+            width: 42px;
+            height: 42px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+        }
+
+            .asm-parent-details-status-icon.active {
+                color: #148645;
+                background: #e5f5ec;
+            }
+
+            .asm-parent-details-status-icon.inactive {
+                color: #c52f2f;
+                background: #fde9e9;
+            }
+
+        .asm-parent-details-status-title {
+            color: var(--pd-ink);
+            font-size: .8rem;
+            font-weight: 950;
+        }
+
+        .asm-parent-details-status-text {
+            margin-top: .18rem;
+            color: #65738d;
+            font-size: .7rem;
+            line-height: 1.5;
+        }
+
+        .asm-parent-details-hierarchy {
+            display: grid;
+            gap: .6rem;
+        }
+
+        .asm-parent-details-hierarchy-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            padding: .68rem .72rem;
+            border: 1px solid #e6ebf2;
+            border-radius: 12px;
+            background: #f8faff;
+        }
+
+            .asm-parent-details-hierarchy-row small {
+                color: #71809d;
+                font-size: .65rem;
+                font-weight: 900;
+                text-transform: uppercase;
+            }
+
+            .asm-parent-details-hierarchy-row strong {
+                color: var(--pd-ink);
+                font-size: .76rem;
+                font-weight: 950;
+            }
+
+        .asm-parent-details-tip-list {
+            display: grid;
+            gap: .7rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+            .asm-parent-details-tip-list li {
+                display: flex;
+                gap: .55rem;
+                color: #56637b;
+                font-size: .75rem;
+                line-height: 1.5;
+            }
+
+            .asm-parent-details-tip-list i {
+                margin-top: .15rem;
+                color: #2463eb;
+            }
+
+        .asm-parent-details-quick-actions {
+            display: grid;
+            gap: .6rem;
+        }
+
+            .asm-parent-details-quick-actions .btn {
+                width: 100%;
+            }
+
+        @@media (max-width: 1399.98px) {
+            .asm-parent-details-command-main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .asm-parent-details-grid {
                 grid-template-columns: 1fr;
             }
 
-            .parent-hero {
-                padding: 1.5rem;
+            .asm-parent-details-sidebar {
+                position: static;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .asm-parent-details-side-card:last-child {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .asm-parent-details-kpis {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .asm-parent-details-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
         @@media (max-width: 767.98px) {
-            .parent-hero,
-            .parent-card,
-            .side-card {
-                border-radius: 22px;
+            .asm-parent-details-page {
+                padding: .85rem;
             }
 
-            .parent-card,
-            .side-card {
-                padding: 1.15rem;
+            .asm-parent-details-command,
+            .asm-parent-details-main-card,
+            .asm-parent-details-side-card {
+                border-radius: 20px;
             }
 
-            .parent-hero-actions,
-            .parent-hero-actions .btn {
+            .asm-parent-details-command {
+                padding: 1.25rem 1rem 1rem;
+            }
+
+            .asm-parent-details-title {
+                align-items: flex-start;
+            }
+
+            .asm-parent-details-title-icon {
+                width: 56px;
+                height: 56px;
+                flex-basis: 56px;
+                border-radius: 17px;
+            }
+
+            .asm-parent-details-kpis {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .asm-parent-details-card-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .asm-parent-details-sidebar {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-parent-details-side-card:last-child {
+                grid-column: auto;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .asm-parent-details-title {
+                flex-direction: column;
+            }
+
+            .asm-parent-details-kpis,
+            .asm-parent-details-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-parent-details-command-actions .btn {
                 width: 100%;
+            }
+
+            .asm-parent-details-command-actions .ms-auto {
+                width: 100%;
+                margin-left: 0 !important;
+                text-align: center;
+            }
+
+            .asm-parent-details-summary,
+            .asm-parent-details-section-head {
+                align-items: flex-start;
+                flex-direction: column;
             }
         }
     </style>
 }
 
-<div class="container-fluid py-4 parent-details-page">
+<div class="asm-parent-details-page">
 
-    <div class="parent-hero mb-4">
-        <div>
-            <span class="parent-kicker">Admin Panel</span>
+    <section class="asm-parent-details-command">
 
-            <h1>Parent Category Details</h1>
+        <div class="asm-parent-details-command-main">
 
-            <p>
-                View top-level category information, SEO slug, sorting order,
-                visibility status, child categories, and product relationship counts.
-            </p>
+            <div class="asm-parent-details-title">
+
+                <div class="asm-parent-details-title-icon">
+                    <i class="fa-solid fa-folder-tree"></i>
+                </div>
+
+                <div>
+                    <span class="asm-parent-details-eyebrow">
+                        Catalog Management
+                    </span>
+
+                    <h1>
+                        Parent Category <span>Details</span>
+                    </h1>
+
+                    <p>
+                        Review top-level catalog information, SEO slug,
+                        storefront visibility, sorting priority, child
+                        categories, and assigned product relationships.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="asm-parent-details-kpis">
+
+                <div class="asm-parent-details-kpi">
+                    <span class="asm-parent-details-kpi-icon blue">
+                        <i class="fa-solid fa-hashtag"></i>
+                    </span>
+
+                    <div>
+                        <small>Category ID</small>
+                        <strong>@Model.Id</strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-details-kpi">
+                    <span class="asm-parent-details-kpi-icon green">
+                        <i class="fa-solid @(Model.IsActive ? "fa-circle-check" : "fa-circle-xmark")"></i>
+                    </span>
+
+                    <div>
+                        <small>Status</small>
+                        <strong>
+                            @(Model.IsActive ? "Active" : "Inactive")
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-details-kpi">
+                    <span class="asm-parent-details-kpi-icon orange">
+                        <i class="fa-solid fa-arrow-down-1-9"></i>
+                    </span>
+
+                    <div>
+                        <small>Display Order</small>
+                        <strong>@Model.DisplayOrder</strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-details-kpi">
+                    <span class="asm-parent-details-kpi-icon purple">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </span>
+
+                    <div>
+                        <small>Children</small>
+                        <strong>@Model.ChildCount</strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-details-kpi">
+                    <span class="asm-parent-details-kpi-icon gray">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </span>
+
+                    <div>
+                        <small>Products</small>
+                        <strong>@Model.ProductCount</strong>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
 
-        <div class="parent-hero-actions">
-            <a asp-action="Index" class="btn parent-btn parent-btn-light">
-                <i class="fa-solid fa-arrow-left me-2"></i>
-                Back
+        <div class="asm-parent-details-command-actions">
+
+            <a asp-action="Index"
+               class="btn asm-parent-details-btn asm-parent-details-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Parent Categories
             </a>
 
             <a asp-action="Edit"
                asp-route-id="@Model.Id"
-               class="btn parent-btn parent-btn-primary">
-                <i class="fa-solid fa-pen-to-square me-2"></i>
-                Edit
+               class="btn asm-parent-details-btn asm-parent-details-btn-primary">
+                <i class="fa-solid fa-pen-to-square"></i>
+                Edit Parent Category
             </a>
+
+            <span class="ms-auto text-muted small fw-bold">
+                <i class="fa-solid fa-circle-info me-1"></i>
+                Read-only category overview
+            </span>
+
         </div>
-    </div>
 
-    <div class="row g-4">
+    </section>
 
-        <div class="col-12 col-xl-8">
-            <div class="parent-card">
+    <div class="asm-parent-details-grid">
 
-                <div class="parent-card-head">
+        <section class="asm-parent-details-main-card">
+
+            <div class="asm-parent-details-card-head">
+
+                <div class="asm-parent-details-card-title">
+                    <i class="fa-solid fa-folder-open"></i>
+                    Parent Category Overview
+                </div>
+
+                <span class="asm-parent-details-status @(Model.IsActive ? "active" : "inactive")">
+
+                    <i class="fa-solid @(Model.IsActive ? "fa-circle-check" : "fa-circle-xmark")"></i>
+
+                    @(Model.IsActive ? "Active" : "Inactive")
+
+                </span>
+
+            </div>
+
+            <div class="asm-parent-details-body">
+
+                <div class="asm-parent-details-summary">
+
                     <div>
-                        <div class="details-label">Parent Category</div>
+                        <span class="asm-parent-details-summary-label">
+                            Parent Category
+                        </span>
 
-                        <h2 class="details-title">
-                            @Model.Name
-                        </h2>
+                        <h2>@Model.Name</h2>
 
-                        <div class="details-slug">
-                            <i class="fa-solid fa-link me-2"></i>
+                        <div class="asm-parent-details-slug">
+                            <i class="fa-solid fa-link"></i>
                             @Model.Slug
                         </div>
                     </div>
 
-                    @if (Model.IsActive)
-                    {
-                        <span class="status-badge active">
-                            <i class="fa-solid fa-circle-check me-1"></i>
-                            Active
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="status-badge inactive">
-                            <i class="fa-solid fa-circle-xmark me-1"></i>
-                            Inactive
-                        </span>
-                    }
+                    <span class="asm-parent-details-id">
+                        <i class="fa-solid fa-hashtag"></i>
+                        @Model.Id
+                    </span>
+
                 </div>
 
-                <div class="details-grid">
+                <div class="asm-parent-details-metrics">
 
-                    <div class="details-box">
-                        <div class="details-box-icon blue">
+                    <div class="asm-parent-details-metric">
+
+                        <span class="asm-parent-details-metric-icon blue">
                             <i class="fa-solid fa-arrow-down-1-9"></i>
-                        </div>
+                        </span>
 
                         <div>
-                            <div class="details-label">Display Order</div>
-                            <div class="details-value">@Model.DisplayOrder</div>
+                            <small>Display Order</small>
+                            <strong>@Model.DisplayOrder</strong>
                         </div>
+
                     </div>
 
-                    <div class="details-box">
-                        <div class="details-box-icon purple">
+                    <div class="asm-parent-details-metric">
+
+                        <span class="asm-parent-details-metric-icon purple">
                             <i class="fa-solid fa-folder-tree"></i>
-                        </div>
+                        </span>
 
                         <div>
-                            <div class="details-label">Child Categories</div>
-                            <div class="details-value">@Model.ChildCount</div>
+                            <small>Child Categories</small>
+                            <strong>@Model.ChildCount</strong>
                         </div>
+
                     </div>
 
-                    <div class="details-box">
-                        <div class="details-box-icon green">
+                    <div class="asm-parent-details-metric">
+
+                        <span class="asm-parent-details-metric-icon green">
                             <i class="fa-solid fa-boxes-stacked"></i>
-                        </div>
+                        </span>
 
                         <div>
-                            <div class="details-label">Products</div>
-                            <div class="details-value">@Model.ProductCount</div>
+                            <small>Assigned Products</small>
+                            <strong>@Model.ProductCount</strong>
                         </div>
+
+                    </div>
+
+                    <div class="asm-parent-details-metric">
+
+                        <span class="asm-parent-details-metric-icon orange">
+                            <i class="fa-solid fa-diagram-project"></i>
+                        </span>
+
+                        <div>
+                            <small>Relationships</small>
+                            <strong>@dependencyCount</strong>
+                        </div>
+
                     </div>
 
                 </div>
 
-                <div class="description-section">
+                <section class="asm-parent-details-section">
 
-                    <div class="section-title">
-                        Description
+                    <div class="asm-parent-details-section-head">
+
+                        <div class="asm-parent-details-section-title">
+                            <i class="fa-solid fa-align-left"></i>
+                            Description
+                        </div>
+
+                        <span class="asm-parent-details-section-state">
+                            @(hasDescription ? "Available" : "Not Provided")
+                        </span>
+
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(Model.Description))
+                    @if (hasDescription)
                     {
-                        <div class="description-box">
+                        <div class="asm-parent-details-description">
                             @Model.Description
                         </div>
                     }
                     else
                     {
-                        <div class="empty-box">
-                            <i class="fa-regular fa-note-sticky me-2"></i>
-                            No description provided.
+                        <div class="asm-parent-details-empty">
+                            <i class="fa-regular fa-note-sticky"></i>
+                            No description has been provided for this parent category.
                         </div>
                     }
 
-                </div>
+                </section>
 
             </div>
-        </div>
 
-        <div class="col-12 col-xl-4">
+        </section>
 
-            <div class="side-card mb-4">
-                <div class="side-title">
+        <aside class="asm-parent-details-sidebar">
+
+            <section class="asm-parent-details-side-card">
+
+                <div class="asm-parent-details-side-title">
+                    <i class="fa-solid fa-signal"></i>
                     Category Status
                 </div>
 
-                <div class="status-summary">
-                    @if (Model.IsActive)
-                    {
-                        <div class="status-icon active">
-                            <i class="fa-solid fa-check"></i>
+                <div class="asm-parent-details-status-summary">
+
+                    <span class="asm-parent-details-status-icon @(Model.IsActive ? "active" : "inactive")">
+
+                        <i class="fa-solid @(Model.IsActive ? "fa-eye" : "fa-eye-slash")"></i>
+
+                    </span>
+
+                    <div>
+                        <div class="asm-parent-details-status-title">
+                            @(Model.IsActive
+                                                        ? "Visible Category"
+                                                        : "Hidden Category")
                         </div>
 
-                        <div>
-                            <div class="status-title">Visible</div>
-                            <div class="status-text">This parent category is active and available for storefront/category logic.</div>
+                        <div class="asm-parent-details-status-text">
+                            @if (Model.IsActive)
+                            {
+                                <span>
+                                    This parent category is active and available
+                                    for storefront and catalog hierarchy logic.
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    This parent category is inactive and should
+                                    not be displayed publicly.
+                                </span>
+                            }
                         </div>
-                    }
-                    else
-                    {
-                        <div class="status-icon inactive">
-                            <i class="fa-solid fa-xmark"></i>
-                        </div>
+                    </div>
 
-                        <div>
-                            <div class="status-title">Hidden</div>
-                            <div class="status-text">This parent category is inactive and should not be shown publicly.</div>
-                        </div>
-                    }
                 </div>
-            </div>
 
-            <div class="side-card">
-                <div class="side-title">
+            </section>
+
+            <section class="asm-parent-details-side-card">
+
+                <div class="asm-parent-details-side-title">
+                    <i class="fa-solid fa-sitemap"></i>
+                    Hierarchy Summary
+                </div>
+
+                <div class="asm-parent-details-hierarchy">
+
+                    <div class="asm-parent-details-hierarchy-row">
+                        <small>Level</small>
+                        <strong>Top Level</strong>
+                    </div>
+
+                    <div class="asm-parent-details-hierarchy-row">
+                        <small>Child Categories</small>
+                        <strong>@Model.ChildCount</strong>
+                    </div>
+
+                    <div class="asm-parent-details-hierarchy-row">
+                        <small>Products</small>
+                        <strong>@Model.ProductCount</strong>
+                    </div>
+
+                    <div class="asm-parent-details-hierarchy-row">
+                        <small>Total Relations</small>
+                        <strong>@dependencyCount</strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="asm-parent-details-side-card">
+
+                <div class="asm-parent-details-side-title">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    Management Guidance
+                </div>
+
+                <ul class="asm-parent-details-tip-list">
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>
+                            Keep the slug stable after search engines index it.
+                        </span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>
+                            Use this parent for related child-category groups.
+                        </span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>
+                            Lower display-order values appear first.
+                        </span>
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <span>
+                            Review visibility after significant catalog changes.
+                        </span>
+                    </li>
+
+                </ul>
+
+            </section>
+
+            <section class="asm-parent-details-side-card">
+
+                <div class="asm-parent-details-side-title">
+                    <i class="fa-solid fa-bolt"></i>
                     Quick Actions
                 </div>
 
-                <div class="quick-actions">
-                    <a asp-action="Index" class="btn parent-btn parent-btn-light border">
-                        <i class="fa-solid fa-list me-2"></i>
-                        All Parent Categories
-                    </a>
+                <div class="asm-parent-details-quick-actions">
 
                     <a asp-action="Edit"
                        asp-route-id="@Model.Id"
-                       class="btn parent-btn parent-btn-primary">
-                        <i class="fa-solid fa-pen-to-square me-2"></i>
-                        Edit Category
-                    </a>
-                </div>
-            </div>
+                       class="btn asm-parent-details-btn asm-parent-details-btn-primary">
 
-        </div>
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        Edit Parent Category
+
+                    </a>
+
+                    <a asp-action="Index"
+                       class="btn asm-parent-details-btn asm-parent-details-btn-outline">
+
+                        <i class="fa-solid fa-list"></i>
+                        All Parent Categories
+
+                    </a>
+
+                </div>
+
+            </section>
+
+        </aside>
 
     </div>
 

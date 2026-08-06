@@ -2,56 +2,346 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var productTitle = string.IsNullOrWhiteSpace(Model.Title)
+        ? "Untitled Product"
+        : Model.Title;
 }
 
 @section Styles {
     <style>
-        .as-admin-product-page {
+        .as-product-edit-page {
             min-height: calc(100vh - 76px);
-            padding: 22px;
-            background: radial-gradient(900px 420px at 8% 0%, rgba(37, 99, 235, .12), transparent 60%), radial-gradient(760px 380px at 100% 8%, rgba(14, 165, 233, .10), transparent 60%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            padding: 12px 0 34px;
+            background: radial-gradient(circle at 6% 0%, rgba(37, 99, 235, .09), transparent 28%), radial-gradient(circle at 94% 2%, rgba(139, 92, 246, .07), transparent 27%), linear-gradient(180deg, #f8fafc 0%, #ffffff 48%, #f1f5f9 100%);
         }
 
-        .as-admin-product-shell {
+        .as-product-edit-shell {
             width: 100%;
-            max-width: 1540px;
+            max-width: 1600px;
             margin: 0 auto;
+            padding: 0 14px;
+        }
+
+        .as-product-dashboard {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 14px;
+            padding: 18px 20px;
+            border: 1px solid rgba(37, 99, 235, .12);
+            border-radius: 22px;
+            background: radial-gradient(430px 180px at 2% 0%, rgba(37, 99, 235, .15), transparent 65%), radial-gradient(390px 170px at 98% 0%, rgba(139, 92, 246, .11), transparent 65%), linear-gradient(125deg, rgba(255, 255, 255, .98), rgba(239, 246, 255, .95) 55%, rgba(245, 243, 255, .92));
+            box-shadow: 0 15px 38px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
+        }
+
+            .as-product-dashboard::before,
+            .as-product-dashboard::after {
+                position: absolute;
+                content: "";
+                border-radius: 999px;
+                pointer-events: none;
+            }
+
+            .as-product-dashboard::before {
+                top: -74px;
+                right: -44px;
+                width: 168px;
+                height: 168px;
+                background: rgba(37, 99, 235, .06);
+            }
+
+            .as-product-dashboard::after {
+                bottom: -104px;
+                left: 38%;
+                width: 208px;
+                height: 208px;
+                background: rgba(139, 92, 246, .05);
+            }
+
+        .as-product-dashboard-main,
+        .as-product-dashboard-nav {
+            position: relative;
+            z-index: 2;
+        }
+
+        .as-product-dashboard-main {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .as-product-dashboard-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            border: 1px solid rgba(37, 99, 235, .16);
+            border-radius: 17px;
+            background: linear-gradient(145deg, rgba(37, 99, 235, .15), rgba(139, 92, 246, .08));
+            color: #2563eb;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, .11);
+            font-size: 20px;
+        }
+
+        .as-product-dashboard-copy {
+            min-width: 0;
+        }
+
+        .as-product-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            color: #2563eb;
+            font-size: 9.5px;
+            font-weight: 900;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+        }
+
+        .as-product-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(24px, 3vw, 38px);
+            font-weight: 950;
+            line-height: 1.08;
+            letter-spacing: -.04em;
+        }
+
+        .as-product-title-accent {
+            background: linear-gradient(100deg, #2563eb, #7c3aed);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .as-product-subtitle {
+            display: -webkit-box;
+            max-width: 820px;
+            margin: 7px 0 0;
+            overflow: hidden;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 650;
+            line-height: 1.55;
+            text-align: justify;
+            text-justify: inter-word;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .as-product-dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(108px, 1fr));
+            gap: 7px;
+        }
+
+        .as-product-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 46px;
+            padding: 7px 9px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .80);
+            box-shadow: 0 7px 18px rgba(15, 23, 42, .045);
+        }
+
+        .as-product-stat-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 29px;
+            height: 29px;
+            min-width: 29px;
+            border-radius: 9px;
+            background: rgba(37, 99, 235, .09);
+            color: #2563eb;
+            font-size: 11px;
+        }
+
+        .as-product-stat:nth-child(2) .as-product-stat-icon {
+            background: rgba(139, 92, 246, .10);
+            color: #7c3aed;
+        }
+
+        .as-product-stat:nth-child(3) .as-product-stat-icon {
+            background: rgba(16, 185, 129, .10);
+            color: #047857;
+        }
+
+        .as-product-stat-value {
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 950;
+            line-height: 1.15;
+        }
+
+        .as-product-stat-label {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 8.5px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .as-product-dashboard-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 12px;
+            padding-top: 11px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
+        }
+
+        .as-dashboard-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 35px;
+            padding: 0 11px;
+            border-radius: 10px;
+            font-size: 10.5px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .as-product-form-card {
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 14px 40px rgba(15, 23, 42, .065);
+        }
+
+        .as-product-form-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(15, 23, 42, .08);
+            background: rgba(248, 250, 252, .80);
+        }
+
+        .as-product-form-heading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            color: #0f172a;
+            font-size: 15px;
+            font-weight: 950;
+            letter-spacing: -.025em;
+        }
+
+            .as-product-form-heading i {
+                color: #2563eb;
+            }
+
+        .as-product-form-description {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .as-product-id-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 31px;
+            padding: 0 9px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 999px;
+            background: #ffffff;
+            color: #475569;
+            font-size: 10px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .as-product-form-body {
+            padding: 16px;
         }
 
         .as-admin-product-form {
             width: 100%;
         }
 
+            .as-admin-product-form label {
+                margin-bottom: 5px;
+                color: #1e293b;
+                font-size: 10.5px;
+                font-weight: 850;
+            }
+
+            .as-admin-product-form .form-control,
+            .as-admin-product-form .form-select {
+                min-height: 39px;
+                border: 1px solid rgba(15, 23, 42, .12);
+                border-radius: 11px;
+                background: #ffffff;
+                color: #0f172a;
+                font-size: 11.5px;
+                box-shadow: none;
+            }
+
+            .as-admin-product-form textarea.form-control {
+                min-height: auto;
+                resize: vertical;
+                line-height: 1.55;
+            }
+
+            .as-admin-product-form .form-control:focus,
+            .as-admin-product-form .form-select:focus {
+                border-color: rgba(37, 99, 235, .55);
+                box-shadow: 0 0 0 .18rem rgba(37, 99, 235, .10);
+            }
+
         .as-validation-box {
-            border: 0;
-            border-radius: 18px;
-            box-shadow: 0 16px 36px rgba(220, 38, 38, .10);
+            margin-bottom: 14px;
+            border: 1px solid rgba(220, 38, 38, .13);
+            border-radius: 14px;
+            background: rgba(254, 242, 242, .94);
+            box-shadow: 0 10px 26px rgba(220, 38, 38, .08);
+            color: #991b1b;
+            font-size: 11.5px;
         }
+
+            .as-validation-box:empty {
+                display: none;
+            }
 
         .as-delete-modal-content {
             overflow: hidden;
             border: 0;
-            border-radius: 26px;
+            border-radius: 22px;
             box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
         }
 
         .as-delete-modal-header {
             position: relative;
-            padding: 24px 24px 10px;
+            padding: 20px 20px 9px;
             border-bottom: 0;
-            background: radial-gradient(520px 220px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
+            background: radial-gradient(500px 210px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
         }
 
         .as-delete-icon {
             display: inline-grid;
-            width: 54px;
-            height: 54px;
+            width: 48px;
+            height: 48px;
             place-items: center;
-            margin-bottom: 14px;
-            border-radius: 18px;
+            margin-bottom: 12px;
+            border-radius: 15px;
             background: rgba(220, 38, 38, .10);
             color: #dc2626;
-            font-size: 22px;
+            font-size: 20px;
         }
 
         .as-delete-title {
@@ -62,15 +352,15 @@
 
         .as-delete-text {
             max-width: 420px;
-            margin: 8px 0 0;
+            margin: 7px 0 0;
             color: #64748b;
-            font-size: 14px;
-            line-height: 1.7;
+            font-size: 12px;
+            line-height: 1.6;
         }
 
         .as-delete-modal-footer {
-            gap: 10px;
-            padding: 18px 24px 24px;
+            gap: 8px;
+            padding: 15px 20px 20px;
             border-top: 0;
             background: #f8fafc;
         }
@@ -79,17 +369,84 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            min-height: 42px;
-            padding: .62rem 1rem;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 800;
+            gap: 6px;
+            min-height: 35px;
+            padding: 0 11px;
+            border-radius: 10px;
+            font-size: 10.5px;
+            font-weight: 900;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .as-product-dashboard-main {
+                grid-template-columns: 54px minmax(0, 1fr);
+            }
+
+            .as-product-dashboard-stats {
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
         }
 
         @@media (max-width: 767.98px) {
-            .as-admin-product-page {
-                padding: 12px;
+            .as-product-edit-page {
+                padding: 10px 0 28px;
+            }
+
+            .as-product-edit-shell {
+                padding: 0 10px;
+            }
+
+            .as-product-dashboard {
+                padding: 15px;
+                border-radius: 19px;
+            }
+
+            .as-product-dashboard-main {
+                grid-template-columns: 44px minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .as-product-dashboard-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+                font-size: 17px;
+            }
+
+            .as-product-title {
+                font-size: 26px;
+            }
+
+            .as-product-subtitle,
+            .as-product-dashboard-stats {
+                grid-column: 1 / -1;
+            }
+
+            .as-product-dashboard-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .as-product-dashboard-nav {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .as-dashboard-btn {
+                width: 100%;
+            }
+
+            .as-product-form-header {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .as-product-form-body {
+                padding: 13px;
+            }
+
+            .as-product-id-badge {
+                width: fit-content;
             }
 
             .as-delete-modal-footer {
@@ -101,22 +458,132 @@
                     width: 100%;
                 }
         }
+
+        @@media (max-width: 390px) {
+            .as-product-dashboard-stats,
+            .as-product-dashboard-nav {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 }
 
-<div class="as-admin-product-page">
-    <div class="as-admin-product-shell">
-        <form asp-action="Edit" method="post" class="as-admin-product-form">
-            @Html.AntiForgeryToken()
+<section class="as-product-edit-page">
+    <div class="as-product-edit-shell">
 
-            <input type="hidden" asp-for="Id" />
+        <header class="as-product-dashboard">
 
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger as-validation-box"></div>
+            <div class="as-product-dashboard-main">
 
-            <partial name="_ProductForm" model="Model" />
-        </form>
+                <div class="as-product-dashboard-icon" aria-hidden="true">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+
+                <div class="as-product-dashboard-copy">
+                    <div class="as-product-kicker">
+                        <i class="fa-solid fa-sparkles"></i>
+                        Admin Product Editor
+                    </div>
+
+                    <h1 class="as-product-title">
+                        Edit
+                        <span class="as-product-title-accent">product</span>
+                    </h1>
+
+                    <p class="as-product-subtitle">
+                        @productTitle
+                    </p>
+                </div>
+
+                <div class="as-product-dashboard-stats" aria-label="Product editor information">
+                    <div class="as-product-stat">
+                        <div class="as-product-stat-icon">
+                            <i class="fa-solid fa-hashtag"></i>
+                        </div>
+                        <div>
+                            <div class="as-product-stat-value">@Model.Id</div>
+                            <div class="as-product-stat-label">Product ID</div>
+                        </div>
+                    </div>
+
+                    <div class="as-product-stat">
+                        <div class="as-product-stat-icon">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </div>
+                        <div>
+                            <div class="as-product-stat-value">Edit Mode</div>
+                            <div class="as-product-stat-label">Current Action</div>
+                        </div>
+                    </div>
+
+                    <div class="as-product-stat">
+                        <div class="as-product-stat-icon">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <div class="as-product-stat-value">Protected</div>
+                            <div class="as-product-stat-label">Anti-forgery</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="as-product-dashboard-nav" aria-label="Product editor navigation">
+                <button type="submit" form="productEditForm" class="btn btn-primary as-dashboard-btn">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save Changes
+                </button>
+
+                <a asp-action="Index" class="btn btn-outline-primary as-dashboard-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Products
+                </a>
+
+                <a asp-area="" asp-controller="Catalog" asp-action="Index" class="btn btn-outline-primary as-dashboard-btn">
+                    <i class="fa-solid fa-store"></i>
+                    Public Catalog
+                </a>
+
+                <a asp-area="" asp-controller="Home" asp-action="TopVisited" class="btn btn-outline-primary as-dashboard-btn">
+                    <i class="fa-solid fa-chart-line"></i>
+                    Top Visited
+                </a>
+            </nav>
+        </header>
+
+        <section class="as-product-form-card" aria-labelledby="product-form-heading">
+            <div class="as-product-form-header">
+                <div>
+                    <h2 id="product-form-heading" class="as-product-form-heading">
+                        <i class="fa-solid fa-file-pen"></i>
+                        Product Information
+                    </h2>
+
+                    <p class="as-product-form-description">
+                        Update product content, pricing, images, visibility and related catalog settings.
+                    </p>
+                </div>
+
+                <span class="as-product-id-badge">
+                    <i class="fa-solid fa-database"></i>
+                    ID @Model.Id
+                </span>
+            </div>
+
+            <div class="as-product-form-body">
+                <form id="productEditForm" asp-action="Edit" method="post" class="as-admin-product-form">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" asp-for="Id" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger as-validation-box"></div>
+
+                    <partial name="_ProductForm" model="Model" />
+                </form>
+            </div>
+        </section>
     </div>
-</div>
+</section>
 
 <div class="modal fade as-delete-modal" id="asDeleteConfirmModal" tabindex="-1" aria-labelledby="asDeleteConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -127,10 +594,12 @@
                         <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
 
-                    <h5 class="modal-title as-delete-title" id="asDeleteConfirmModalLabel">Confirm Delete</h5>
+                    <h2 class="modal-title h5 as-delete-title" id="asDeleteConfirmModalLabel">
+                        Confirm Permanent Deletion
+                    </h2>
 
                     <p class="as-delete-text">
-                        This action cannot be undone. Please confirm before deleting.
+                        You are about to permanently delete this product. This action cannot be undone.
                     </p>
                 </div>
 
@@ -138,14 +607,14 @@
             </div>
 
             <div class="modal-footer as-delete-modal-footer">
-                <button type="button" class="btn btn-light as-modal-btn" data-bs-dismiss="modal">
+                <button type="button" class="btn btn-outline-secondary as-modal-btn" data-bs-dismiss="modal">
                     <i class="fa-solid fa-xmark"></i>
                     Cancel
                 </button>
 
                 <button type="button" class="btn btn-danger as-modal-btn" id="asDeleteConfirmButton">
                     <i class="fa-solid fa-trash"></i>
-                    Yes, Delete
+                    Yes, Delete Permanently
                 </button>
             </div>
         </div>
@@ -189,20 +658,40 @@
         });
 
         confirmButton.addEventListener('click', function () {
+            if (confirmButton.disabled) {
+                return;
+            }
+
+            confirmButton.disabled = true;
+            confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Deleting...';
+
             if (pendingDeleteForm) {
-                pendingDeleteForm.submit();
+                if (typeof pendingDeleteForm.requestSubmit === 'function') {
+                    pendingDeleteForm.requestSubmit();
+                } else {
+                    pendingDeleteForm.submit();
+                }
                 return;
             }
 
             if (pendingDeleteUrl) {
                 window.location.href = pendingDeleteUrl;
+                return;
             }
+
+            resetConfirmButton();
         });
 
         modalElement.addEventListener('hidden.bs.modal', function () {
             pendingDeleteForm = null;
             pendingDeleteUrl = null;
+            resetConfirmButton();
         });
+
+        function resetConfirmButton() {
+            confirmButton.disabled = false;
+            confirmButton.innerHTML = '<i class="fa-solid fa-trash"></i> Yes, Delete Permanently';
+        }
     })();
 </script>
 

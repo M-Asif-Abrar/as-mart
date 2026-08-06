@@ -8,6 +8,20 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var productsCount = Model.Products?.Count ?? 0;
+    var totalCategories = Model.AllCategories?.Count ?? 0;
+    var totalBrands = Model.BrandOptions?.Count ?? 0;
+    var selectedCategoriesCount = Model.SelectedCategoryIds?.Count ?? 0;
+
+    var activeFilterCount = selectedCategoriesCount
+        + (!string.IsNullOrWhiteSpace(Model.Brand) ? 1 : 0)
+        + (Model.MinPrice.HasValue ? 1 : 0)
+        + (Model.MaxPrice.HasValue ? 1 : 0)
+        + (Model.MinRating.HasValue ? 1 : 0)
+        + (Model.MaxRating.HasValue ? 1 : 0);
+
+    var currentPageLabel = Model.TotalPages > 0
+        ? $"{Model.Page:N0} / {Model.TotalPages:N0}"
+        : "1 / 1";
 }
 
 @section Styles {
@@ -43,88 +57,197 @@
             position: relative;
             z-index: 1;
             overflow: hidden;
-            border-radius: 28px;
-            border: 1px solid rgba(15, 23, 42, .08);
-            background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(239,246,255,.92)), radial-gradient(circle at top right, rgba(59,130,246,.18), transparent 34%);
-            box-shadow: 0 24px 70px rgba(15, 23, 42, .08);
-            margin-bottom: 18px;
+            margin-bottom: 14px;
+            padding: 20px 22px;
+            border: 1px solid rgba(37, 99, 235, .12);
+            border-radius: 24px;
+            background: radial-gradient(430px 180px at 3% 0%, rgba(37, 99, 235, .15), transparent 65%), radial-gradient(390px 170px at 98% 0%, rgba(139, 92, 246, .11), transparent 65%), linear-gradient(125deg, rgba(255, 255, 255, .98), rgba(239, 246, 255, .95) 55%, rgba(245, 243, 255, .92));
+            box-shadow: 0 16px 42px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .9);
         }
 
-            .catalog-hero::before {
-                content: "";
+            .catalog-hero::before,
+            .catalog-hero::after {
                 position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 18% 20%, rgba(37,99,235,.10), transparent 26%), radial-gradient(circle at 84% 80%, rgba(14,165,233,.13), transparent 30%);
+                content: "";
+                border-radius: 999px;
                 pointer-events: none;
             }
 
-        .catalog-hero-body {
+            .catalog-hero::before {
+                top: -78px;
+                right: -48px;
+                width: 180px;
+                height: 180px;
+                background: rgba(37, 99, 235, .07);
+            }
+
+            .catalog-hero::after {
+                bottom: -105px;
+                left: 38%;
+                width: 220px;
+                height: 220px;
+                background: rgba(139, 92, 246, .055);
+            }
+
+        .catalog-dashboard {
             position: relative;
-            z-index: 1;
-            padding: 28px;
+            z-index: 2;
+        }
+
+        .catalog-dashboard-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .catalog-dashboard-icon {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            border: 1px solid rgba(37, 99, 235, .16);
+            border-radius: 19px;
+            background: linear-gradient(145deg, rgba(37, 99, 235, .15), rgba(139, 92, 246, .08));
+            color: #2563eb;
+            box-shadow: 0 11px 26px rgba(37, 99, 235, .11);
+            font-size: 23px;
+        }
+
+        .catalog-dashboard-copy {
+            min-width: 0;
+            flex: 1;
         }
 
         .catalog-kicker {
             display: inline-flex;
             align-items: center;
-            gap: 9px;
-            padding: 8px 13px;
-            border-radius: 999px;
-            background: rgba(37, 99, 235, .09);
-            border: 1px solid rgba(37, 99, 235, .14);
-            color: #1d4ed8;
-            font-size: 12px;
+            gap: 7px;
+            margin-bottom: 4px;
+            color: #2563eb;
+            font-size: 10px;
             font-weight: 900;
+            letter-spacing: .07em;
             text-transform: uppercase;
-            letter-spacing: .04em;
-            margin-bottom: 13px;
         }
 
         .catalog-title {
             margin: 0;
             color: #0f172a;
-            font-size: clamp(32px, 4vw, 54px);
-            line-height: 1.02;
-            letter-spacing: -.045em;
+            font-size: clamp(28px, 3vw, 42px);
             font-weight: 950;
+            line-height: 1.04;
+            letter-spacing: -.045em;
+        }
+
+        .catalog-title-accent {
+            background: linear-gradient(100deg, #2563eb, #7c3aed);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
         }
 
         .catalog-sub {
-            margin: 13px 0 0;
-            max-width: 780px;
-            color: #475569;
-            font-size: 15px;
-            line-height: 1.75;
-            font-weight: 600;
+            max-width: 760px;
+            margin: 7px 0 0;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 650;
+            line-height: 1.55;
+        }
+
+        .catalog-dashboard-stats {
+            display: grid;
+            flex: 0 0 auto;
+            grid-template-columns: repeat(2, minmax(138px, 1fr));
+            gap: 8px;
         }
 
         .catalog-stat-card {
-            width: 100%;
-            max-width: 260px;
-            margin-left: auto;
-            padding: 18px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, .75);
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-height: 54px;
+            padding: 8px 11px;
             border: 1px solid rgba(15, 23, 42, .08);
-            box-shadow: 0 16px 38px rgba(15, 23, 42, .07);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, .80);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, .045);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
 
-        .catalog-stat-label {
-            color: #64748b;
-            font-size: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .05em;
+        .catalog-stat-icon {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(37, 99, 235, .10);
+            color: #2563eb;
+            font-size: 13px;
+        }
+
+        .catalog-stat-card:nth-child(2) .catalog-stat-icon {
+            background: rgba(139, 92, 246, .10);
+            color: #7c3aed;
+        }
+
+        .catalog-stat-card:nth-child(3) .catalog-stat-icon {
+            background: rgba(245, 158, 11, .12);
+            color: #d97706;
+        }
+
+        .catalog-stat-card:nth-child(4) .catalog-stat-icon {
+            background: rgba(14, 165, 233, .10);
+            color: #0284c7;
+        }
+
+        .catalog-stat-content {
+            min-width: 0;
         }
 
         .catalog-stat-value {
             color: #0f172a;
-            font-size: 28px;
+            font-size: 18px;
             font-weight: 950;
-            line-height: 1.1;
-            margin-top: 5px;
+            line-height: 1;
+        }
+
+        .catalog-stat-label {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 9px;
+            font-weight: 900;
+            line-height: 1.15;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .catalog-dashboard-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 14px;
+            padding-top: 13px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
+        }
+
+        .catalog-dashboard-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            min-height: 38px;
+            padding: 0 13px;
+            border-radius: 11px;
+            font-size: 11.5px;
+            font-weight: 900;
+            white-space: nowrap;
         }
 
         .catalog-filter-card {
@@ -453,9 +576,15 @@
                 padding: 5px 0 34px;
             }
 
-            .catalog-stat-card {
-                max-width: none;
-                margin-left: 0;
+            .catalog-dashboard-main {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .catalog-dashboard-stats {
+                width: 100%;
+                padding-left: 76px;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
             }
 
             .catalog-actions {
@@ -470,15 +599,57 @@
             }
 
             .catalog-hero {
-                border-radius: 22px;
+                padding: 15px;
+                border-radius: 20px;
             }
 
-            .catalog-hero-body {
-                padding: 18px;
+            .catalog-dashboard-main {
+                display: grid;
+                grid-template-columns: 46px minmax(0, 1fr);
+                gap: 11px;
+            }
+
+            .catalog-dashboard-icon {
+                width: 46px;
+                height: 46px;
+                border-radius: 15px;
+                font-size: 18px;
+            }
+
+            .catalog-title {
+                font-size: 27px;
             }
 
             .catalog-sub {
-                font-size: 14px;
+                grid-column: 1 / -1;
+                font-size: 12.5px;
+            }
+
+            .catalog-dashboard-stats {
+                grid-column: 1 / -1;
+                width: 100%;
+                padding-left: 0;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .catalog-stat-card {
+                min-width: 0;
+                min-height: 51px;
+                padding: 7px 8px;
+            }
+
+            .catalog-stat-value {
+                font-size: 16px;
+            }
+
+            .catalog-dashboard-nav {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .catalog-dashboard-btn {
+                width: 100%;
+                min-height: 40px;
             }
 
             .catalog-filter-card {
@@ -512,37 +683,130 @@
                 padding: 8px 10px;
             }
         }
+
+        @@media (max-width: 767.98px) and (min-width: 576px) {
+            .catalog-dashboard-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                padding-left: 76px;
+            }
+        }
+
+        @@media (max-width: 390px) {
+            .catalog-dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 }
 
 <section class="catalog-page">
     <div class="container-fluid catalog-shell">
 
-        <div class="catalog-hero">
-            <div class="catalog-hero-body">
-                <div class="row align-items-center g-3">
-                    <div class="col-12 col-lg-8">
+        <header class="catalog-hero">
+            <div class="catalog-dashboard">
+
+                <div class="catalog-dashboard-main">
+
+                    <div class="catalog-dashboard-icon" aria-hidden="true">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                    </div>
+
+                    <div class="catalog-dashboard-copy">
                         <div class="catalog-kicker">
-                            <i class="fa-solid fa-bag-shopping"></i>
-                            As-Mart Catalog
+                            <i class="fa-solid fa-sparkles"></i>
+                            As-Mart Product Catalog
                         </div>
 
-                        <h1 class="catalog-title">Shop Products</h1>
+                        <h1 class="catalog-title">
+                            Explore our
+                            <span class="catalog-title-accent">product collection</span>
+                        </h1>
 
                         <p class="catalog-sub">
-                            Browse products, filter by category, brand, price, and rating, then quickly open details or buy from trusted affiliate links.
+                            Browse active products and narrow results by category,
+                            brand, price and rating. Open any product to review its
+                            complete details.
                         </p>
                     </div>
 
-                    <div class="col-12 col-lg-4">
+                    <div class="catalog-dashboard-stats" aria-label="Catalog statistics">
+
                         <div class="catalog-stat-card">
-                            <div class="catalog-stat-label">Showing</div>
-                            <div class="catalog-stat-value">@productsCount Items</div>
+                            <div class="catalog-stat-icon">
+                                <i class="fa-solid fa-boxes-stacked"></i>
+                            </div>
+                            <div class="catalog-stat-content">
+                                <div class="catalog-stat-value">@productsCount.ToString("N0")</div>
+                                <div class="catalog-stat-label">Showing Products</div>
+                            </div>
                         </div>
+
+                        <div class="catalog-stat-card">
+                            <div class="catalog-stat-icon">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <div class="catalog-stat-content">
+                                <div class="catalog-stat-value">@totalCategories.ToString("N0")</div>
+                                <div class="catalog-stat-label">Categories</div>
+                            </div>
+                        </div>
+
+                        <div class="catalog-stat-card">
+                            <div class="catalog-stat-icon">
+                                <i class="fa-solid fa-copyright"></i>
+                            </div>
+                            <div class="catalog-stat-content">
+                                <div class="catalog-stat-value">@totalBrands.ToString("N0")</div>
+                                <div class="catalog-stat-label">Brands</div>
+                            </div>
+                        </div>
+
+                        <div class="catalog-stat-card">
+                            <div class="catalog-stat-icon">
+                                <i class="fa-solid fa-filter"></i>
+                            </div>
+                            <div class="catalog-stat-content">
+                                <div class="catalog-stat-value">@activeFilterCount.ToString("N0")</div>
+                                <div class="catalog-stat-label">Active Filters</div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+
+                <nav class="catalog-dashboard-nav" aria-label="Catalog dashboard navigation">
+                    <a asp-controller="Home" asp-action="Index"
+                       class="btn btn-outline-primary catalog-dashboard-btn">
+                        <i class="fa-solid fa-star"></i>
+                        Featured
+                    </a>
+
+                    <a asp-controller="Home" asp-action="Deals"
+                       class="btn btn-outline-primary catalog-dashboard-btn">
+                        <i class="fa-solid fa-bolt"></i>
+                        Deals of the Day
+                    </a>
+
+                    <a asp-controller="Home" asp-action="TopVisited"
+                       class="btn btn-outline-primary catalog-dashboard-btn">
+                        <i class="fa-solid fa-chart-line"></i>
+                        Top Visited
+                    </a>
+
+                    <a asp-controller="Gallery" asp-action="Index"
+                       class="btn btn-outline-primary catalog-dashboard-btn">
+                        <i class="fa-regular fa-images"></i>
+                        Product Gallery
+                    </a>
+
+                    <span class="btn btn-light catalog-dashboard-btn disabled">
+                        <i class="fa-solid fa-file-lines"></i>
+                        Page @currentPageLabel
+                    </span>
+                </nav>
+
             </div>
-        </div>
+        </header>
 
         <div class="catalog-filter-card">
             <form asp-action="Index" method="get" class="row g-3 align-items-end filter-row" id="catalogFilterForm">
@@ -719,7 +983,7 @@
             var grid = new ProductGridVm
             {
                 Title = null,
-                Actions = ProductGridActions.DetailsAndBuy,
+                Actions = ProductGridActions.DetailsOnly,
                 Products = Model.Products.Select(p => p.ToCardVm()).ToList()
             };
         }

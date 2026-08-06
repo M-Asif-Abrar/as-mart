@@ -2,140 +2,318 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var statusText = Model.IsActive
+        ? "Active"
+        : "Inactive";
+
+    var priceText = Model.Price.HasValue
+        ? $"{Model.Price.Value:0.00} {Model.Currency}"
+        : "Not set";
+
+    var categoryCount = Model.CategoryNames?.Count ?? 0;
+    var hasImage = !string.IsNullOrWhiteSpace(Model.MainImageUrl);
 }
 
 @section Styles {
     <style>
-        .as-delete-page {
+        .as-product-delete-page {
             min-height: calc(100vh - 76px);
-            padding: 24px;
-            background: radial-gradient(900px 420px at 7% 0%, rgba(239, 68, 68, .10), transparent 60%), radial-gradient(760px 380px at 100% 8%, rgba(37, 99, 235, .10), transparent 60%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            padding: 12px 0 34px;
+            background: radial-gradient(circle at 6% 0%, rgba(220, 38, 38, .08), transparent 28%), radial-gradient(circle at 94% 2%, rgba(37, 99, 235, .06), transparent 27%), linear-gradient(180deg, #f8fafc 0%, #ffffff 48%, #f1f5f9 100%);
         }
 
-        .as-delete-shell {
+        .as-product-delete-shell {
             width: 100%;
-            max-width: 1120px;
+            max-width: 1240px;
             margin: 0 auto;
+            padding: 0 14px;
         }
 
-        .as-delete-card {
+        .as-delete-dashboard {
+            position: relative;
             overflow: hidden;
-            border: 1px solid rgba(15, 23, 42, .08);
-            border-radius: 30px;
-            background: rgba(255, 255, 255, .88);
-            box-shadow: 0 24px 70px rgba(15, 23, 42, .12);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
+            margin-bottom: 14px;
+            padding: 18px 20px;
+            border: 1px solid rgba(220, 38, 38, .12);
+            border-radius: 22px;
+            background: radial-gradient(430px 180px at 2% 0%, rgba(220, 38, 38, .13), transparent 65%), radial-gradient(390px 170px at 98% 0%, rgba(245, 158, 11, .09), transparent 65%), linear-gradient(125deg, rgba(255, 255, 255, .98), rgba(254, 242, 242, .95) 55%, rgba(255, 247, 237, .92));
+            box-shadow: 0 15px 38px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
         }
 
-        .as-delete-hero {
+            .as-delete-dashboard::before,
+            .as-delete-dashboard::after {
+                position: absolute;
+                content: "";
+                border-radius: 999px;
+                pointer-events: none;
+            }
+
+            .as-delete-dashboard::before {
+                top: -74px;
+                right: -44px;
+                width: 168px;
+                height: 168px;
+                background: rgba(220, 38, 38, .06);
+            }
+
+            .as-delete-dashboard::after {
+                bottom: -104px;
+                left: 38%;
+                width: 208px;
+                height: 208px;
+                background: rgba(245, 158, 11, .05);
+            }
+
+        .as-delete-dashboard-main,
+        .as-delete-dashboard-nav {
+            position: relative;
+            z-index: 2;
+        }
+
+        .as-delete-dashboard-main {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .as-delete-dashboard-icon {
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 18px;
-            padding: 26px;
-            border-bottom: 1px solid rgba(15, 23, 42, .08);
-            background: radial-gradient(620px 280px at 0% 0%, rgba(239, 68, 68, .12), transparent 60%), linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.88));
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            border: 1px solid rgba(220, 38, 38, .16);
+            border-radius: 17px;
+            background: linear-gradient(145deg, rgba(220, 38, 38, .14), rgba(239, 68, 68, .08));
+            color: #dc2626;
+            box-shadow: 0 10px 24px rgba(220, 38, 38, .11);
+            font-size: 20px;
+        }
+
+        .as-delete-dashboard-copy {
+            min-width: 0;
         }
 
         .as-delete-kicker {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 7px 12px;
-            margin-bottom: 12px;
-            border-radius: 999px;
-            background: rgba(220, 38, 38, .10);
+            gap: 6px;
+            margin-bottom: 4px;
             color: #dc2626;
-            font-size: 12px;
+            font-size: 9.5px;
             font-weight: 900;
-            letter-spacing: .08em;
+            letter-spacing: .07em;
             text-transform: uppercase;
         }
 
-        .as-delete-heading {
+        .as-delete-title {
             margin: 0;
             color: #0f172a;
-            font-size: clamp(26px, 3vw, 42px);
+            font-size: clamp(24px, 3vw, 38px);
             font-weight: 950;
-            letter-spacing: -.055em;
-            line-height: 1.05;
+            line-height: 1.08;
+            letter-spacing: -.04em;
+        }
+
+        .as-delete-title-accent {
+            background: linear-gradient(100deg, #dc2626, #ef4444);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
         }
 
         .as-delete-subtitle {
-            max-width: 720px;
-            margin: 10px 0 0;
+            display: -webkit-box;
+            max-width: 780px;
+            margin: 7px 0 0;
+            overflow: hidden;
             color: #64748b;
-            font-size: 14px;
-            line-height: 1.75;
+            font-size: 12px;
+            font-weight: 650;
+            line-height: 1.55;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .as-delete-dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(108px, 1fr));
+            gap: 7px;
+        }
+
+        .as-delete-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 46px;
+            padding: 7px 9px;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .80);
+            box-shadow: 0 7px 18px rgba(15, 23, 42, .045);
+        }
+
+        .as-delete-stat-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 29px;
+            height: 29px;
+            min-width: 29px;
+            border-radius: 9px;
+            background: rgba(220, 38, 38, .09);
+            color: #dc2626;
+            font-size: 11px;
+        }
+
+        .as-delete-stat:nth-child(2) .as-delete-stat-icon {
+            background: rgba(37, 99, 235, .09);
+            color: #2563eb;
+        }
+
+        .as-delete-stat:nth-child(3) .as-delete-stat-icon {
+            background: rgba(16, 185, 129, .10);
+            color: #047857;
+        }
+
+        .as-delete-stat-value {
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 950;
+            line-height: 1.15;
+        }
+
+        .as-delete-stat-label {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 8.5px;
+            font-weight: 900;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .as-delete-dashboard-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 12px;
+            padding-top: 11px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
+        }
+
+        .as-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 35px;
+            padding: 0 11px;
+            border-radius: 10px;
+            font-size: 10.5px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .as-delete-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 14px;
+            align-items: start;
+        }
+
+        .as-delete-card,
+        .as-delete-side-card {
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, .08);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 14px 40px rgba(15, 23, 42, .065);
+        }
+
+        .as-delete-card {
+            padding: 16px;
+        }
+
+        .as-delete-side {
+            display: grid;
+            gap: 14px;
+            position: sticky;
+            top: 86px;
+        }
+
+        .as-delete-side-card {
+            padding: 14px;
         }
 
         .as-warning-box {
             display: flex;
-            gap: 14px;
             align-items: flex-start;
-            margin: 22px 26px 0;
-            padding: 16px;
-            border: 1px solid rgba(220, 38, 38, .18);
-            border-radius: 22px;
-            background: linear-gradient(135deg, rgba(254, 242, 242, .95), rgba(255, 255, 255, .88));
+            gap: 10px;
+            padding: 12px;
+            border: 1px solid rgba(220, 38, 38, .16);
+            border-radius: 14px;
+            background: radial-gradient(420px 160px at 0 0, rgba(239, 68, 68, .10), transparent 65%), linear-gradient(135deg, rgba(254, 242, 242, .96), rgba(255, 255, 255, .92));
         }
 
         .as-warning-icon {
             display: inline-grid;
-            width: 44px;
-            height: 44px;
-            min-width: 44px;
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
             place-items: center;
-            border-radius: 16px;
+            border-radius: 12px;
             background: rgba(220, 38, 38, .10);
             color: #dc2626;
-            font-size: 18px;
+            font-size: 15px;
         }
 
-        .as-warning-title {
+        .as-warning-box h2 {
+            margin: 0;
             color: #991b1b;
             font-size: 14px;
-            font-weight: 900;
+            font-weight: 950;
+            letter-spacing: -.025em;
         }
 
-        .as-warning-text {
-            margin-top: 3px;
+        .as-warning-box p {
+            margin: 5px 0 0;
             color: #7f1d1d;
-            font-size: 13px;
-            line-height: 1.65;
+            font-size: 10.5px;
+            line-height: 1.55;
         }
 
         .as-product-preview {
             display: grid;
-            grid-template-columns: 170px minmax(0, 1fr);
-            gap: 20px;
+            grid-template-columns: 130px minmax(0, 1fr);
+            gap: 14px;
             align-items: center;
-            margin: 22px 26px 0;
-            padding: 18px;
+            margin-top: 14px;
+            padding: 12px;
             border: 1px solid rgba(15, 23, 42, .08);
-            border-radius: 26px;
-            background: rgba(255, 255, 255, .78);
-            box-shadow: 0 14px 34px rgba(15, 23, 42, .06);
+            border-radius: 15px;
+            background: #f8fafc;
         }
 
         .as-product-image-wrap {
             position: relative;
             display: grid;
-            width: 170px;
-            height: 170px;
+            width: 130px;
+            height: 130px;
             place-items: center;
             overflow: hidden;
             border: 1px solid rgba(15, 23, 42, .08);
-            border-radius: 24px;
-            background: #fff;
+            border-radius: 15px;
+            background: #ffffff;
         }
 
         .as-product-image {
             width: 100%;
             height: 100%;
+            padding: 8px;
             object-fit: contain;
-            padding: 12px;
         }
 
         .as-image-fallback {
@@ -143,74 +321,80 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             color: #94a3b8;
-            font-size: 13px;
+            font-size: 10px;
             font-weight: 800;
         }
+
+            .as-image-fallback i {
+                font-size: 22px;
+            }
 
         .as-image-missing .as-image-fallback {
             display: flex;
         }
 
-        .as-image-fallback i {
-            font-size: 28px;
-        }
-
-        .as-product-badge {
+        .as-product-status {
             display: inline-flex;
             align-items: center;
-            width: fit-content;
-            padding: 7px 12px;
-            margin-bottom: 10px;
+            gap: 6px;
+            min-height: 28px;
+            padding: 0 8px;
             border-radius: 999px;
-            background: rgba(37, 99, 235, .10);
-            color: #1d4ed8;
-            font-size: 12px;
+            background: @(Model.IsActive ? "rgba(16, 185, 129, .10)" : "rgba(220, 38, 38, .10)");
+            color: @(Model.IsActive ? "#047857" : "#dc2626");
+            font-size: 9.5px;
             font-weight: 900;
         }
 
-        .as-product-title {
-            margin: 0;
+        .as-product-name {
+            display: -webkit-box;
+            margin: 8px 0 0;
+            overflow: hidden;
             color: #0f172a;
-            font-size: clamp(20px, 2.4vw, 32px);
+            font-size: 15px;
             font-weight: 950;
-            letter-spacing: -.04em;
-            line-height: 1.15;
+            line-height: 1.4;
+            text-align: justify;
+            text-justify: inter-word;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
         }
 
         .as-product-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 14px;
+            gap: 7px;
+            margin-top: 10px;
         }
 
             .as-product-meta span {
                 display: inline-flex;
                 align-items: center;
-                gap: 8px;
-                padding: 8px 11px;
+                gap: 5px;
+                padding: 6px 8px;
                 border: 1px solid rgba(15, 23, 42, .08);
                 border-radius: 999px;
-                background: #f8fafc;
+                background: #ffffff;
                 color: #475569;
-                font-size: 13px;
+                font-size: 9.5px;
                 font-weight: 800;
             }
 
         .as-details-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-            margin: 18px 26px 0;
+            gap: 9px;
+            margin-top: 12px;
         }
 
         .as-detail-box {
-            padding: 16px;
+            min-width: 0;
+            padding: 10px 11px;
             border: 1px solid rgba(15, 23, 42, .08);
-            border-radius: 22px;
-            background: rgba(248, 250, 252, .82);
+            border-radius: 13px;
+            background: #f8fafc;
         }
 
         .as-detail-box-wide {
@@ -220,85 +404,137 @@
         .as-detail-label {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: 6px;
+            margin-bottom: 5px;
             color: #64748b;
-            font-size: 12px;
+            font-size: 8.5px;
             font-weight: 900;
-            letter-spacing: .06em;
+            letter-spacing: .05em;
             text-transform: uppercase;
         }
 
         .as-detail-value {
             color: #0f172a;
-            font-size: 18px;
-            font-weight: 900;
+            font-size: 11.5px;
+            font-weight: 850;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
         }
 
         .as-category-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
         }
 
         .as-category-chip {
             display: inline-flex;
             align-items: center;
-            padding: 8px 11px;
+            padding: 6px 8px;
             border: 1px solid rgba(37, 99, 235, .14);
             border-radius: 999px;
             background: rgba(37, 99, 235, .08);
             color: #1d4ed8;
-            font-size: 13px;
+            font-size: 9.5px;
             font-weight: 850;
         }
 
         .as-delete-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
-            margin-top: 22px;
-            padding: 20px 26px 26px;
-            border-top: 1px solid rgba(15, 23, 42, .08);
-            background: rgba(248, 250, 252, .78);
+            gap: 7px;
+            margin-top: 14px;
+            padding-top: 13px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
         }
 
-        .as-action-btn {
-            display: inline-flex;
+        .as-side-title {
+            display: flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
-            min-height: 42px;
-            padding: .62rem 1rem;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 850;
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 950;
         }
+
+            .as-side-title i {
+                display: inline-grid;
+                width: 31px;
+                height: 31px;
+                place-items: center;
+                border-radius: 10px;
+                background: rgba(37, 99, 235, .10);
+                color: #2563eb;
+                font-size: 11px;
+            }
+
+        .as-side-list {
+            display: grid;
+            gap: 7px;
+            margin-top: 10px;
+        }
+
+            .as-side-list div {
+                padding: 9px 10px;
+                border: 1px solid rgba(15, 23, 42, .08);
+                border-radius: 11px;
+                background: #f8fafc;
+            }
+
+            .as-side-list span {
+                display: block;
+                margin-bottom: 3px;
+                color: #64748b;
+                font-size: 8.5px;
+                font-weight: 900;
+                letter-spacing: .05em;
+                text-transform: uppercase;
+            }
+
+            .as-side-list strong {
+                display: block;
+                color: #0f172a;
+                font-size: 10.5px;
+                font-weight: 850;
+                overflow-wrap: anywhere;
+            }
+
+        .as-tip-list {
+            margin: 10px 0 0;
+            padding-left: 16px;
+            color: #475569;
+            font-size: 10.5px;
+            line-height: 1.55;
+        }
+
+            .as-tip-list li {
+                margin-bottom: 4px;
+            }
 
         .as-delete-modal-content {
             overflow: hidden;
             border: 0;
-            border-radius: 26px;
+            border-radius: 22px;
             box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
         }
 
         .as-delete-modal-header {
             position: relative;
-            padding: 24px 24px 10px;
+            padding: 20px 20px 9px;
             border-bottom: 0;
-            background: radial-gradient(520px 220px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
+            background: radial-gradient(500px 210px at 0% 0%, rgba(239, 68, 68, .14), transparent 62%), linear-gradient(180deg, #ffffff 0%, #fff7f7 100%);
         }
 
         .as-delete-modal-icon {
             display: inline-grid;
-            width: 54px;
-            height: 54px;
+            width: 48px;
+            height: 48px;
             place-items: center;
-            margin-bottom: 14px;
-            border-radius: 18px;
+            margin-bottom: 12px;
+            border-radius: 15px;
             background: rgba(220, 38, 38, .10);
             color: #dc2626;
-            font-size: 22px;
+            font-size: 20px;
         }
 
         .as-delete-modal-title {
@@ -309,40 +545,95 @@
 
         .as-delete-modal-text {
             max-width: 420px;
-            margin: 8px 0 0;
+            margin: 7px 0 0;
             color: #64748b;
-            font-size: 14px;
-            line-height: 1.7;
+            font-size: 12px;
+            line-height: 1.6;
         }
 
         .as-delete-modal-footer {
-            gap: 10px;
-            padding: 18px 24px 24px;
+            gap: 8px;
+            padding: 15px 20px 20px;
             border-top: 0;
             background: #f8fafc;
         }
 
+        @@media (max-width: 991.98px) {
+            .as-delete-dashboard-main {
+                grid-template-columns: 54px minmax(0, 1fr);
+            }
+
+            .as-delete-dashboard-stats {
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .as-delete-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .as-delete-side {
+                position: static;
+            }
+        }
+
         @@media (max-width: 767.98px) {
-            .as-delete-page {
-                padding: 12px;
+            .as-product-delete-page {
+                padding: 10px 0 28px;
             }
 
-            .as-delete-hero {
-                flex-direction: column;
-                padding: 20px;
+            .as-product-delete-shell {
+                padding: 0 10px;
             }
 
-                .as-delete-hero .btn {
-                    width: 100%;
-                }
+            .as-delete-dashboard {
+                padding: 15px;
+                border-radius: 19px;
+            }
 
-            .as-warning-box {
-                margin: 16px 16px 0;
+            .as-delete-dashboard-main {
+                grid-template-columns: 44px minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .as-delete-dashboard-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+                font-size: 17px;
+            }
+
+            .as-delete-title {
+                font-size: 26px;
+            }
+
+            .as-delete-subtitle,
+            .as-delete-dashboard-stats {
+                grid-column: 1 / -1;
+            }
+
+            .as-delete-dashboard-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .as-delete-dashboard-nav,
+            .as-delete-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .as-action-btn {
+                width: 100%;
+            }
+
+            .as-delete-card,
+            .as-delete-side-card {
+                padding: 13px;
+                border-radius: 18px;
             }
 
             .as-product-preview {
                 grid-template-columns: 1fr;
-                margin: 16px 16px 0;
                 text-align: center;
             }
 
@@ -350,219 +641,420 @@
                 margin: 0 auto;
             }
 
-            .as-product-badge {
-                margin-left: auto;
-                margin-right: auto;
+            .as-product-status {
+                margin: 0 auto;
             }
 
             .as-product-meta {
                 justify-content: center;
             }
 
-            .as-details-grid {
-                grid-template-columns: 1fr;
-                margin: 16px 16px 0;
-            }
-
-            .as-delete-actions {
-                flex-direction: column-reverse;
-                padding: 18px 16px 20px;
-            }
-
-                .as-delete-actions .btn,
-                .as-delete-modal-footer .btn {
-                    width: 100%;
-                }
-
             .as-delete-modal-footer {
                 flex-direction: column-reverse;
                 align-items: stretch;
+            }
+
+                .as-delete-modal-footer .btn {
+                    width: 100%;
+                }
+        }
+
+        @@media (max-width: 575.98px) {
+            .as-delete-dashboard-stats,
+            .as-delete-dashboard-nav,
+            .as-delete-actions,
+            .as-details-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 }
 
-<div class="as-delete-page">
-    <div class="as-delete-shell">
-        <div class="as-delete-card">
-            <div class="as-delete-hero">
-                <div>
+<section class="as-product-delete-page">
+    <div class="as-product-delete-shell">
+
+        <header class="as-delete-dashboard">
+
+            <div class="as-delete-dashboard-main">
+
+                <div class="as-delete-dashboard-icon"
+                     aria-hidden="true">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+
+                <div class="as-delete-dashboard-copy">
                     <div class="as-delete-kicker">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        Delete Confirmation
+                        <i class="fa-solid fa-shield-halved"></i>
+                        Destructive Action
                     </div>
 
-                    <h1 class="as-delete-heading">Delete Product</h1>
+                    <h1 class="as-delete-title">
+                        Delete
+                        <span class="as-delete-title-accent">
+                            product
+                        </span>
+                    </h1>
 
                     <p class="as-delete-subtitle">
-                        Review this product carefully before deleting. The final delete action will only run after confirmation.
+                        Review the product carefully before permanently removing it
+                        from the As-Mart catalog.
                     </p>
                 </div>
 
-                <a asp-action="Index" class="btn btn-light border as-action-btn">
+                <div class="as-delete-dashboard-stats"
+                     aria-label="Product information">
+
+                    <div class="as-delete-stat">
+                        <div class="as-delete-stat-icon">
+                            <i class="fa-solid fa-hashtag"></i>
+                        </div>
+
+                        <div>
+                            <div class="as-delete-stat-value">
+                                @Model.Id
+                            </div>
+
+                            <div class="as-delete-stat-label">
+                                Product ID
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="as-delete-stat">
+                        <div class="as-delete-stat-icon">
+                            <i class="fa-solid fa-circle-info"></i>
+                        </div>
+
+                        <div>
+                            <div class="as-delete-stat-value">
+                                @statusText
+                            </div>
+
+                            <div class="as-delete-stat-label">
+                                Current Status
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="as-delete-stat">
+                        <div class="as-delete-stat-icon">
+                            <i class="fa-solid fa-folder-tree"></i>
+                        </div>
+
+                        <div>
+                            <div class="as-delete-stat-value">
+                                @categoryCount
+                            </div>
+
+                            <div class="as-delete-stat-label">
+                                Categories
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <nav class="as-delete-dashboard-nav"
+                 aria-label="Delete product navigation">
+
+                <a asp-action="Index"
+                   class="btn btn-outline-primary as-action-btn">
                     <i class="fa-solid fa-arrow-left"></i>
-                    Back to Products
+                    Products
                 </a>
-            </div>
 
-            <div class="as-warning-box">
-                <div class="as-warning-icon">
-                    <i class="fa-solid fa-trash"></i>
-                </div>
+                <a asp-action="Details"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-primary as-action-btn">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Product Details
+                </a>
 
-                <div>
-                    <div class="as-warning-title">Permanent delete warning</div>
-                    <div class="as-warning-text">
-                        This product will be permanently removed from your catalog. This action cannot be undone.
-                    </div>
-                </div>
-            </div>
+                <a asp-action="Edit"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-primary as-action-btn">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Edit Product
+                </a>
 
-            <div class="as-product-preview">
-                <div class="as-product-image-wrap">
-                    <img src="@Model.MainImageUrl"
-                         alt="@Model.Title"
-                         class="as-product-image"
-                         onerror="this.closest('.as-product-image-wrap').classList.add('as-image-missing'); this.remove();" />
-
-                    <div class="as-image-fallback">
-                        <i class="fa-solid fa-image"></i>
-                        <span>No Image</span>
-                    </div>
-                </div>
-
-                <div class="as-product-content">
-                    <div class="as-product-badge">
-                        @(Model.IsActive ? "Active Product" : "Inactive Product")
-                    </div>
-
-                    <h2 class="as-product-title">@Model.Title</h2>
-
-                    <div class="as-product-meta">
-                        <span>
-                            <i class="fa-solid fa-barcode"></i>
-                            ASIN: @(string.IsNullOrWhiteSpace(Model.ASIN) ? "N/A" : Model.ASIN)
-                        </span>
-
-                        <span>
-                            <i class="fa-solid fa-coins"></i>
-                            @if (Model.Price.HasValue)
-                            {
-                                @($"{Model.Price.Value:0.00} {Model.Currency}")
-                            }
-                            else
-                            {
-                                @:N/A
-                            }
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="as-details-grid">
-                <div class="as-detail-box">
-                    <div class="as-detail-label">
-                        <i class="fa-solid fa-dollar-sign"></i>
-                        Price
-                    </div>
-                    <div class="as-detail-value">
-                        @if (Model.Price.HasValue)
-                        {
-                            @($"{Model.Price.Value:0.00} {Model.Currency}")
-                        }
-                        else
-                        {
-                            <span class="text-muted">N/A</span>
-                        }
-                    </div>
-                </div>
-
-                <div class="as-detail-box">
-                    <div class="as-detail-label">
-                        <i class="fa-solid fa-toggle-on"></i>
-                        Active
-                    </div>
-                    <div class="as-detail-value">
-                        @(Model.IsActive ? "Yes" : "No")
-                    </div>
-                </div>
-
-                <div class="as-detail-box as-detail-box-wide">
-                    <div class="as-detail-label">
-                        <i class="fa-solid fa-layer-group"></i>
-                        Categories
-                    </div>
-
-                    <div class="as-category-list">
-                        @if (Model.CategoryNames != null && Model.CategoryNames.Any())
-                        {
-                            foreach (var categoryName in Model.CategoryNames)
-                            {
-                                <span class="as-category-chip">@categoryName</span>
-                            }
-                        }
-                        else
-                        {
-                            <span class="text-muted">None</span>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <form asp-action="Delete" method="post" id="deleteProductForm">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@Model.Id" />
-
-                <div class="as-delete-actions">
-                    <a asp-action="Index" class="btn btn-outline-secondary as-action-btn">
-                        <i class="fa-solid fa-xmark"></i>
-                        Cancel
+                @if (!string.IsNullOrWhiteSpace(Model.Slug))
+                {
+                    <a asp-area=""
+                       asp-controller="Product"
+                       asp-action="Details"
+                       asp-route-slug="@Model.Slug"
+                       class="btn btn-outline-primary as-action-btn"
+                       target="_blank"
+                       rel="noopener">
+                        <i class="fa-solid fa-eye"></i>
+                        Public Page
                     </a>
+                }
 
-                    <button type="button"
-                            class="btn btn-danger as-action-btn"
-                            data-delete-confirm="true"
-                            data-delete-message="Are you sure you want to permanently delete this product? This action cannot be undone.">
+            </nav>
+        </header>
+
+        <div class="as-delete-layout">
+
+            <section class="as-delete-card"
+                     aria-labelledby="delete-product-heading">
+
+                <div class="as-warning-box">
+                    <div class="as-warning-icon">
                         <i class="fa-solid fa-trash"></i>
-                        Delete Product
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+                    </div>
 
-<div class="modal fade as-delete-modal" id="asDeleteConfirmModal" tabindex="-1" aria-labelledby="asDeleteConfirmModalLabel" aria-hidden="true">
+                    <div>
+                        <h2 id="delete-product-heading">
+                            Permanent deletion
+                        </h2>
+
+                        <p>
+                            This product will be removed permanently. Product links,
+                            catalog references and related data may stop working.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="as-product-preview">
+
+                    <div class="as-product-image-wrap @(hasImage ? "" : "as-image-missing")">
+
+                        @if (hasImage)
+                        {
+                            <img src="@Model.MainImageUrl"
+                                 alt="@Model.Title"
+                                 class="as-product-image"
+                                 loading="lazy"
+                                 onerror="this.closest('.as-product-image-wrap').classList.add('as-image-missing'); this.remove();" />
+                        }
+
+                        <div class="as-image-fallback">
+                            <i class="fa-regular fa-image"></i>
+                            <span>No image</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="as-product-status">
+                            <i class="fa-solid @(Model.IsActive ? "fa-circle-check" : "fa-circle-xmark")"></i>
+                            @statusText Product
+                        </span>
+
+                        <h2 class="as-product-name">
+                            @Model.Title
+                        </h2>
+
+                        <div class="as-product-meta">
+                            <span>
+                                <i class="fa-solid fa-barcode"></i>
+                                @(string.IsNullOrWhiteSpace(Model.ASIN) ? "No ASIN" : Model.ASIN)
+                            </span>
+
+                            <span>
+                                <i class="fa-solid fa-coins"></i>
+                                @priceText
+                            </span>
+
+                            <span>
+                                <i class="fa-solid fa-eye"></i>
+                                @Model.ClickCount.ToString("N0") views
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="as-details-grid">
+
+                    <div class="as-detail-box">
+                        <div class="as-detail-label">
+                            <i class="fa-solid fa-dollar-sign"></i>
+                            Price
+                        </div>
+
+                        <div class="as-detail-value">
+                            @priceText
+                        </div>
+                    </div>
+
+                    <div class="as-detail-box">
+                        <div class="as-detail-label">
+                            <i class="fa-solid fa-toggle-on"></i>
+                            Status
+                        </div>
+
+                        <div class="as-detail-value">
+                            @statusText
+                        </div>
+                    </div>
+
+                    <div class="as-detail-box as-detail-box-wide">
+                        <div class="as-detail-label">
+                            <i class="fa-solid fa-layer-group"></i>
+                            Categories
+                        </div>
+
+                        @if (Model.CategoryNames != null &&
+                                                Model.CategoryNames.Any())
+                        {
+                            <div class="as-category-list">
+                                @foreach (var categoryName in Model.CategoryNames)
+                                {
+                                    <span class="as-category-chip">
+                                        @categoryName
+                                    </span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="as-detail-value text-muted">
+                                No categories assigned
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <form asp-action="Delete"
+                      method="post"
+                      id="deleteProductForm">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="id"
+                           value="@Model.Id" />
+
+                    <div class="as-delete-actions">
+
+                        <a asp-action="Index"
+                           class="btn btn-outline-secondary as-action-btn">
+                            <i class="fa-solid fa-xmark"></i>
+                            Cancel
+                        </a>
+
+                        <button type="button"
+                                class="btn btn-danger as-action-btn"
+                                data-delete-confirm="true"
+                                data-delete-message="Permanently delete this product? This action cannot be undone.">
+                            <i class="fa-solid fa-trash"></i>
+                            Delete Product
+                        </button>
+
+                    </div>
+                </form>
+            </section>
+
+            <aside class="as-delete-side">
+
+                <div class="as-delete-side-card">
+                    <div class="as-side-title">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Product Summary
+                    </div>
+
+                    <div class="as-side-list">
+                        <div>
+                            <span>Product ID</span>
+                            <strong>@Model.Id</strong>
+                        </div>
+
+                        <div>
+                            <span>ASIN</span>
+                            <strong>
+                                @(string.IsNullOrWhiteSpace(Model.ASIN)
+                                                                ? "Not set"
+                                                                : Model.ASIN)
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Status</span>
+                            <strong>@statusText</strong>
+                        </div>
+
+                        <div>
+                            <span>Price</span>
+                            <strong>@priceText</strong>
+                        </div>
+
+                        <div>
+                            <span>Views</span>
+                            <strong>@Model.ClickCount.ToString("N0")</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="as-delete-side-card">
+                    <div class="as-side-title">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        Before Deleting
+                    </div>
+
+                    <ul class="as-tip-list">
+                        <li>Verify this is the correct product.</li>
+                        <li>Check its category and collection references.</li>
+                        <li>Review active campaign or affiliate links.</li>
+                        <li>Consider deactivating it instead.</li>
+                    </ul>
+                </div>
+
+            </aside>
+        </div>
+
+    </div>
+</section>
+
+<div class="modal fade as-delete-modal"
+     id="asDeleteConfirmModal"
+     tabindex="-1"
+     aria-labelledby="asDeleteConfirmModalLabel"
+     aria-hidden="true">
+
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content as-delete-modal-content">
+
             <div class="modal-header as-delete-modal-header">
                 <div>
                     <div class="as-delete-modal-icon">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
 
-                    <h5 class="modal-title as-delete-modal-title" id="asDeleteConfirmModalLabel">
-                        Confirm Delete
-                    </h5>
+                    <h2 class="modal-title h5 as-delete-modal-title"
+                        id="asDeleteConfirmModalLabel">
+                        Confirm Permanent Deletion
+                    </h2>
 
                     <p class="as-delete-modal-text">
-                        This action cannot be undone. Please confirm before deleting.
+                        You are about to permanently delete this product.
+                        This action cannot be undone.
                     </p>
                 </div>
 
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
             </div>
 
             <div class="modal-footer as-delete-modal-footer">
-                <button type="button" class="btn btn-light as-action-btn" data-bs-dismiss="modal">
+
+                <button type="button"
+                        class="btn btn-outline-secondary as-action-btn"
+                        data-bs-dismiss="modal">
                     <i class="fa-solid fa-xmark"></i>
                     Cancel
                 </button>
 
-                <button type="button" class="btn btn-danger as-action-btn" id="asDeleteConfirmButton">
+                <button type="button"
+                        class="btn btn-danger as-action-btn"
+                        id="asDeleteConfirmButton">
                     <i class="fa-solid fa-trash"></i>
-                    Yes, Delete
+                    Yes, Delete Permanently
                 </button>
+
             </div>
         </div>
     </div>
@@ -572,17 +1064,23 @@
     (() => {
         let pendingDeleteForm = null;
 
-        const modalElement = document.getElementById('asDeleteConfirmModal');
-        const confirmButton = document.getElementById('asDeleteConfirmButton');
+        const modalElement =
+            document.getElementById('asDeleteConfirmModal');
 
-        if (!modalElement || !confirmButton || typeof bootstrap === 'undefined') {
+        const confirmButton =
+            document.getElementById('asDeleteConfirmButton');
+
+        if (!modalElement ||
+            !confirmButton ||
+            typeof bootstrap === 'undefined') {
             return;
         }
 
         const modal = new bootstrap.Modal(modalElement);
 
         document.addEventListener('click', function (event) {
-            const deleteTrigger = event.target.closest('[data-delete-confirm="true"]');
+            const deleteTrigger =
+                event.target.closest('[data-delete-confirm="true"]');
 
             if (!deleteTrigger) {
                 return;
@@ -590,10 +1088,14 @@
 
             event.preventDefault();
 
-            pendingDeleteForm = deleteTrigger.closest('form');
+            pendingDeleteForm =
+                deleteTrigger.closest('form');
 
-            const customMessage = deleteTrigger.dataset.deleteMessage;
-            const textElement = modalElement.querySelector('.as-delete-modal-text');
+            const customMessage =
+                deleteTrigger.dataset.deleteMessage;
+
+            const textElement =
+                modalElement.querySelector('.as-delete-modal-text');
 
             if (customMessage && textElement) {
                 textElement.textContent = customMessage;
@@ -603,13 +1105,36 @@
         });
 
         confirmButton.addEventListener('click', function () {
-            if (pendingDeleteForm) {
+            if (!pendingDeleteForm || confirmButton.disabled) {
+                return;
+            }
+
+            confirmButton.disabled = true;
+
+            confirmButton.innerHTML =
+                '<span class="spinner-border spinner-border-sm" ' +
+                'aria-hidden="true"></span> Deleting...';
+
+            if (typeof pendingDeleteForm.requestSubmit === 'function') {
+                pendingDeleteForm.requestSubmit();
+            } else {
                 pendingDeleteForm.submit();
             }
         });
 
-        modalElement.addEventListener('hidden.bs.modal', function () {
-            pendingDeleteForm = null;
-        });
+        modalElement.addEventListener(
+            'hidden.bs.modal',
+            function () {
+                pendingDeleteForm = null;
+                resetConfirmButton();
+            });
+
+        function resetConfirmButton() {
+            confirmButton.disabled = false;
+
+            confirmButton.innerHTML =
+                '<i class="fa-solid fa-trash"></i> ' +
+                'Yes, Delete Permanently';
+        }
     })();
 </script>

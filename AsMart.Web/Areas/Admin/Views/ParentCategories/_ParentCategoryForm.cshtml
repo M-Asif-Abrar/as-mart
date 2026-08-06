@@ -1,310 +1,691 @@
 ﻿@model AsMart.Web.Models.DTOs.ParentCategoryFormDto
 
 <style>
-    .modern-form-wrap {
+    .asm-parent-form {
+        --pf-blue: #146cff;
+        --pf-blue-dark: #0d57d8;
+        --pf-indigo: #5b4bff;
+        --pf-green: #159447;
+        --pf-red: #d93a3a;
+        --pf-ink: #111a2e;
+        --pf-text: #33415c;
+        --pf-muted: #71809d;
+        --pf-border: rgba(99, 116, 150, .16);
         width: 100%;
     }
 
-    .modern-form-card {
-        border-radius: 30px;
-        background: rgba(255,255,255,.96);
-        border: 1px solid rgba(15,23,42,.08);
-        box-shadow: 0 18px 45px rgba(15,23,42,.08);
-        padding: 1.5rem;
+    .asm-parent-form-card {
+        position: relative;
         overflow: hidden;
+        width: 100%;
+        padding: clamp(1rem, 2.5vw, 1.5rem);
+        border: 1px solid var(--pf-border);
+        border-radius: 22px;
+        background: radial-gradient(circle at 96% 0%, rgba(91, 75, 255, .06), transparent 18rem), rgba(255, 255, 255, .98);
+        box-shadow: 0 12px 32px rgba(33, 54, 92, .06);
     }
 
-    .modern-form-header {
+    .asm-parent-form-header {
         display: flex;
         align-items: flex-start;
         gap: 1rem;
-        margin-bottom: 1.8rem;
-        padding-bottom: 1.25rem;
-        border-bottom: 1px solid rgba(15,23,42,.08);
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.2rem;
+        border-bottom: 1px solid #e5eaf2;
     }
 
-    .modern-form-icon {
-        width: 68px;
-        height: 68px;
-        border-radius: 22px;
-        background: linear-gradient(135deg,#2563eb,#3b82f6);
-        color: #fff;
-        display: flex;
+    .asm-parent-form-icon {
+        display: inline-flex;
+        flex: 0 0 58px;
+        width: 58px;
+        height: 58px;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
-        flex: 0 0 auto;
-        box-shadow: 0 12px 30px rgba(37,99,235,.22);
+        color: #2f63dd;
+        font-size: 1.25rem;
+        border: 1px solid #bdd0ff;
+        border-radius: 18px;
+        background: linear-gradient(145deg, #dce8ff, #eef2ff);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, .10);
     }
 
-    .modern-form-title {
-        color: #0f172a;
-        font-size: 1.3rem;
+    .asm-parent-form-heading {
+        min-width: 0;
+    }
+
+    .asm-parent-form-eyebrow {
+        display: block;
+        margin-bottom: .25rem;
+        color: #2459d8;
+        font-size: .67rem;
         font-weight: 900;
-        margin-bottom: .35rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
     }
 
-    .modern-form-subtitle {
-        color: #64748b;
+    .asm-parent-form-title {
+        margin: 0 0 .3rem;
+        color: var(--pf-ink);
+        font-size: 1.12rem;
+        font-weight: 950;
+        letter-spacing: -.015em;
+    }
+
+    .asm-parent-form-subtitle {
+        max-width: 720px;
         margin: 0;
+        color: var(--pf-muted);
+        font-size: .8rem;
         line-height: 1.6;
     }
 
-    .modern-label {
-        color: #0f172a;
-        font-weight: 800;
-        margin-bottom: .65rem;
-        display: block;
+    .asm-parent-form-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 1.15rem;
     }
 
-    .modern-input-wrap {
-        display: flex;
-        align-items: stretch;
-        border-radius: 18px;
-        border: 1px solid rgba(15,23,42,.12);
-        overflow: hidden;
-        background: #fff;
-        transition: .2s ease;
+    .asm-parent-field {
+        grid-column: span 12;
+        min-width: 0;
     }
 
-        .modern-input-wrap:focus-within,
-        .modern-textarea-wrap:focus-within {
-            border-color: rgba(37,99,235,.45);
-            box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
+        .asm-parent-field.half {
+            grid-column: span 6;
         }
 
-    .modern-input-icon {
-        width: 58px;
-        min-width: 58px;
+    .asm-parent-label {
         display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        margin-bottom: .45rem;
+        color: #26334c;
+        font-size: .73rem;
+        font-weight: 900;
+        letter-spacing: .025em;
+    }
+
+    .asm-parent-required {
+        color: var(--pf-red);
+        font-size: .7rem;
+        font-weight: 900;
+    }
+
+    .asm-parent-input-group {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+        min-height: 50px;
+        overflow: hidden;
+        border: 1px solid #d8e0ec;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 2px 5px rgba(15, 23, 42, .02);
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+
+        .asm-parent-input-group:hover {
+            border-color: rgba(20, 108, 255, .28);
+        }
+
+        .asm-parent-input-group:focus-within {
+            border-color: rgba(20, 108, 255, .58);
+            box-shadow: 0 0 0 .22rem rgba(20, 108, 255, .10);
+        }
+
+    .asm-parent-input-icon {
+        display: inline-flex;
+        flex: 0 0 50px;
+        width: 50px;
         align-items: center;
         justify-content: center;
-        background: #f8fafc;
-        border-right: 1px solid rgba(15,23,42,.08);
-        color: #64748b;
-        font-size: 1rem;
+        color: #66758f;
+        font-size: .95rem;
+        border-right: 1px solid #e1e7f0;
+        background: #f8faff;
     }
 
-    .modern-control {
+    .asm-parent-control {
+        width: 100%;
+        min-width: 0;
+        min-height: 48px;
+        padding: .72rem .9rem;
+        color: var(--pf-ink);
+        font-size: .88rem;
+        font-weight: 600;
         border: 0 !important;
+        border-radius: 0 !important;
+        outline: 0 !important;
+        background: transparent !important;
         box-shadow: none !important;
-        min-height: 54px;
-        font-size: .96rem;
-        padding: .9rem 1rem;
-        background: transparent;
     }
 
-    .modern-textarea-wrap {
-        border-radius: 18px;
-        border: 1px solid rgba(15,23,42,.12);
+        .asm-parent-control::placeholder {
+            color: #9aa6b9;
+            font-weight: 500;
+        }
+
+    .asm-parent-textarea-group {
+        position: relative;
         overflow: hidden;
+        border: 1px solid #d8e0ec;
+        border-radius: 14px;
         background: #fff;
-        transition: .2s ease;
+        transition: border-color .2s ease, box-shadow .2s ease;
     }
 
-    .modern-textarea {
-        resize: vertical;
-        min-height: 140px;
-    }
+        .asm-parent-textarea-group:hover {
+            border-color: rgba(20, 108, 255, .28);
+        }
 
-    .modern-help-text {
-        margin-top: .55rem;
-        color: #64748b;
-        font-size: .84rem;
-    }
+        .asm-parent-textarea-group:focus-within {
+            border-color: rgba(20, 108, 255, .58);
+            box-shadow: 0 0 0 .22rem rgba(20, 108, 255, .10);
+        }
 
-    .modern-switch-card {
-        border-radius: 22px;
-        border: 1px solid rgba(15,23,42,.08);
-        background: #f8fafc;
-        padding: 1rem;
-        min-height: 100%;
-    }
-
-    .modern-switch-wrap {
+    .asm-parent-textarea-toolbar {
         display: flex;
         align-items: center;
-        gap: .75rem;
-        margin: 0;
+        gap: .5rem;
+        min-height: 42px;
+        padding: .55rem .8rem;
+        color: #66758f;
+        font-size: .72rem;
+        font-weight: 850;
+        border-bottom: 1px solid #e5eaf2;
+        background: #f8faff;
     }
 
-    .modern-switch {
-        width: 3rem !important;
-        height: 1.5rem !important;
-        margin-top: 0;
+    .asm-parent-textarea {
+        min-height: 130px;
+        resize: vertical;
+        line-height: 1.65;
     }
 
-    .modern-switch-label {
-        font-weight: 800;
-        color: #0f172a;
-    }
-
-    .modern-switch-help {
-        margin-top: .6rem;
-        color: #64748b;
-        font-size: .84rem;
+    .asm-parent-help {
+        display: flex;
+        align-items: flex-start;
+        gap: .4rem;
+        margin-top: .45rem;
+        color: var(--pf-muted);
+        font-size: .7rem;
         line-height: 1.5;
     }
 
-    @@media (max-width: 767.98px) {
-
-        .modern-form-card {
-            border-radius: 24px;
-            padding: 1.15rem;
+        .asm-parent-help i {
+            margin-top: .15rem;
+            color: #5c78a8;
         }
 
-        .modern-form-header {
+    .asm-parent-switch-card {
+        display: flex;
+        min-height: 100%;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .9rem;
+        border: 1px solid #dfe5ee;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #f8faff, #fff);
+    }
+
+    .asm-parent-switch-content {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .asm-parent-switch-icon {
+        display: inline-flex;
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+        align-items: center;
+        justify-content: center;
+        color: var(--pf-green);
+        border-radius: 13px;
+        background: rgba(21, 148, 71, .09);
+    }
+
+    .asm-parent-switch-title {
+        display: block;
+        margin: 0;
+        color: var(--pf-ink);
+        font-size: .8rem;
+        font-weight: 950;
+        cursor: pointer;
+    }
+
+    .asm-parent-switch-help {
+        display: block;
+        margin-top: .15rem;
+        color: var(--pf-muted);
+        font-size: .68rem;
+        line-height: 1.45;
+    }
+
+    .asm-parent-switch-wrap {
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 0;
+    }
+
+    .asm-parent-switch {
+        width: 3rem !important;
+        height: 1.55rem !important;
+        margin: 0 !important;
+        cursor: pointer;
+        border-color: #bdc7d6;
+        box-shadow: none !important;
+    }
+
+        .asm-parent-switch:checked {
+            border-color: var(--pf-green);
+            background-color: var(--pf-green);
+        }
+
+    .asm-parent-form .field-validation-error,
+    .asm-parent-form .text-danger {
+        display: flex;
+        align-items: flex-start;
+        gap: .35rem;
+        margin-top: .4rem;
+        color: var(--pf-red) !important;
+        font-size: .7rem;
+        font-weight: 800;
+        line-height: 1.45;
+    }
+
+        .asm-parent-form .field-validation-error::before {
+            margin-top: .03rem;
+            content: "\f06a";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+        }
+
+    .asm-parent-form .input-validation-error {
+        background: #fffafa !important;
+    }
+
+    .asm-parent-input-group:has(.input-validation-error),
+    .asm-parent-textarea-group:has(.input-validation-error) {
+        border-color: rgba(217, 58, 58, .58);
+        box-shadow: 0 0 0 .18rem rgba(217, 58, 58, .08);
+    }
+
+    .asm-parent-character-count {
+        margin-left: auto;
+        color: #8591a6;
+        font-size: .67rem;
+        font-weight: 800;
+    }
+
+    @@media (max-width: 767.98px) {
+        .asm-parent-form-card {
+            padding: 1rem;
+            border-radius: 18px;
+        }
+
+        .asm-parent-form-header {
+            gap: .75rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 1rem;
+        }
+
+        .asm-parent-form-icon {
+            flex-basis: 50px;
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+        }
+
+        .asm-parent-field.half {
+            grid-column: span 12;
+        }
+
+        .asm-parent-switch-card {
+            align-items: flex-start;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .asm-parent-form-header {
             flex-direction: column;
         }
 
-        .modern-form-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 18px;
+        .asm-parent-input-icon {
+            flex-basis: 44px;
+            width: 44px;
+        }
+
+        .asm-parent-switch-card {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .asm-parent-switch-wrap {
+            padding-left: 3.2rem;
         }
     }
 </style>
 
-<div class="modern-form-wrap">
+<div class="asm-parent-form">
+    <div class="asm-parent-form-card">
 
-    <div class="modern-form-card">
-
-        <div class="modern-form-header">
-
-            <div class="modern-form-icon">
+        <div class="asm-parent-form-header">
+            <div class="asm-parent-form-icon">
                 <i class="fa-solid fa-layer-group"></i>
             </div>
 
-            <div>
-                <h3 class="modern-form-title">
+            <div class="asm-parent-form-heading">
+                <span class="asm-parent-form-eyebrow">
+                    Parent Category Form
+                </span>
+
+                <h3 class="asm-parent-form-title">
                     Parent Category Information
                 </h3>
 
-                <p class="modern-form-subtitle">
-                    Configure category structure, SEO slug,
-                    sorting order, and visibility settings.
+                <p class="asm-parent-form-subtitle">
+                    Configure the category name, SEO slug, description,
+                    storefront display order, and publishing status.
                 </p>
             </div>
-
         </div>
 
-        <div class="row g-4">
+        <div class="asm-parent-form-grid">
 
-            <div class="col-12">
+            <div class="asm-parent-field">
+                <label asp-for="Name"
+                       class="asm-parent-label">
+                    <span>
+                        Category Name
+                        <span class="asm-parent-required">*</span>
+                    </span>
+                </label>
 
-                <label asp-for="Name" class="modern-label"></label>
-
-                <div class="modern-input-wrap">
-
-                    <span class="modern-input-icon">
+                <div class="asm-parent-input-group">
+                    <span class="asm-parent-input-icon">
                         <i class="fa-solid fa-folder-tree"></i>
                     </span>
 
                     <input asp-for="Name"
-                           class="form-control modern-control"
-                           placeholder="Enter parent category name" />
-
+                           class="form-control asm-parent-control"
+                           placeholder="Enter parent category name"
+                           autocomplete="off" />
                 </div>
 
-                <span asp-validation-for="Name"
-                      class="text-danger small mt-1 d-block"></span>
+                <div class="asm-parent-help">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>
+                        Use a broad customer-facing name suitable for grouping
+                        multiple child categories.
+                    </span>
+                </div>
 
+                <span asp-validation-for="Name"></span>
             </div>
 
-            <div class="col-12">
+            <div class="asm-parent-field">
+                <label asp-for="Slug"
+                       class="asm-parent-label">
+                    <span>
+                        SEO Slug
+                    </span>
+                </label>
 
-                <label asp-for="Slug" class="modern-label"></label>
-
-                <div class="modern-input-wrap">
-
-                    <span class="modern-input-icon">
+                <div class="asm-parent-input-group">
+                    <span class="asm-parent-input-icon">
                         <i class="fa-solid fa-link"></i>
                     </span>
 
                     <input asp-for="Slug"
-                           class="form-control modern-control"
-                           placeholder="example-category-slug" />
-
+                           class="form-control asm-parent-control"
+                           placeholder="example-parent-category"
+                           autocomplete="off"
+                           spellcheck="false" />
                 </div>
 
-                <div class="modern-help-text">
-                    Leave empty to auto-generate from category name.
+                <div class="asm-parent-help">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>
+                        Leave this field empty when the application automatically
+                        generates the slug from the category name.
+                    </span>
                 </div>
 
-                <span asp-validation-for="Slug"
-                      class="text-danger small mt-1 d-block"></span>
-
+                <span asp-validation-for="Slug"></span>
             </div>
 
-            <div class="col-12">
+            <div class="asm-parent-field">
+                <label asp-for="Description"
+                       class="asm-parent-label">
+                    <span>
+                        Description
+                    </span>
 
-                <label asp-for="Description" class="modern-label"></label>
+                    <span class="asm-parent-character-count"
+                          id="parentDescriptionCount">
+                        0 characters
+                    </span>
+                </label>
 
-                <div class="modern-textarea-wrap">
+                <div class="asm-parent-textarea-group">
+                    <div class="asm-parent-textarea-toolbar">
+                        <i class="fa-solid fa-align-left"></i>
+                        Storefront and SEO description
+                    </div>
 
                     <textarea asp-for="Description"
-                              class="form-control modern-control modern-textarea"
+                              class="form-control asm-parent-control asm-parent-textarea"
                               rows="5"
-                              placeholder="Write a short description about this category..."></textarea>
-
+                              placeholder="Write a concise description for this parent category..."></textarea>
                 </div>
 
-                <span asp-validation-for="Description"
-                      class="text-danger small mt-1 d-block"></span>
+                <div class="asm-parent-help">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>
+                        Describe the category purpose and the types of products
+                        or child categories it contains.
+                    </span>
+                </div>
 
+                <span asp-validation-for="Description"></span>
             </div>
 
-            <div class="col-12 col-md-6">
+            <div class="asm-parent-field half">
+                <label asp-for="DisplayOrder"
+                       class="asm-parent-label">
+                    <span>
+                        Display Order
+                    </span>
+                </label>
 
-                <label asp-for="DisplayOrder" class="modern-label"></label>
-
-                <div class="modern-input-wrap">
-
-                    <span class="modern-input-icon">
+                <div class="asm-parent-input-group">
+                    <span class="asm-parent-input-icon">
                         <i class="fa-solid fa-arrow-down-1-9"></i>
                     </span>
 
                     <input asp-for="DisplayOrder"
-                           class="form-control modern-control"
+                           class="form-control asm-parent-control"
+                           type="number"
+                           min="0"
+                           step="1"
+                           inputmode="numeric"
                            placeholder="0" />
-
                 </div>
 
-                <span asp-validation-for="DisplayOrder"
-                      class="text-danger small mt-1 d-block"></span>
+                <div class="asm-parent-help">
+                    <i class="fa-solid fa-sort"></i>
+                    <span>
+                        Lower numbers are displayed before higher numbers.
+                    </span>
+                </div>
 
+                <span asp-validation-for="DisplayOrder"></span>
             </div>
 
-            <div class="col-12 col-md-6">
-
-                <label class="modern-label d-block">
-                    Category Status
+            <div class="asm-parent-field half">
+                <label class="asm-parent-label">
+                    <span>
+                        Category Status
+                    </span>
                 </label>
 
-                <div class="modern-switch-card">
+                <div class="asm-parent-switch-card">
+                    <div class="asm-parent-switch-content">
+                        <span class="asm-parent-switch-icon"
+                              id="parentStatusIcon">
+                            <i class="fa-solid fa-eye"></i>
+                        </span>
 
-                    <div class="form-check form-switch modern-switch-wrap">
+                        <div>
+                            <label asp-for="IsActive"
+                                   class="asm-parent-switch-title"
+                                   id="parentStatusLabel">
+                                Active Category
+                            </label>
 
+                            <span class="asm-parent-switch-help"
+                                  id="parentStatusHelp">
+                                Visible across the public storefront.
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch asm-parent-switch-wrap">
                         <input asp-for="IsActive"
-                               class="form-check-input modern-switch" />
-
-                        <label asp-for="IsActive"
-                               class="form-check-label modern-switch-label">
-                            Active Category
-                        </label>
-
+                               class="form-check-input asm-parent-switch"
+                               role="switch"
+                               aria-describedby="parentStatusHelp" />
                     </div>
-
-                    <div class="modern-switch-help">
-                        Enable this category to make it visible across the storefront.
-                    </div>
-
                 </div>
 
+                <span asp-validation-for="IsActive"></span>
             </div>
 
         </div>
-
     </div>
-
 </div>
+
+<script>
+    (function () {
+        'use strict';
+
+        const formRoot = document.currentScript
+            ? document.currentScript.previousElementSibling
+            : document.querySelector('.asm-parent-form');
+
+        const nameInput =
+            document.querySelector('[name="Name"]');
+
+        const slugInput =
+            document.querySelector('[name="Slug"]');
+
+        const descriptionInput =
+            document.querySelector('[name="Description"]');
+
+        const activeInput =
+            document.querySelector('[name="IsActive"]');
+
+        const descriptionCount =
+            document.getElementById('parentDescriptionCount');
+
+        const statusLabel =
+            document.getElementById('parentStatusLabel');
+
+        const statusHelp =
+            document.getElementById('parentStatusHelp');
+
+        const statusIcon =
+            document.getElementById('parentStatusIcon');
+
+        function createSlug(value) {
+            return String(value || '')
+                .trim()
+                .toLowerCase()
+                .replace(/['"]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
+
+        function updateDescriptionCount() {
+            if (!descriptionInput || !descriptionCount) {
+                return;
+            }
+
+            const count = String(descriptionInput.value || '').length;
+
+            descriptionCount.textContent =
+                count + ' character' + (count === 1 ? '' : 's');
+        }
+
+        function updateStatus() {
+            if (!activeInput) {
+                return;
+            }
+
+            const isActive = activeInput.checked;
+
+            if (statusLabel) {
+                statusLabel.textContent =
+                    isActive ? 'Active Category' : 'Inactive Category';
+            }
+
+            if (statusHelp) {
+                statusHelp.textContent = isActive
+                    ? 'Visible across the public storefront.'
+                    : 'Hidden from the public storefront.';
+            }
+
+            if (statusIcon) {
+                statusIcon.innerHTML = isActive
+                    ? '<i class="fa-solid fa-eye"></i>'
+                    : '<i class="fa-solid fa-eye-slash"></i>';
+
+                statusIcon.style.color =
+                    isActive ? '#159447' : '#d93a3a';
+
+                statusIcon.style.background =
+                    isActive
+                        ? 'rgba(21, 148, 71, .09)'
+                        : 'rgba(217, 58, 58, .09)';
+            }
+        }
+
+        let slugWasManuallyEdited =
+            Boolean(slugInput && String(slugInput.value || '').trim());
+
+        slugInput?.addEventListener('input', function () {
+            slugWasManuallyEdited =
+                String(slugInput.value || '').trim().length > 0;
+        });
+
+        nameInput?.addEventListener('input', function () {
+            if (!slugInput || slugWasManuallyEdited) {
+                return;
+            }
+
+            slugInput.value = createSlug(nameInput.value);
+            slugInput.dispatchEvent(
+                new Event('input', { bubbles: true })
+            );
+        });
+
+        descriptionInput?.addEventListener(
+            'input',
+            updateDescriptionCount
+        );
+
+        activeInput?.addEventListener(
+            'change',
+            updateStatus
+        );
+
+        updateDescriptionCount();
+        updateStatus();
+    })();
+</script>

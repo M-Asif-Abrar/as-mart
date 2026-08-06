@@ -18,6 +18,10 @@
         MidpointRounding.AwayFromZero);
 
     filledStars = Math.Clamp(filledStars, 0, 5);
+
+    var isAdmin =
+        User.Identity?.IsAuthenticated == true &&
+        User.IsInRole("Admin");
 }
 
 <style>
@@ -27,16 +31,16 @@
         height: 100%;
         overflow: hidden;
         border: 1px solid rgba(15, 23, 42, .08);
-        border-radius: 24px;
-        background: rgba(255, 255, 255, .97);
-        box-shadow: 0 16px 45px rgba(15, 23, 42, .07);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, .98);
+        box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
         transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
     }
 
         .pc-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-3px);
             border-color: rgba(37, 99, 235, .20);
-            box-shadow: 0 24px 64px rgba(15, 23, 42, .11);
+            box-shadow: 0 18px 46px rgba(15, 23, 42, .10);
         }
 
     .pc-media {
@@ -45,7 +49,7 @@
         align-items: center;
         justify-content: center;
         min-height: 230px;
-        padding: 15px;
+        padding: 14px;
         border-bottom: 1px solid rgba(15, 23, 42, .07);
         background: linear-gradient( 180deg, #f8fafc 0%, #ffffff 100%);
         text-decoration: none;
@@ -60,14 +64,19 @@
 
     .pc-badge {
         position: absolute;
-        top: 13px;
-        left: 13px;
-        padding: 7px 11px;
+        top: 12px;
+        left: 12px;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        padding: 0 10px;
         border: 1px solid rgba(255, 255, 255, .35);
         border-radius: 999px;
-        color: #ffffff;
         background: linear-gradient( 135deg, #ef4444, #dc2626);
-        box-shadow: 0 9px 22px rgba(220, 38, 38, .22);
+        color: #ffffff;
+        box-shadow: 0 8px 20px rgba(220, 38, 38, .20);
         font-size: 12px;
         font-weight: 950;
         line-height: 1;
@@ -77,8 +86,8 @@
         display: flex;
         flex: 1;
         flex-direction: column;
-        gap: 12px;
-        padding: 16px;
+        gap: 11px;
+        padding: 14px;
     }
 
     .pc-title {
@@ -86,7 +95,7 @@
         min-height: calc(1.35em * 3);
         overflow: hidden;
         color: #0f172a;
-        font-size: 15px;
+        font-size: 14.5px;
         font-weight: 950;
         line-height: 1.35;
         text-decoration: none;
@@ -103,31 +112,31 @@
     .pc-meta {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 9px;
     }
 
     .pc-rating-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        min-height: 34px;
+        gap: 8px;
+        min-height: 32px;
     }
 
     .pc-rating-left {
         display: flex;
         align-items: center;
         min-width: 0;
-        gap: 7px;
+        gap: 6px;
     }
 
     .pc-rating-number {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 38px;
-        height: 34px;
-        padding: 0 9px;
+        min-width: 36px;
+        height: 32px;
+        padding: 0 8px;
         border-radius: 999px;
         background: rgba(37, 99, 235, .09);
         color: #1d4ed8;
@@ -141,7 +150,7 @@
         align-items: center;
         gap: 1px;
         color: #f59e0b;
-        font-size: 13px;
+        font-size: 12px;
         line-height: 1;
         white-space: nowrap;
     }
@@ -154,13 +163,13 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        min-height: 34px;
-        padding: 0 10px;
+        min-height: 32px;
+        padding: 0 9px;
         border: 1px solid rgba(15, 23, 42, .07);
         border-radius: 999px;
         background: #f8fafc;
         color: #64748b;
-        font-size: 12px;
+        font-size: 11.5px;
         font-weight: 850;
     }
 
@@ -169,14 +178,14 @@
         flex: 0 0 auto;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        min-height: 30px;
-        padding: 0 9px;
-        border: 1px solid rgba(37, 99, 235, .10);
-        border-radius: 10px;
+        gap: 5px;
+        min-height: 29px;
+        padding: 0 8px;
+        border: 1px solid rgba(37, 99, 235, .12);
+        border-radius: 9px;
         background: linear-gradient( 135deg, rgba(37, 99, 235, .08), rgba(14, 165, 233, .06));
         color: #0f172a;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 950;
         line-height: 1;
         white-space: nowrap;
@@ -184,30 +193,33 @@
 
         .pc-click-count i {
             color: #2563eb;
-            font-size: 12px;
+            font-size: 11px;
         }
 
     .pc-price-row {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 7px;
     }
 
     .pc-price {
-        padding: 8px 12px;
+        display: inline-flex;
+        align-items: center;
+        min-height: 38px;
+        padding: 0 11px;
         border: 1px solid rgba(16, 185, 129, .17);
         border-radius: 999px;
         background: rgba(16, 185, 129, .10);
         color: #047857;
-        font-size: 13px;
+        font-size: 12.5px;
         font-weight: 950;
         white-space: nowrap;
     }
 
     .pc-list-price {
         color: #94a3b8;
-        font-size: 12px;
+        font-size: 11.5px;
         font-weight: 850;
         text-decoration: line-through;
         white-space: nowrap;
@@ -217,48 +229,68 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        min-height: 42px;
+        gap: 7px;
+        min-height: 39px;
         margin-top: auto;
-        padding: 0 14px;
-        border: 1px solid #2563eb;
-        border-radius: 13px;
-        background: linear-gradient( 135deg, #1677ff 0%, #2563eb 100%);
-        color: #ffffff;
-        box-shadow: 0 8px 18px rgba(37, 99, 235, .20);
-        font-size: 14px;
+        padding: 0 13px;
+        border-radius: 11px;
+        font-size: 12.5px;
         font-weight: 900;
+        line-height: 1;
         text-decoration: none;
-        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+        box-shadow: none;
+        transition: color .18s ease, background-color .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
     }
+
+        .pc-action i {
+            font-size: 11.5px;
+        }
 
         .pc-action:hover,
         .pc-action:focus {
             transform: translateY(-1px);
-            border-color: #1d4ed8;
-            background: linear-gradient( 135deg, #0f6fe8 0%, #1d4ed8 100%);
             color: #ffffff;
-            box-shadow: 0 10px 22px rgba(37, 99, 235, .26);
             text-decoration: none;
+            box-shadow: 0 8px 18px rgba(13, 110, 253, .18);
         }
 
         .pc-action:focus-visible {
-            outline: 3px solid rgba(37, 99, 235, .22);
+            outline: 3px solid rgba(13, 110, 253, .18);
             outline-offset: 2px;
         }
 
-        .pc-action i {
-            font-size: 13px;
+    @@media (max-width: 767.98px) {
+        .pc-card {
+            border-radius: 19px;
         }
+
+        .pc-media {
+            min-height: 220px;
+            padding: 12px;
+        }
+
+        .pc-img {
+            height: 200px;
+        }
+
+        .pc-body {
+            gap: 10px;
+            padding: 13px;
+        }
+
+        .pc-title {
+            font-size: 14px;
+        }
+    }
 
     @@media (max-width: 575.98px) {
         .pc-card {
-            border-radius: 21px;
+            border-radius: 18px;
         }
 
         .pc-media {
             min-height: 280px;
-            padding: 15px;
+            padding: 14px;
         }
 
         .pc-img {
@@ -266,7 +298,7 @@
         }
 
         .pc-body {
-            padding: 14px;
+            padding: 13px;
         }
 
         .pc-title {
@@ -276,7 +308,7 @@
         }
 
         .pc-rating-row {
-            gap: 7px;
+            gap: 6px;
         }
 
         .pc-rating-left {
@@ -284,30 +316,36 @@
         }
 
         .pc-rating-number {
-            min-width: 36px;
-            height: 32px;
-            padding: 0 8px;
+            min-width: 35px;
+            height: 31px;
+            padding: 0 7px;
         }
 
         .pc-stars {
-            font-size: 12px;
+            font-size: 11.5px;
         }
 
         .pc-click-count {
-            min-height: 29px;
-            padding: 0 8px;
-            font-size: 11px;
+            min-height: 28px;
+            padding: 0 7px;
+            font-size: 10.5px;
+        }
+
+        .pc-price {
+            min-height: 36px;
+            padding: 0 10px;
+            font-size: 12px;
         }
 
         .pc-action {
-            min-height: 40px;
-            padding: 0 12px;
-            border-radius: 12px;
-            font-size: 13px;
+            min-height: 38px;
+            padding: 0 11px;
+            border-radius: 10px;
+            font-size: 12px;
         }
 
             .pc-action i {
-                font-size: 12px;
+                font-size: 11px;
             }
     }
 
@@ -316,12 +354,16 @@
             align-items: flex-start;
         }
 
+        .pc-rating-left {
+            gap: 4px;
+        }
+
         .pc-stars {
             gap: 0;
         }
 
         .pc-click-count {
-            padding: 0 7px;
+            padding: 0 6px;
         }
     }
 </style>
@@ -395,15 +437,16 @@
                     else
                     {
                         <span class="pc-no-rating">
-                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"
+                               aria-hidden="true"></i>
+
                             No rating
                         </span>
                     }
 
                 </div>
 
-                @if (User.Identity?.IsAuthenticated == true &&
-                                User.IsInRole("Admin"))
+                @if (isAdmin)
                 {
                     <span class="pc-click-count"
                           title="@Model.ClickCount.ToString("N0") product views"
@@ -447,7 +490,7 @@
         <a asp-controller="Product"
            asp-action="Details"
            asp-route-slug="@Model.Slug"
-           class="pc-action"
+           class="btn btn-outline-primary pc-action"
            aria-label="View @Model.Title">
 
             <i class="fa-solid fa-eye"

@@ -2,682 +2,1322 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var items = Model?.ToList() ?? new List<AsMart.Web.Models.DTOs.ParentCategoryListItemDto>();
+    var totalCategories = items.Count;
+    var activeCategories = items.Count(x => x.IsActive);
+    var inactiveCategories = totalCategories - activeCategories;
+    var totalChildren = items.Sum(x => x.ChildCount);
+    var totalProducts = items.Sum(x => x.ProductCount);
 }
 
 @section Styles {
     <style>
-        .parent-category-index-page {
-            min-height: calc(100vh - 80px);
-            background: linear-gradient(135deg,#f8fafc 0%,#eef4ff 45%,#ffffff 100%);
+        .asm-parent-dashboard {
+            --asm-blue: #146cff;
+            --asm-blue-dark: #0d57d8;
+            --asm-indigo: #5b4bff;
+            --asm-green: #159447;
+            --asm-orange: #b76312;
+            --asm-red: #d93a3a;
+            --asm-ink: #111a2e;
+            --asm-text: #33415c;
+            --asm-muted: #71809d;
+            --asm-line: #dfe6f1;
+            min-height: calc(100vh - 70px);
+            padding: 1.25rem;
+            background: radial-gradient(circle at 8% 2%, rgba(37, 99, 235, .10), transparent 30rem), radial-gradient(circle at 96% 10%, rgba(124, 58, 237, .10), transparent 28rem), linear-gradient(135deg, #eef5ff 0%, #f8fbff 50%, #f3f1ff 100%);
         }
 
-        .parent-hero {
-            border-radius: 30px;
-            padding: 2rem;
-            background: linear-gradient(135deg,#0f172a,#2563eb);
-            color: #fff;
-            box-shadow: 0 18px 45px rgba(15,23,42,.16);
+        .asm-parent-command,
+        .asm-parent-filter-card,
+        .asm-parent-table-card {
+            border: 1px solid rgba(99, 116, 150, .15);
+            border-radius: 26px;
+            background: rgba(255, 255, 255, .90);
+            box-shadow: 0 16px 42px rgba(33, 54, 92, .09);
+            backdrop-filter: blur(14px);
+        }
+
+        .asm-parent-command {
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 1.5rem 1.25rem;
+        }
+
+            .asm-parent-command::after {
+                position: absolute;
+                top: -100px;
+                right: -45px;
+                width: 245px;
+                height: 245px;
+                content: "";
+                border-radius: 50%;
+                background: rgba(91, 75, 255, .08);
+            }
+
+        .asm-parent-command-main {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(340px, 1.15fr) minmax(620px, 1.85fr);
+            gap: 1.4rem;
+            align-items: center;
+        }
+
+        .asm-parent-title {
             display: flex;
             align-items: center;
-            justify-content: space-between;
             gap: 1rem;
-            flex-wrap: wrap;
         }
 
-        .parent-kicker {
+        .asm-parent-title-icon {
+            display: inline-flex;
+            flex: 0 0 68px;
+            width: 68px;
+            height: 68px;
+            align-items: center;
+            justify-content: center;
+            color: #2f63dd;
+            font-size: 1.55rem;
+            border: 1px solid #bdd0ff;
+            border-radius: 22px;
+            background: linear-gradient(145deg, #dce8ff, #eef2ff);
+        }
+
+        .asm-parent-eyebrow {
+            display: block;
+            margin-bottom: .35rem;
+            color: #2459d8;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .1em;
             text-transform: uppercase;
-            letter-spacing: .14em;
-            color: #bfdbfe;
+        }
+
+        .asm-parent-title h1 {
+            margin: 0;
+            color: var(--asm-ink);
+            font-size: clamp(2rem, 3vw, 3rem);
+            font-weight: 950;
+            line-height: 1;
+            letter-spacing: -.045em;
+        }
+
+            .asm-parent-title h1 span {
+                color: var(--asm-indigo);
+            }
+
+        .asm-parent-title p {
+            max-width: 680px;
+            margin: .55rem 0 0;
+            color: var(--asm-muted);
+            font-size: .92rem;
+            line-height: 1.65;
+        }
+
+        .asm-parent-kpis {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(112px, 1fr));
+            gap: .55rem;
+        }
+
+        .asm-parent-kpi {
+            display: flex;
+            align-items: center;
+            gap: .62rem;
+            min-height: 58px;
+            padding: .62rem .7rem;
+            border: 1px solid rgba(99, 116, 150, .15);
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .asm-parent-kpi-icon {
+            display: inline-flex;
+            flex: 0 0 35px;
+            width: 35px;
+            height: 35px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+            font-size: .85rem;
+        }
+
+            .asm-parent-kpi-icon.blue {
+                color: #2e62dc;
+                background: #e8efff;
+            }
+
+            .asm-parent-kpi-icon.green {
+                color: #148645;
+                background: #e5f5ec;
+            }
+
+            .asm-parent-kpi-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-parent-kpi-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+            .asm-parent-kpi-icon.gray {
+                color: #526079;
+                background: #edf0f5;
+            }
+
+        .asm-parent-kpi small {
+            display: block;
+            color: #697895;
+            font-size: .60rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .asm-parent-kpi strong {
+            display: block;
+            margin-top: .05rem;
+            color: var(--asm-ink);
+            font-size: .92rem;
+            font-weight: 950;
+        }
+
+        .asm-parent-command-actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            flex-wrap: wrap;
+            margin-top: 1.15rem;
+            padding-top: .9rem;
+            border-top: 1px solid #e3e9f2;
+        }
+
+        .asm-parent-btn {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .65rem 1rem;
             font-size: .78rem;
             font-weight: 900;
-        }
-
-        .parent-hero h1 {
-            font-size: clamp(2rem,4vw,3rem);
-            font-weight: 900;
-            margin: .35rem 0;
-            line-height: 1.1;
-        }
-
-        .parent-hero p {
-            margin: 0;
-            max-width: 760px;
-            color: rgba(255,255,255,.78);
-            line-height: 1.7;
-        }
-
-        .parent-card {
-            border-radius: 28px;
-            background: rgba(255,255,255,.96);
-            border: 1px solid rgba(15,23,42,.08);
-            box-shadow: 0 18px 45px rgba(15,23,42,.08);
-            overflow: hidden;
-        }
-
-        .parent-toolbar {
-            padding: 1.5rem;
-            border-bottom: 1px solid rgba(15,23,42,.08);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .search-box {
-            position: relative;
-            flex: 1 1 340px;
-        }
-
-            .search-box i {
-                position: absolute;
-                left: 1rem;
-                top: 50%;
-                transform: translateY(-50%);
-                color: #94a3b8;
-            }
-
-            .search-box input {
-                width: 100%;
-                height: 52px;
-                border-radius: 16px;
-                border: 1px solid rgba(15,23,42,.12);
-                padding: 0 1rem 0 2.8rem;
-                outline: none;
-                background: #fff;
-            }
-
-                .search-box input:focus {
-                    border-color: rgba(37,99,235,.45);
-                    box-shadow: 0 0 0 .22rem rgba(37,99,235,.12);
-                }
-
-        .toolbar-pill {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: .7rem 1rem;
-            background: #f8fafc;
-            border: 1px solid rgba(15,23,42,.08);
-            color: #475569;
-            font-size: .86rem;
-            font-weight: 800;
-            white-space: nowrap;
-        }
-
-        .modern-table thead th {
-            background: #f8fafc;
-            border-bottom: 1px solid rgba(15,23,42,.08);
-            color: #0f172a;
-            font-size: .8rem;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-            padding: 1rem;
-            white-space: nowrap;
-        }
-
-        .modern-table tbody td {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(15,23,42,.06);
-            vertical-align: middle;
-        }
-
-        .modern-table tbody tr:hover td {
-            background: rgba(37,99,235,.03);
-        }
-
-        .category-main {
-            display: flex;
-            align-items: center;
-            gap: .9rem;
-            min-width: 0;
-        }
-
-        .category-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 18px;
-            background: rgba(37,99,235,.08);
-            color: #2563eb;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex: 0 0 auto;
-            font-size: 1.1rem;
-        }
-
-        .category-name {
-            color: #0f172a;
-            font-weight: 900;
-            overflow-wrap: anywhere;
-        }
-
-        .category-slug {
-            margin-top: .2rem;
-            color: #64748b;
-            font-size: .84rem;
-            overflow-wrap: anywhere;
-        }
-
-        .id-pill,
-        .metric-pill {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 999px;
-            padding: .45rem .85rem;
-            background: #f8fafc;
-            border: 1px solid rgba(15,23,42,.08);
-            color: #0f172a;
-            font-weight: 800;
-            font-size: .8rem;
-        }
-
-            .metric-pill.purple {
-                background: rgba(124,58,237,.08);
-                border-color: rgba(124,58,237,.16);
-                color: #7c3aed;
-            }
-
-            .metric-pill.green {
-                background: rgba(22,101,52,.08);
-                border-color: rgba(22,101,52,.16);
-                color: #16a34a;
-            }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: .5rem .9rem;
-            font-size: .8rem;
-            font-weight: 900;
-            white-space: nowrap;
-        }
-
-            .status-badge.active {
-                color: #166534;
-                background: rgba(22,101,52,.08);
-                border: 1px solid rgba(22,101,52,.16);
-            }
-
-            .status-badge.inactive {
-                color: #dc2626;
-                background: rgba(220,38,38,.08);
-                border: 1px solid rgba(220,38,38,.16);
-            }
-
-        .table-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: .6rem;
-        }
-
-        .action-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            border: 1px solid rgba(15,23,42,.08);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: .2s ease;
-            text-decoration: none;
-        }
-
-            .action-btn:hover {
-                transform: translateY(-2px);
-            }
-
-        .view-btn {
-            background: rgba(37,99,235,.06);
-            color: #2563eb;
-        }
-
-        .edit-btn {
-            background: #f8fafc;
-            color: #0f172a;
-        }
-
-        .delete-btn {
-            background: rgba(220,38,38,.06);
-            color: #dc2626;
-        }
-
-        .parent-btn {
-            border-radius: 16px;
-            padding: .82rem 1.2rem;
-            font-weight: 900;
+            border-radius: 13px;
             transition: .2s ease;
         }
 
-            .parent-btn:hover {
+            .asm-parent-btn:hover:not(:disabled) {
                 transform: translateY(-2px);
             }
 
-        .parent-btn-primary {
+        .asm-parent-btn-primary {
             color: #fff;
-            background: linear-gradient(135deg,#2563eb,#1d4ed8);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(37,99,235,.24);
+            border: 1px solid var(--asm-blue);
+            background: linear-gradient(135deg, var(--asm-blue), #2463eb);
+            box-shadow: 0 9px 20px rgba(20, 108, 255, .22);
         }
 
-            .parent-btn-primary:hover,
-            .parent-btn-danger:hover {
+            .asm-parent-btn-primary:hover {
                 color: #fff;
             }
 
-        .parent-btn-light {
+        .asm-parent-btn-outline {
+            color: var(--asm-blue);
+            border: 1px solid var(--asm-blue);
             background: #fff;
-            color: #0f172a;
         }
 
-        .parent-btn-danger {
+        .asm-parent-btn-danger {
             color: #fff;
-            background: linear-gradient(135deg,#dc2626,#ef4444);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(220,38,38,.20);
+            border: 1px solid var(--asm-red);
+            background: linear-gradient(135deg, var(--asm-red), #b92525);
+            box-shadow: 0 9px 20px rgba(217, 58, 58, .20);
         }
 
-        .empty-state {
-            padding: 3rem 1.5rem;
-            text-align: center;
+            .asm-parent-btn-danger:hover {
+                color: #fff;
+            }
+
+        .asm-parent-page-indicator {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            gap: .45rem;
+            padding: .65rem .8rem;
+            color: #4c576e;
+            font-size: .77rem;
+            font-weight: 900;
+            border-radius: 13px;
+            background: #f7f9fc;
         }
 
-        .empty-icon {
-            width: 86px;
-            height: 86px;
-            border-radius: 24px;
-            margin: 0 auto 1.25rem;
-            background: rgba(37,99,235,.08);
-            color: #2563eb;
+        .asm-parent-filter-card {
+            margin-top: 1rem;
+            padding: 1rem;
+        }
+
+        .asm-parent-filter-head {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 2rem;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: .85rem;
         }
 
-        .empty-state h3 {
-            color: #0f172a;
+        .asm-parent-section-title {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            color: var(--asm-ink);
+            font-size: 1rem;
+            font-weight: 950;
+        }
+
+            .asm-parent-section-title i {
+                color: #2463eb;
+            }
+
+        .asm-parent-result-text {
+            color: #65738d;
+            font-size: .8rem;
+            font-weight: 800;
+        }
+
+        .asm-parent-filter-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, 2fr) minmax(180px, 1fr) auto auto;
+            gap: .75rem;
+            align-items: end;
+        }
+
+        .asm-parent-field label {
+            display: block;
+            margin-bottom: .35rem;
+            color: #66758f;
+            font-size: .68rem;
             font-weight: 900;
-            margin-bottom: .65rem;
+            letter-spacing: .04em;
+            text-transform: uppercase;
         }
 
-        .empty-state p {
-            color: #64748b;
-            max-width: 650px;
-            margin: 0 auto 1.5rem;
-            line-height: 1.7;
+        .asm-parent-input-wrap {
+            position: relative;
         }
 
-        .delete-modal {
-            border: 0;
-            border-radius: 28px;
-            box-shadow: 0 24px 70px rgba(15,23,42,.22);
+            .asm-parent-input-wrap i {
+                position: absolute;
+                top: 50%;
+                left: .9rem;
+                color: #8b98af;
+                transform: translateY(-50%);
+            }
+
+        .asm-parent-input,
+        .asm-parent-select {
+            width: 100%;
+            min-height: 46px;
+            padding: .65rem .85rem;
+            color: var(--asm-ink);
+            border: 1px solid #d8e0ec;
+            border-radius: 13px;
+            outline: none;
+            background: #fff;
         }
 
-        .modal-delete-icon {
-            width: 76px;
-            height: 76px;
-            border-radius: 50%;
-            background: rgba(220,38,38,.08);
-            color: #dc2626;
+        .asm-parent-input {
+            padding-left: 2.55rem;
+        }
+
+            .asm-parent-input:focus,
+            .asm-parent-select:focus {
+                border-color: #78a5ff;
+                box-shadow: 0 0 0 .2rem rgba(20, 108, 255, .10);
+            }
+
+        .asm-parent-table-card {
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .asm-parent-table-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.1rem;
+            border-bottom: 1px solid #e5eaf2;
+        }
+
+        .asm-parent-table {
+            min-width: 1050px;
+            margin: 0;
+        }
+
+            .asm-parent-table thead th {
+                padding: .85rem 1rem;
+                color: #62708a;
+                font-size: .67rem;
+                font-weight: 950;
+                letter-spacing: .045em;
+                text-transform: uppercase;
+                white-space: nowrap;
+                border-bottom: 1px solid #e4e9f1;
+                background: #f8faff;
+            }
+
+            .asm-parent-table tbody td {
+                padding: .95rem 1rem;
+                vertical-align: middle;
+                border-color: #edf1f6;
+            }
+
+            .asm-parent-table tbody tr:hover td {
+                background: #f9fbff;
+            }
+
+        .asm-parent-category-main {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            min-width: 0;
+        }
+
+        .asm-parent-category-icon {
             display: inline-flex;
+            flex: 0 0 44px;
+            width: 44px;
+            height: 44px;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
+            color: #2e62dc;
+            border-radius: 14px;
+            background: #e8efff;
+        }
+
+        .asm-parent-category-name {
+            color: var(--asm-ink);
+            font-weight: 950;
+            overflow-wrap: anywhere;
+        }
+
+        .asm-parent-category-slug {
+            margin-top: .15rem;
+            color: #71809d;
+            font-size: .72rem;
+            font-weight: 750;
+            overflow-wrap: anywhere;
+        }
+
+        .asm-parent-pill {
+            display: inline-flex;
+            min-width: 38px;
+            align-items: center;
+            justify-content: center;
+            padding: .36rem .62rem;
+            font-size: .72rem;
+            font-weight: 900;
+            border-radius: 999px;
+        }
+
+            .asm-parent-pill.gray {
+                color: #526079;
+                background: #edf1f6;
+            }
+
+            .asm-parent-pill.blue {
+                color: #2459d8;
+                background: #eaf1ff;
+            }
+
+            .asm-parent-pill.purple {
+                color: #6540c7;
+                background: #eee9ff;
+            }
+
+            .asm-parent-pill.green {
+                color: #147a3f;
+                background: #e4f5eb;
+            }
+
+            .asm-parent-pill.active {
+                color: #147a3f;
+                background: #e4f5eb;
+            }
+
+            .asm-parent-pill.inactive {
+                color: #b22f2f;
+                background: #fdeaea;
+            }
+
+        .asm-parent-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: .4rem;
+        }
+
+        .asm-parent-icon-btn {
+            display: inline-flex;
+            width: 36px;
+            height: 36px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dce3ee;
+            border-radius: 11px;
+            background: #fff;
+            text-decoration: none;
+            transition: .2s ease;
+        }
+
+            .asm-parent-icon-btn:hover {
+                transform: translateY(-2px);
+            }
+
+            .asm-parent-icon-btn.view {
+                color: #2463eb;
+            }
+
+            .asm-parent-icon-btn.edit {
+                color: #536079;
+            }
+
+            .asm-parent-icon-btn.delete {
+                color: #d13b3b;
+            }
+
+        .asm-parent-mobile-list {
+            display: none;
+        }
+
+        .asm-parent-empty {
+            padding: 3rem 1rem;
+            text-align: center;
+            color: var(--asm-muted);
+        }
+
+        .asm-parent-empty-icon {
+            display: inline-flex;
+            width: 76px;
+            height: 76px;
+            align-items: center;
+            justify-content: center;
             margin-bottom: 1rem;
+            color: #2f63dd;
+            font-size: 1.8rem;
+            border-radius: 22px;
+            background: #e8efff;
+        }
+
+        .asm-parent-empty h3 {
+            margin-bottom: .4rem;
+            color: var(--asm-ink);
+            font-weight: 950;
+        }
+
+        .asm-parent-empty p {
+            max-width: 560px;
+            margin: 0 auto 1.25rem;
+            line-height: 1.6;
+        }
+
+        .asm-parent-modal {
+            border: 0;
+            border-radius: 22px;
+            box-shadow: 0 25px 70px rgba(17, 26, 46, .22);
+        }
+
+        .asm-parent-modal-icon {
+            display: inline-flex;
+            width: 68px;
+            height: 68px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: #d93a3a;
+            font-size: 1.8rem;
+            border-radius: 20px;
+            background: #fdeaea;
+        }
+
+        .asm-parent-warning {
+            padding: .8rem;
+            color: #8a5616;
+            font-size: .78rem;
+            line-height: 1.55;
+            text-align: left;
+            border: 1px solid #f2d3a8;
+            border-radius: 13px;
+            background: #fff8ed;
+        }
+
+        .asm-parent-submitting {
+            opacity: .72;
+            pointer-events: none;
+        }
+
+        .asm-parent-spinner {
+            display: none;
+        }
+
+        .asm-parent-submitting .asm-parent-spinner {
+            display: inline-block;
+        }
+
+        .asm-parent-submitting .asm-parent-delete-icon {
+            display: none;
+        }
+
+        @@media (max-width: 1399.98px) {
+            .asm-parent-command-main {
+                grid-template-columns: 1fr;
+            }
         }
 
         @@media (max-width: 991.98px) {
+            .asm-parent-kpis {
+                grid-template-columns: repeat(3, 1fr);
+            }
 
-            .table-actions {
-                justify-content: flex-start;
+            .asm-parent-filter-grid {
+                grid-template-columns: 1fr 1fr;
             }
         }
 
         @@media (max-width: 767.98px) {
-
-            .parent-hero,
-            .parent-card,
-            .delete-modal {
-                border-radius: 22px;
+            .asm-parent-dashboard {
+                padding: .85rem;
             }
 
-            .parent-hero,
-            .parent-toolbar {
-                padding: 1.2rem;
+            .asm-parent-command,
+            .asm-parent-filter-card,
+            .asm-parent-table-card,
+            .asm-parent-modal {
+                border-radius: 20px;
             }
 
-            .parent-hero-actions,
-            .parent-hero-actions .btn,
-            .modal-body .btn,
-            .modal-body form {
+            .asm-parent-command {
+                padding: 1.25rem 1rem 1rem;
+            }
+
+            .asm-parent-title {
+                align-items: flex-start;
+            }
+
+            .asm-parent-title-icon {
+                width: 56px;
+                height: 56px;
+                flex-basis: 56px;
+                border-radius: 17px;
+            }
+
+            .asm-parent-kpis {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .asm-parent-filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+                .asm-parent-filter-grid .asm-parent-btn {
+                    width: 100%;
+                }
+
+            .asm-parent-table-card .table-responsive {
+                display: none;
+            }
+
+            .asm-parent-mobile-list {
+                display: grid;
+                gap: .75rem;
+                padding: .8rem;
+            }
+
+            .asm-parent-mobile-card {
+                padding: 1rem;
+                border: 1px solid #e1e7f0;
+                border-radius: 17px;
+                background: #fff;
+            }
+
+            .asm-parent-mobile-top {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: .8rem;
+                margin-bottom: .8rem;
+            }
+
+            .asm-parent-mobile-meta {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: .55rem;
+                margin: .8rem 0;
+            }
+
+                .asm-parent-mobile-meta div {
+                    padding: .6rem;
+                    border-radius: 12px;
+                    background: #f7f9fc;
+                }
+
+                .asm-parent-mobile-meta small {
+                    display: block;
+                    color: #7a879d;
+                    font-size: .62rem;
+                    font-weight: 900;
+                    text-transform: uppercase;
+                }
+
+                .asm-parent-mobile-meta strong {
+                    color: var(--asm-ink);
+                    font-size: .8rem;
+                }
+
+            .asm-parent-actions {
+                justify-content: flex-start;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .asm-parent-title {
+                flex-direction: column;
+            }
+
+            .asm-parent-kpis {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-parent-command-actions .asm-parent-btn,
+            .asm-parent-command-actions .asm-parent-page-indicator {
                 width: 100%;
             }
 
-            .table-actions {
-                flex-wrap: wrap;
+            .asm-parent-filter-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .asm-parent-modal .btn,
+            .asm-parent-modal form {
+                width: 100%;
             }
         }
     </style>
 }
 
-<div class="container-fluid py-4 parent-category-index-page">
+<div class="asm-parent-dashboard">
+    <section class="asm-parent-command">
+        <div class="asm-parent-command-main">
+            <div class="asm-parent-title">
+                <div class="asm-parent-title-icon">
+                    <i class="fa-solid fa-folder-tree"></i>
+                </div>
 
-    <div class="parent-hero mb-4">
+                <div>
+                    <span class="asm-parent-eyebrow">
+                        Catalog Management
+                    </span>
 
-        <div>
-            <span class="parent-kicker">
-                Admin Panel
-            </span>
+                    <h1>Parent <span>Categories</span></h1>
 
-            <h1>Parent Categories</h1>
+                    <p>
+                        Manage top-level catalog structure, storefront hierarchy,
+                        SEO organization, child categories, and product grouping.
+                    </p>
+                </div>
+            </div>
 
-            <p>
-                Manage top-level catalog structure, storefront hierarchy,
-                SEO organization, child categories, and product grouping.
-            </p>
+            <div class="asm-parent-kpis">
+                <div class="asm-parent-kpi">
+                    <span class="asm-parent-kpi-icon blue">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </span>
+
+                    <div>
+                        <small>Total Parents</small>
+                        <strong>@totalCategories</strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-kpi">
+                    <span class="asm-parent-kpi-icon green">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </span>
+
+                    <div>
+                        <small>Active</small>
+                        <strong>@activeCategories</strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-kpi">
+                    <span class="asm-parent-kpi-icon orange">
+                        <i class="fa-solid fa-circle-pause"></i>
+                    </span>
+
+                    <div>
+                        <small>Inactive</small>
+                        <strong>@inactiveCategories</strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-kpi">
+                    <span class="asm-parent-kpi-icon purple">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </span>
+
+                    <div>
+                        <small>Child Categories</small>
+                        <strong>@totalChildren</strong>
+                    </div>
+                </div>
+
+                <div class="asm-parent-kpi">
+                    <span class="asm-parent-kpi-icon gray">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </span>
+
+                    <div>
+                        <small>Products</small>
+                        <strong>@totalProducts</strong>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="parent-hero-actions">
-
+        <div class="asm-parent-command-actions">
             <a asp-action="Create"
-               class="btn parent-btn parent-btn-primary">
-                <i class="fa-solid fa-plus me-2"></i>
-                Add Parent Category
+               class="btn asm-parent-btn asm-parent-btn-primary">
+                <i class="fa-solid fa-plus"></i>
+                New Parent Category
             </a>
 
+            <a asp-action="Index"
+               class="btn asm-parent-btn asm-parent-btn-outline">
+                <i class="fa-solid fa-list"></i>
+                All Parent Categories
+            </a>
+
+            <a asp-area=""
+               asp-controller="Catalog"
+               asp-action="Index"
+               class="btn asm-parent-btn asm-parent-btn-outline">
+                <i class="fa-solid fa-eye"></i>
+                Public Catalog
+            </a>
+
+            <span class="asm-parent-page-indicator">
+                <i class="fa-solid fa-file-lines"></i>
+                <span id="recordIndicator">@totalCategories records</span>
+            </span>
+        </div>
+    </section>
+
+    <section class="asm-parent-filter-card">
+        <div class="asm-parent-filter-head">
+            <div class="asm-parent-section-title">
+                <i class="fa-solid fa-filter"></i>
+                Filters
+            </div>
+
+            <span class="asm-parent-result-text"
+                  id="parentFilterSummary">
+                Showing all @totalCategories parent categories
+            </span>
         </div>
 
-    </div>
+        <div class="asm-parent-filter-grid">
+            <div class="asm-parent-field">
+                <label for="parentCategorySearch">
+                    Search
+                </label>
 
-    <div class="parent-card">
+                <div class="asm-parent-input-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
 
-        <div class="parent-toolbar">
+                    <input id="parentCategorySearch"
+                           class="asm-parent-input"
+                           type="search"
+                           placeholder="Search by name, slug, or ID..."
+                           autocomplete="off" />
+                </div>
+            </div>
 
-            <div class="search-box">
+            <div class="asm-parent-field">
+                <label for="parentStatusFilter">
+                    Status
+                </label>
 
+                <select id="parentStatusFilter"
+                        class="asm-parent-select">
+                    <option value="">All statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+
+            <button type="button"
+                    id="applyParentFilters"
+                    class="btn asm-parent-btn asm-parent-btn-primary">
                 <i class="fa-solid fa-magnifying-glass"></i>
+                Apply
+            </button>
 
-                <input type="search"
-                       id="parentCategorySearch"
-                       placeholder="Search parent categories..." />
+            <button type="button"
+                    id="resetParentFilters"
+                    class="btn asm-parent-btn asm-parent-btn-outline">
+                <i class="fa-solid fa-rotate-left"></i>
+                Reset
+            </button>
+        </div>
+    </section>
 
+    <section class="asm-parent-table-card">
+        <div class="asm-parent-table-toolbar">
+            <div class="asm-parent-section-title">
+                <i class="fa-solid fa-table-list"></i>
+                Parent Category Directory
             </div>
 
-            <div class="toolbar-stats">
-
-                <span class="toolbar-pill">
-                    <i class="fa-solid fa-layer-group me-2"></i>
-                    Total:
-                    <strong class="ms-1">@Model.Count()</strong>
-                </span>
-
-            </div>
-
+            <span class="asm-parent-result-text"
+                  id="parentVisibleCount">
+                @totalCategories visible
+            </span>
         </div>
 
-        @if (!Model.Any())
+        @if (!items.Any())
         {
-            <div class="empty-state">
-
-                <div class="empty-icon">
+            <div class="asm-parent-empty">
+                <div class="asm-parent-empty-icon">
                     <i class="fa-solid fa-folder-tree"></i>
                 </div>
 
                 <h3>No parent categories found</h3>
 
                 <p>
-                    Start building your storefront hierarchy
-                    by creating your first parent category.
+                    Start building the storefront hierarchy by creating
+                    the first parent category.
                 </p>
 
                 <a asp-action="Create"
-                   class="btn parent-btn parent-btn-primary">
-                    <i class="fa-solid fa-plus me-2"></i>
+                   class="btn asm-parent-btn asm-parent-btn-primary">
+                    <i class="fa-solid fa-plus"></i>
                     Create Parent Category
                 </a>
-
             </div>
         }
         else
         {
             <div class="table-responsive">
-
-                <table class="table modern-table align-middle mb-0">
-
+                <table class="table asm-parent-table"
+                       id="parentCategoryTable">
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Category</th>
-                            <th>Display</th>
-                            <th>Status</th>
-                            <th>Children</th>
-                            <th>Products</th>
+                            <th>Parent Category</th>
+                            <th class="text-center">Display</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Children</th>
+                            <th class="text-center">Products</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
 
-                    <tbody id="parentCategoryTable">
-
-                        @foreach (var item in Model)
+                    <tbody>
+                        @foreach (var item in items)
                         {
-                            <tr class="search-row">
+                            <tr data-search="@($"{item.Id} {item.Name} {item.Slug}".ToLowerInvariant())"
+                                data-status="@(item.IsActive ? "active" : "inactive")">
 
                                 <td>
-                                    <span class="id-pill">
+                                    <span class="asm-parent-pill gray">
                                         #@item.Id
                                     </span>
                                 </td>
 
                                 <td>
-
-                                    <div class="category-main">
-
-                                        <div class="category-icon">
+                                    <div class="asm-parent-category-main">
+                                        <span class="asm-parent-category-icon">
                                             <i class="fa-solid fa-folder-tree"></i>
-                                        </div>
+                                        </span>
 
                                         <div>
-
-                                            <div class="category-name searchable-text">
+                                            <div class="asm-parent-category-name">
                                                 @item.Name
                                             </div>
 
-                                            <div class="category-slug searchable-text">
+                                            <div class="asm-parent-category-slug">
                                                 <i class="fa-solid fa-link me-1"></i>
                                                 @item.Slug
                                             </div>
-
                                         </div>
-
                                     </div>
-
                                 </td>
 
-                                <td>
-                                    <span class="metric-pill">
+                                <td class="text-center">
+                                    <span class="asm-parent-pill blue">
                                         @item.DisplayOrder
                                     </span>
                                 </td>
 
-                                <td>
-
-                                    @if (item.IsActive)
-                                    {
-                                        <span class="status-badge active">
-                                            <i class="fa-solid fa-circle-check me-1"></i>
-                                            Active
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="status-badge inactive">
-                                            <i class="fa-solid fa-circle-xmark me-1"></i>
-                                            Inactive
-                                        </span>
-                                    }
-
+                                <td class="text-center">
+                                    <span class="asm-parent-pill @(item.IsActive ? "active" : "inactive")">
+                                        @(item.IsActive ? "Active" : "Inactive")
+                                    </span>
                                 </td>
 
-                                <td>
-                                    <span class="metric-pill purple">
+                                <td class="text-center">
+                                    <span class="asm-parent-pill purple">
                                         @item.ChildCount
                                     </span>
                                 </td>
 
-                                <td>
-                                    <span class="metric-pill green">
+                                <td class="text-center">
+                                    <span class="asm-parent-pill green">
                                         @item.ProductCount
                                     </span>
                                 </td>
 
                                 <td>
-
-                                    <div class="table-actions">
-
+                                    <div class="asm-parent-actions">
                                         <a asp-action="Details"
                                            asp-route-id="@item.Id"
-                                           class="action-btn view-btn"
-                                           title="Details">
-
+                                           class="asm-parent-icon-btn view"
+                                           title="View details"
+                                           aria-label="View details for @item.Name">
                                             <i class="fa-regular fa-eye"></i>
-
                                         </a>
 
                                         <a asp-action="Edit"
                                            asp-route-id="@item.Id"
-                                           class="action-btn edit-btn"
-                                           title="Edit">
-
+                                           class="asm-parent-icon-btn edit"
+                                           title="Edit"
+                                           aria-label="Edit @item.Name">
                                             <i class="fa-regular fa-pen-to-square"></i>
-
                                         </a>
 
                                         <button type="button"
-                                                class="action-btn delete-btn"
+                                                class="asm-parent-icon-btn delete js-parent-delete"
+                                                data-delete-url="@Url.Action("Delete", new { id = item.Id })"
+                                                data-parent-id="@item.Id"
+                                                data-parent-name="@item.Name"
+                                                data-child-count="@item.ChildCount"
+                                                data-product-count="@item.ProductCount"
                                                 title="Delete"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal_@item.Id">
-
+                                                aria-label="Delete @item.Name">
                                             <i class="fa-regular fa-trash-can"></i>
-
                                         </button>
-
                                     </div>
-
-                                    <div class="modal fade"
-                                         id="deleteModal_@item.Id"
-                                         tabindex="-1"
-                                         aria-hidden="true">
-
-                                        <div class="modal-dialog modal-dialog-centered">
-
-                                            <div class="modal-content delete-modal">
-
-                                                <div class="modal-body text-center p-4">
-
-                                                    <div class="modal-delete-icon">
-                                                        <i class="fa-solid fa-circle-exclamation"></i>
-                                                    </div>
-
-                                                    <h4 class="fw-bold mb-2">
-                                                        Confirm Deletion
-                                                    </h4>
-
-                                                    <p class="text-muted mb-4">
-                                                        Are you sure you want to permanently delete:
-                                                        <br />
-                                                        <strong>@item.Name</strong>
-                                                    </p>
-
-                                                    @if (item.ChildCount > 0 || item.ProductCount > 0)
-                                                    {
-                                                        <div class="alert alert-warning rounded-4 mb-4 text-start">
-                                                            <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                                                            This category contains child categories and/or products.
-                                                            Remove dependencies before deletion.
-                                                        </div>
-                                                    }
-
-                                                    <div class="d-flex justify-content-center gap-2 flex-wrap">
-
-                                                        <button type="button"
-                                                                class="btn parent-btn parent-btn-light border"
-                                                                data-bs-dismiss="modal">
-                                                            Cancel
-                                                        </button>
-
-                                                        @if (item.ChildCount == 0 && item.ProductCount == 0)
-                                                        {
-                                                            <form asp-action="Delete"
-                                                                  method="post"
-                                                                  class="m-0">
-
-                                                                @Html.AntiForgeryToken()
-
-                                                                <input type="hidden"
-                                                                       name="id"
-                                                                       value="@item.Id" />
-
-                                                                <button type="submit"
-                                                                        class="btn parent-btn parent-btn-danger">
-                                                                    Yes, Delete
-                                                                </button>
-
-                                                            </form>
-                                                        }
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-
                                 </td>
-
                             </tr>
                         }
-
                     </tbody>
-
                 </table>
+            </div>
 
+            <div class="asm-parent-mobile-list"
+                 id="parentCategoryMobileList">
+                @foreach (var item in items)
+                {
+                    <article class="asm-parent-mobile-card"
+                             data-search="@($"{item.Id} {item.Name} {item.Slug}".ToLowerInvariant())"
+                             data-status="@(item.IsActive ? "active" : "inactive")">
+
+                        <div class="asm-parent-mobile-top">
+                            <div class="asm-parent-category-main">
+                                <span class="asm-parent-category-icon">
+                                    <i class="fa-solid fa-folder-tree"></i>
+                                </span>
+
+                                <div>
+                                    <div class="asm-parent-category-name">
+                                        @item.Name
+                                    </div>
+
+                                    <div class="asm-parent-category-slug">
+                                        @item.Slug
+                                    </div>
+                                </div>
+                            </div>
+
+                            <span class="asm-parent-pill @(item.IsActive ? "active" : "inactive")">
+                                @(item.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </div>
+
+                        <div class="asm-parent-mobile-meta">
+                            <div>
+                                <small>ID</small>
+                                <strong>#@item.Id</strong>
+                            </div>
+
+                            <div>
+                                <small>Display Order</small>
+                                <strong>@item.DisplayOrder</strong>
+                            </div>
+
+                            <div>
+                                <small>Children</small>
+                                <strong>@item.ChildCount</strong>
+                            </div>
+
+                            <div>
+                                <small>Products</small>
+                                <strong>@item.ProductCount</strong>
+                            </div>
+                        </div>
+
+                        <div class="asm-parent-actions">
+                            <a asp-action="Details"
+                               asp-route-id="@item.Id"
+                               class="asm-parent-icon-btn view">
+                                <i class="fa-regular fa-eye"></i>
+                            </a>
+
+                            <a asp-action="Edit"
+                               asp-route-id="@item.Id"
+                               class="asm-parent-icon-btn edit">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+
+                            <button type="button"
+                                    class="asm-parent-icon-btn delete js-parent-delete"
+                                    data-delete-url="@Url.Action("Delete", new { id = item.Id })"
+                                    data-parent-id="@item.Id"
+                                    data-parent-name="@item.Name"
+                                    data-child-count="@item.ChildCount"
+                                    data-product-count="@item.ProductCount">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </article>
+                }
             </div>
         }
-
-    </div>
-
+    </section>
 </div>
 
-<script>
-    (function () {
+<div class="modal fade"
+     id="parentDeleteModal"
+     tabindex="-1"
+     aria-labelledby="parentDeleteModalLabel"
+     aria-hidden="true">
 
-        const input = document.getElementById('parentCategorySearch');
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content asm-parent-modal">
+            <div class="modal-body p-4 text-center">
+                <div class="asm-parent-modal-icon">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
 
-        if (!input) return;
+                <h4 id="parentDeleteModalLabel"
+                    class="fw-bold mb-2">
+                    Delete Parent Category?
+                </h4>
 
-        input.addEventListener('input', function () {
+                <p class="text-muted mb-3">
+                    You are about to permanently delete
+                    <strong id="parentDeleteName"></strong>.
+                </p>
 
-            const query = input.value.toLowerCase().trim();
+                <div id="parentDeleteWarning"
+                     class="asm-parent-warning d-none mb-3">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                    This category has
+                    <strong id="parentDependencyText"></strong>.
+                    Remove or reassign these dependencies before deletion.
+                </div>
 
-            document.querySelectorAll('#parentCategoryTable .search-row')
-                .forEach(function (row) {
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                    <button type="button"
+                            class="btn asm-parent-btn asm-parent-btn-outline"
+                            data-bs-dismiss="modal">
+                        <i class="fa-solid fa-xmark"></i>
+                        Cancel
+                    </button>
 
-                    const text = row.innerText.toLowerCase();
+                    <form asp-action="Delete"
+                          method="post"
+                          id="parentDeleteForm"
+                          class="m-0">
 
-                    row.style.display =
-                        text.includes(query)
-                            ? ''
-                            : 'none';
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="id"
+                               id="parentDeleteId" />
+
+                        <button type="submit"
+                                id="parentConfirmDeleteButton"
+                                class="btn asm-parent-btn asm-parent-btn-danger">
+
+                            <span class="spinner-border spinner-border-sm asm-parent-spinner"
+                                  aria-hidden="true"></span>
+
+                            <i class="fa-solid fa-trash asm-parent-delete-icon"></i>
+
+                            <span class="asm-parent-delete-text">
+                                Yes, Delete
+                            </span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            'use strict';
+
+            const searchInput = document.getElementById('parentCategorySearch');
+            const statusFilter = document.getElementById('parentStatusFilter');
+            const applyButton = document.getElementById('applyParentFilters');
+            const resetButton = document.getElementById('resetParentFilters');
+            const visibleCount = document.getElementById('parentVisibleCount');
+            const filterSummary = document.getElementById('parentFilterSummary');
+
+            const desktopRows = Array.from(
+                document.querySelectorAll('#parentCategoryTable tbody tr')
+            );
+
+            const mobileCards = Array.from(
+                document.querySelectorAll('#parentCategoryMobileList .asm-parent-mobile-card')
+            );
+
+            const total = desktopRows.length || mobileCards.length;
+
+            function matchesFilter(element, query, status) {
+                const searchText = element.dataset.search || '';
+                const itemStatus = element.dataset.status || '';
+
+                return (!query || searchText.includes(query)) &&
+                       (!status || itemStatus === status);
+            }
+
+            function applyFilters() {
+                const query = (searchInput?.value || '').trim().toLowerCase();
+                const status = statusFilter?.value || '';
+                let count = 0;
+
+                desktopRows.forEach(function (row) {
+                    const visible = matchesFilter(row, query, status);
+                    row.style.display = visible ? '' : 'none';
+
+                    if (visible) {
+                        count++;
+                    }
                 });
 
-        });
+                mobileCards.forEach(function (card) {
+                    const visible = matchesFilter(card, query, status);
+                    card.style.display = visible ? '' : 'none';
+                });
 
-    })();
-</script>
+                if (!desktopRows.length) {
+                    count = mobileCards.filter(function (card) {
+                        return card.style.display !== 'none';
+                    }).length;
+                }
+
+                if (visibleCount) {
+                    visibleCount.textContent = count + ' visible';
+                }
+
+                if (filterSummary) {
+                    filterSummary.textContent =
+                        query || status
+                            ? 'Showing ' + count + ' of ' + total + ' parent categories'
+                            : 'Showing all ' + total + ' parent categories';
+                }
+            }
+
+            function resetFilters() {
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+
+                if (statusFilter) {
+                    statusFilter.value = '';
+                }
+
+                applyFilters();
+                searchInput?.focus();
+            }
+
+            applyButton?.addEventListener('click', applyFilters);
+            resetButton?.addEventListener('click', resetFilters);
+            searchInput?.addEventListener('input', applyFilters);
+            statusFilter?.addEventListener('change', applyFilters);
+
+            const modalElement = document.getElementById('parentDeleteModal');
+            const deleteName = document.getElementById('parentDeleteName');
+            const deleteId = document.getElementById('parentDeleteId');
+            const warning = document.getElementById('parentDeleteWarning');
+            const dependencyText = document.getElementById('parentDependencyText');
+            const deleteForm = document.getElementById('parentDeleteForm');
+            const deleteButton = document.getElementById('parentConfirmDeleteButton');
+
+            document.querySelectorAll('.js-parent-delete')
+                .forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        const id = button.dataset.parentId || '';
+                        const name = button.dataset.parentName || 'this category';
+                        const childCount = Number(button.dataset.childCount || 0);
+                        const productCount = Number(button.dataset.productCount || 0);
+                        const blocked = childCount > 0 || productCount > 0;
+
+                        if (deleteId) {
+                            deleteId.value = id;
+                        }
+
+                        if (deleteName) {
+                            deleteName.textContent = name;
+                        }
+
+                        if (warning) {
+                            warning.classList.toggle('d-none', !blocked);
+                        }
+
+                        if (dependencyText) {
+                            dependencyText.textContent =
+                                childCount + ' child categor' +
+                                (childCount === 1 ? 'y' : 'ies') +
+                                ' and ' +
+                                productCount + ' product' +
+                                (productCount === 1 ? '' : 's');
+                        }
+
+                        if (deleteForm) {
+                            deleteForm.classList.toggle('d-none', blocked);
+                        }
+
+                        bootstrap.Modal
+                            .getOrCreateInstance(modalElement)
+                            .show();
+                    });
+                });
+
+            deleteForm?.addEventListener('submit', function () {
+                if (!deleteButton) {
+                    return;
+                }
+
+                deleteButton.disabled = true;
+                deleteButton.classList.add('asm-parent-submitting');
+
+                const text = deleteButton.querySelector('.asm-parent-delete-text');
+
+                if (text) {
+                    text.textContent = 'Deleting...';
+                }
+            });
+        })();
+    </script>
+}

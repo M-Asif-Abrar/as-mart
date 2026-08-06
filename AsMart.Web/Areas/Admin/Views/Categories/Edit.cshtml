@@ -6,221 +6,769 @@
 
 @section Styles {
     <style>
-        .category-edit-page {
-            min-height: calc(100vh - 80px);
-            background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 45%, #ffffff 100%);
+        .asm-category-editor {
+            --asm-blue: #146cff;
+            --asm-indigo: #5b4bff;
+            --asm-green: #159447;
+            --asm-orange: #b76312;
+            --asm-ink: #111a2e;
+            --asm-muted: #71809d;
+            --asm-line: #dfe6f1;
+            min-height: calc(100vh - 70px);
+            padding: 1.25rem;
+            background: radial-gradient(circle at 8% 2%,rgba(37,99,235,.10),transparent 30rem), radial-gradient(circle at 96% 10%,rgba(124,58,237,.10),transparent 28rem), linear-gradient(135deg,#eef5ff 0%,#f8fbff 50%,#f3f1ff 100%);
         }
 
-        .category-hero {
-            border-radius: 30px;
-            padding: 2rem;
-            background: linear-gradient(135deg, #0f172a, #2563eb);
+        .asm-edit-command,
+        .asm-edit-form-card,
+        .asm-edit-side-card {
+            border: 1px solid rgba(99,116,150,.15);
+            border-radius: 26px;
+            background: rgba(255,255,255,.9);
+            box-shadow: 0 16px 42px rgba(33,54,92,.09);
+            backdrop-filter: blur(14px);
+        }
+
+        .asm-edit-command {
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 1.5rem 1.25rem;
+        }
+
+            .asm-edit-command::after {
+                position: absolute;
+                top: -100px;
+                right: -45px;
+                width: 245px;
+                height: 245px;
+                content: "";
+                border-radius: 50%;
+                background: rgba(91,75,255,.08);
+            }
+
+        .asm-edit-command-main {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(340px,1.2fr) minmax(520px,1.5fr);
+            gap: 1.4rem;
+            align-items: center;
+        }
+
+        .asm-edit-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .asm-edit-icon {
+            display: inline-flex;
+            flex: 0 0 68px;
+            width: 68px;
+            height: 68px;
+            align-items: center;
+            justify-content: center;
+            color: #2f63dd;
+            font-size: 1.55rem;
+            border: 1px solid #bdd0ff;
+            border-radius: 22px;
+            background: linear-gradient(145deg,#dce8ff,#eef2ff);
+        }
+
+        .asm-edit-eyebrow {
+            display: block;
+            margin-bottom: .35rem;
+            color: #2459d8;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .asm-edit-title h1 {
+            margin: 0;
+            color: var(--asm-ink);
+            font-size: clamp(2rem,3vw,3rem);
+            font-weight: 950;
+            line-height: 1;
+            letter-spacing: -.045em;
+        }
+
+            .asm-edit-title h1 span {
+                color: var(--asm-indigo);
+            }
+
+        .asm-edit-title p {
+            max-width: 650px;
+            margin: .55rem 0 0;
+            color: var(--asm-muted);
+            font-size: .92rem;
+            line-height: 1.65;
+        }
+
+        .asm-edit-kpis {
+            display: grid;
+            grid-template-columns: repeat(4,minmax(120px,1fr));
+            gap: .6rem;
+        }
+
+        .asm-edit-kpi {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            min-height: 58px;
+            padding: .65rem .75rem;
+            border: 1px solid rgba(99,116,150,.15);
+            border-radius: 16px;
+            background: #fff;
+        }
+
+        .asm-edit-kpi-icon {
+            display: inline-flex;
+            flex: 0 0 36px;
+            width: 36px;
+            height: 36px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+        }
+
+            .asm-edit-kpi-icon.blue {
+                color: #2e62dc;
+                background: #e8efff;
+            }
+
+            .asm-edit-kpi-icon.green {
+                color: #148645;
+                background: #e5f5ec;
+            }
+
+            .asm-edit-kpi-icon.orange {
+                color: #a55d13;
+                background: #fff0db;
+            }
+
+            .asm-edit-kpi-icon.purple {
+                color: #6846d8;
+                background: #eee9ff;
+            }
+
+        .asm-edit-kpi small {
+            display: block;
+            color: #697895;
+            font-size: .62rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .asm-edit-kpi strong {
+            display: block;
+            margin-top: .05rem;
+            overflow: hidden;
+            color: var(--asm-ink);
+            font-size: .92rem;
+            font-weight: 950;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .asm-edit-command-actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            flex-wrap: wrap;
+            margin-top: 1.15rem;
+            padding-top: .9rem;
+            border-top: 1px solid #e3e9f2;
+        }
+
+        .asm-edit-btn {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .65rem 1rem;
+            font-size: .78rem;
+            font-weight: 900;
+            border-radius: 13px;
+            transition: .2s ease;
+        }
+
+            .asm-edit-btn:hover {
+                transform: translateY(-2px);
+            }
+
+        .asm-edit-btn-primary {
             color: #fff;
-            box-shadow: 0 18px 45px rgba(15,23,42,.16);
+            border: 1px solid var(--asm-blue);
+            background: linear-gradient(135deg,var(--asm-blue),#2463eb);
+            box-shadow: 0 9px 20px rgba(20,108,255,.22);
+        }
+
+            .asm-edit-btn-primary:hover {
+                color: #fff;
+            }
+
+        .asm-edit-btn-outline {
+            color: var(--asm-blue);
+            border: 1px solid var(--asm-blue);
+            background: #fff;
+        }
+
+        .asm-edit-grid {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) 310px;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: start;
+        }
+
+        .asm-edit-form-card {
+            overflow: hidden;
+        }
+
+        .asm-card-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            flex-wrap: wrap;
+            padding: 1rem 1.15rem;
+            border-bottom: 1px solid #e5eaf2;
         }
 
-        .category-kicker {
-            text-transform: uppercase;
-            letter-spacing: .14em;
-            color: #bfdbfe;
-            font-size: .78rem;
-            font-weight: 900;
-        }
-
-        .category-hero h1 {
-            font-size: clamp(1.9rem, 4vw, 2.9rem);
-            font-weight: 900;
-            margin: .35rem 0;
-            line-height: 1.1;
-        }
-
-        .category-hero p {
-            margin: 0;
-            max-width: 760px;
-            color: rgba(255,255,255,.78);
-            font-weight: 500;
-            line-height: 1.6;
-        }
-
-        .hero-actions {
+        .asm-card-title {
             display: flex;
             align-items: center;
-            gap: .75rem;
-            flex-wrap: wrap;
+            gap: .65rem;
+            color: var(--asm-ink);
+            font-size: 1rem;
+            font-weight: 950;
         }
 
-        .category-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: .9rem;
-            flex-wrap: wrap;
-            margin-top: 1.5rem;
+            .asm-card-title i {
+                color: #2463eb;
+            }
+
+        .asm-required-note {
+            color: #7a879d;
+            font-size: .72rem;
+            font-weight: 800;
         }
 
-        .category-btn {
-            border-radius: 16px;
-            padding: .82rem 1.25rem;
+        .asm-form-body {
+            padding: 1.15rem;
+        }
+
+        .asm-category-editor .asm-form-body label,
+        .asm-category-editor .asm-form-body .form-label {
+            margin-bottom: .38rem;
+            color: #64718a;
+            font-size: .68rem;
             font-weight: 900;
-            transition: .2s ease;
+            letter-spacing: .035em;
+            text-transform: uppercase;
         }
 
-            .category-btn:hover {
-                transform: translateY(-2px);
-            }
-
-        .category-btn-primary {
-            color: #fff;
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            border: 0;
-            box-shadow: 0 10px 24px rgba(37,99,235,.24);
-        }
-
-            .category-btn-primary:hover {
-                color: #fff;
-            }
-
-        .category-btn-light {
+        .asm-category-editor .asm-form-body .form-control,
+        .asm-category-editor .asm-form-body .form-select {
+            min-height: 46px;
+            color: var(--asm-ink);
+            border: 1px solid #d8e0ec;
+            border-radius: 13px;
             background: #fff;
-            color: #0f172a;
         }
 
-        .validation-summary {
-            border-radius: 18px;
-            border: 0;
-            box-shadow: 0 10px 24px rgba(220,38,38,.08);
-            margin-bottom: 1.25rem;
+        .asm-category-editor .asm-form-body textarea.form-control {
+            min-height: 115px;
         }
 
-        @@media (max-width: 991.98px) {
+        .asm-category-editor .asm-form-body .form-control:focus,
+        .asm-category-editor .asm-form-body .form-select:focus {
+            border-color: #78a5ff;
+            box-shadow: 0 0 0 .2rem rgba(20,108,255,.10);
+        }
 
-            .category-hero {
-                padding: 1.5rem;
+        .asm-category-editor .asm-form-body .form-check-input:checked {
+            border-color: #159447;
+            background-color: #159447;
+        }
+
+        .asm-validation {
+            margin-bottom: 1rem;
+            padding: .85rem 1rem;
+            color: #a62929;
+            border: 1px solid #f1cccc;
+            border-radius: 14px;
+            background: #fff5f5;
+        }
+
+        .asm-edit-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.15rem;
+            border-top: 1px solid #e5eaf2;
+            background: #fbfcff;
+        }
+
+        .asm-save-note {
+            color: #71809d;
+            font-size: .76rem;
+            font-weight: 800;
+        }
+
+            .asm-save-note i {
+                color: #159447;
             }
 
-            .category-actions {
-                justify-content: stretch;
+        .asm-action-buttons {
+            display: flex;
+            gap: .55rem;
+        }
+
+        .asm-edit-sidebar {
+            position: sticky;
+            top: 1rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .asm-edit-side-card {
+            padding: 1rem;
+        }
+
+        .asm-side-title {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: .8rem;
+            color: var(--asm-ink);
+            font-size: .9rem;
+            font-weight: 950;
+        }
+
+            .asm-side-title i {
+                color: #6846d8;
             }
 
-                .category-actions .btn,
-                .hero-actions .btn {
-                    width: 100%;
+        .asm-preview-list {
+            display: grid;
+            gap: .55rem;
+        }
+
+        .asm-preview-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            padding: .68rem .72rem;
+            border: 1px solid #e6ebf2;
+            border-radius: 12px;
+            background: #f8faff;
+        }
+
+            .asm-preview-row small {
+                color: #71809d;
+                font-size: .65rem;
+                font-weight: 900;
+                text-transform: uppercase;
+            }
+
+            .asm-preview-row strong {
+                max-width: 165px;
+                overflow: hidden;
+                color: var(--asm-ink);
+                font-size: .76rem;
+                font-weight: 950;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+        .asm-status-preview {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .3rem .55rem;
+            color: #147a3f;
+            font-size: .7rem;
+            font-weight: 900;
+            border-radius: 999px;
+            background: #e4f5eb;
+        }
+
+            .asm-status-preview.inactive {
+                color: #b22f2f;
+                background: #fdeaea;
+            }
+
+        .asm-tip-list {
+            display: grid;
+            gap: .7rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+            .asm-tip-list li {
+                display: flex;
+                gap: .55rem;
+                color: #56637b;
+                font-size: .75rem;
+                line-height: 1.5;
+            }
+
+            .asm-tip-list i {
+                margin-top: .15rem;
+                color: #2463eb;
+            }
+
+        .asm-submitting {
+            opacity: .72;
+            pointer-events: none;
+        }
+
+        .asm-spinner {
+            display: none;
+        }
+
+        .asm-submitting .asm-spinner {
+            display: inline-block;
+        }
+
+        .asm-submitting .asm-save-icon {
+            display: none;
+        }
+
+        @@media (max-width:1199.98px) {
+            .asm-edit-command-main {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-edit-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .asm-edit-sidebar {
+                position: static;
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @@media (max-width:767.98px) {
+            .asm-category-editor {
+                padding: .85rem;
+            }
+
+            .asm-edit-command, .asm-edit-form-card, .asm-edit-side-card {
+                border-radius: 20px;
+            }
+
+            .asm-edit-command {
+                padding: 1.25rem 1rem 1rem;
+            }
+
+            .asm-edit-title {
+                align-items: flex-start;
+            }
+
+            .asm-edit-icon {
+                width: 56px;
+                height: 56px;
+                flex-basis: 56px;
+                border-radius: 17px;
+            }
+
+            .asm-edit-kpis {
+                grid-template-columns: repeat(2,1fr);
+            }
+
+            .asm-card-head, .asm-edit-actions {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .asm-action-buttons {
+                width: 100%;
+            }
+
+                .asm-action-buttons .btn {
+                    flex: 1;
                 }
+
+            .asm-edit-sidebar {
+                grid-template-columns: 1fr;
+            }
         }
 
-        @@media (max-width: 575.98px) {
-
-            .category-hero {
-                border-radius: 22px;
-                padding: 1.25rem;
+        @@media (max-width:575.98px) {
+            .asm-edit-title {
+                flex-direction: column;
             }
 
-                .category-hero h1 {
-                    font-size: 1.8rem;
-                }
+            .asm-edit-kpis {
+                grid-template-columns: 1fr;
+            }
 
-            .category-actions {
+            .asm-edit-command-actions .btn {
+                width: 100%;
+            }
+
+            .asm-action-buttons {
                 flex-direction: column-reverse;
             }
+
+                .asm-action-buttons .btn {
+                    width: 100%;
+                }
         }
     </style>
 }
 
-<div class="container-fluid py-4 category-edit-page">
+<div class="asm-category-editor">
+    <section class="asm-edit-command">
+        <div class="asm-edit-command-main">
+            <div class="asm-edit-title">
+                <div class="asm-edit-icon">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </div>
+                <div>
+                    <span class="asm-edit-eyebrow">Catalog Management</span>
+                    <h1>Edit <span>Category</span></h1>
+                    <p>
+                        Update category identity, hierarchy, SEO slug, display order,
+                        storefront linking, and visibility from one responsive workspace.
+                    </p>
+                </div>
+            </div>
 
-    <div class="category-hero mb-4">
-
-        <div>
-            <span class="category-kicker">
-                Admin Panel
-            </span>
-
-            <h1>Edit Category</h1>
-
-            <p>
-                Update category information, SEO slug, hierarchy,
-                display order, storefront links, and visibility status.
-            </p>
+            <div class="asm-edit-kpis">
+                <div class="asm-edit-kpi">
+                    <span class="asm-edit-kpi-icon blue"><i class="fa-solid fa-hashtag"></i></span>
+                    <div><small>Category ID</small><strong>@Model.Id</strong></div>
+                </div>
+                <div class="asm-edit-kpi">
+                    <span class="asm-edit-kpi-icon green"><i class="fa-solid fa-circle-check"></i></span>
+                    <div><small>Status</small><strong id="topStatusText">Active</strong></div>
+                </div>
+                <div class="asm-edit-kpi">
+                    <span class="asm-edit-kpi-icon orange"><i class="fa-solid fa-arrow-down-1-9"></i></span>
+                    <div><small>Display Order</small><strong id="topOrderText">—</strong></div>
+                </div>
+                <div class="asm-edit-kpi">
+                    <span class="asm-edit-kpi-icon purple"><i class="fa-solid fa-link"></i></span>
+                    <div><small>Slug</small><strong id="topSlugText">Not specified</strong></div>
+                </div>
+            </div>
         </div>
 
-        <div class="hero-actions">
-
-            <a asp-action="Index"
-               class="btn category-btn category-btn-light">
-                <i class="fa-solid fa-arrow-left me-2"></i>
-                Back
+        <div class="asm-edit-command-actions">
+            <a asp-action="Index" class="btn asm-edit-btn asm-edit-btn-outline">
+                <i class="fa-solid fa-arrow-left"></i> Back to Categories
             </a>
-
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn asm-edit-btn asm-edit-btn-outline">
+                <i class="fa-solid fa-circle-info"></i> View Details
+            </a>
+            <span class="ms-auto text-muted small fw-bold">
+                <i class="fa-solid fa-shield-halved me-1"></i>
+                Protected admin form
+            </span>
         </div>
+    </section>
 
-    </div>
+    <form asp-action="Edit" method="post" id="categoryEditForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
 
-    <div class="row justify-content-center">
-
-        <div class="col-12 col-xxl-10">
-
-            <form asp-action="Edit"
-                  method="post"
-                  id="categoryEditForm">
-
-                @Html.AntiForgeryToken()
-
-                <input type="hidden" asp-for="Id" />
-
-                <div asp-validation-summary="ModelOnly"
-                     class="alert alert-danger validation-summary d-none"
-                     id="valSummary">
+        <div class="asm-edit-grid">
+            <section class="asm-edit-form-card">
+                <div class="asm-card-head">
+                    <div class="asm-card-title">
+                        <i class="fa-solid fa-sliders"></i>
+                        Category Information
+                    </div>
+                    <span class="asm-required-note">Fields marked with * are required</span>
                 </div>
 
-                <partial name="_CategoryForm" model="Model" />
+                <div class="asm-form-body">
+                    <div asp-validation-summary="ModelOnly"
+                         class="asm-validation d-none"
+                         id="valSummary"
+                         role="alert"></div>
 
-                <div class="category-actions">
-
-                    <a asp-action="Index"
-                       class="btn category-btn category-btn-light border">
-                        <i class="fa-solid fa-xmark me-2"></i>
-                        Cancel
-                    </a>
-
-                    <button type="submit"
-                            class="btn category-btn category-btn-primary">
-                        <i class="fa-solid fa-floppy-disk me-2"></i>
-                        Save Changes
-                    </button>
-
+                    <partial name="_CategoryForm" model="Model" />
                 </div>
 
-            </form>
+                <div class="asm-edit-actions">
+                    <div class="asm-save-note">
+                        <i class="fa-solid fa-circle-check me-1"></i>
+                        Changes are validated before saving.
+                    </div>
 
+                    <div class="asm-action-buttons">
+                        <a asp-action="Index" class="btn asm-edit-btn asm-edit-btn-outline">
+                            <i class="fa-solid fa-xmark"></i> Cancel
+                        </a>
+                        <button type="submit" id="saveCategoryButton" class="btn asm-edit-btn asm-edit-btn-primary">
+                            <span class="spinner-border spinner-border-sm asm-spinner" aria-hidden="true"></span>
+                            <i class="fa-solid fa-floppy-disk asm-save-icon"></i>
+                            <span class="asm-save-text">Save Changes</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="asm-edit-sidebar">
+                <section class="asm-edit-side-card">
+                    <div class="asm-side-title">
+                        <i class="fa-solid fa-chart-simple"></i>
+                        Live Summary
+                    </div>
+
+                    <div class="asm-preview-list">
+                        <div class="asm-preview-row">
+                            <small>ID</small>
+                            <strong>#@Model.Id</strong>
+                        </div>
+                        <div class="asm-preview-row">
+                            <small>Name</small>
+                            <strong id="namePreview">Not specified</strong>
+                        </div>
+                        <div class="asm-preview-row">
+                            <small>Slug</small>
+                            <strong id="slugPreview">Not specified</strong>
+                        </div>
+                        <div class="asm-preview-row">
+                            <small>Parent</small>
+                            <strong id="parentPreview">None</strong>
+                        </div>
+                        <div class="asm-preview-row">
+                            <small>Status</small>
+                            <span id="statusPreview" class="asm-status-preview">
+                                <i class="fa-solid fa-circle-check"></i> Active
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="asm-edit-side-card">
+                    <div class="asm-side-title">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        Editing Guidance
+                    </div>
+
+                    <ul class="asm-tip-list">
+                        <li><i class="fa-solid fa-check"></i><span>Use a clear customer-facing category name.</span></li>
+                        <li><i class="fa-solid fa-check"></i><span>Keep the slug lowercase, short, and SEO-friendly.</span></li>
+                        <li><i class="fa-solid fa-check"></i><span>Choose the correct parent to preserve hierarchy.</span></li>
+                        <li><i class="fa-solid fa-check"></i><span>Use display order to control storefront placement.</span></li>
+                    </ul>
+                </section>
+            </aside>
         </div>
-
-    </div>
-
+    </form>
 </div>
 
-
 @section Scripts {
-
     <partial name="_ValidationScriptsPartial" />
 
     <script>
         (function () {
+            'use strict';
 
+            const form = document.getElementById('categoryEditForm');
             const summary = document.getElementById('valSummary');
+            const saveButton = document.getElementById('saveCategoryButton');
 
-            if (!summary) return;
+            if (!form) return;
 
-            const hasText = (summary.innerText || '').trim().length > 0;
+            const byName = function (name) {
+                return form.querySelector('[name="' + name + '"]');
+            };
 
-            if (hasText) {
-                summary.classList.remove('d-none');
+            const nameInput = byName('Name');
+            const slugInput = byName('Slug');
+            const activeInput = byName('IsActive');
+            const orderInput = byName('DisplayOrder');
+            const parentInput = byName('ParentCategoryId');
+
+            const namePreview = document.getElementById('namePreview');
+            const slugPreview = document.getElementById('slugPreview');
+            const parentPreview = document.getElementById('parentPreview');
+            const statusPreview = document.getElementById('statusPreview');
+            const topStatusText = document.getElementById('topStatusText');
+            const topOrderText = document.getElementById('topOrderText');
+            const topSlugText = document.getElementById('topSlugText');
+
+            function valueOr(input, fallback) {
+                return input && String(input.value || '').trim()
+                    ? String(input.value).trim()
+                    : fallback;
             }
 
+            function isActive() {
+                if (!activeInput) return true;
+                return activeInput.type === 'checkbox'
+                    ? activeInput.checked
+                    : String(activeInput.value).toLowerCase() === 'true';
+            }
+
+            function selectedText(select) {
+                if (!select || select.tagName !== 'SELECT') return 'None';
+                const option = select.options[select.selectedIndex];
+                return option && option.value ? option.text.trim() : 'None';
+            }
+
+            function updatePreview() {
+                const name = valueOr(nameInput, 'Not specified');
+                const slug = valueOr(slugInput, 'Not specified');
+                const order = valueOr(orderInput, '—');
+                const active = isActive();
+
+                if (namePreview) { namePreview.textContent = name; namePreview.title = name; }
+                if (slugPreview) { slugPreview.textContent = slug; slugPreview.title = slug; }
+                if (parentPreview) parentPreview.textContent = selectedText(parentInput);
+                if (topSlugText) { topSlugText.textContent = slug; topSlugText.title = slug; }
+                if (topOrderText) topOrderText.textContent = order;
+                if (topStatusText) topStatusText.textContent = active ? 'Active' : 'Inactive';
+
+                if (statusPreview) {
+                    statusPreview.classList.toggle('inactive', !active);
+                    statusPreview.innerHTML = active
+                        ? '<i class="fa-solid fa-circle-check"></i> Active'
+                        : '<i class="fa-solid fa-circle-xmark"></i> Inactive';
+                }
+            }
+
+            function showSummary() {
+                if (!summary) return;
+                const hasError = summary.querySelector('li') || (summary.innerText || '').trim();
+                summary.classList.toggle('d-none', !hasError);
+            }
+
+            [nameInput, slugInput, activeInput, orderInput, parentInput].forEach(function (input) {
+                if (!input) return;
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
+            });
+
+            form.addEventListener('submit', function () {
+                showSummary();
+
+                if (saveButton && form.checkValidity()) {
+                    saveButton.disabled = true;
+                    saveButton.classList.add('asm-submitting');
+
+                    const text = saveButton.querySelector('.asm-save-text');
+                    if (text) text.textContent = 'Saving...';
+                }
+            });
+
+            updatePreview();
+            showSummary();
         })();
     </script>
-
 }

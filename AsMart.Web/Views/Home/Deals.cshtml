@@ -5,13 +5,27 @@
 @model IReadOnlyCollection<Product>
 
 @{
-    var products = Model?.ToList() ?? new List<Product>();
+    ViewData["Title"] = "Deals of the Day";
+
+    var products = Model?
+        .OrderByDescending(product => product.UpdatedAt)
+        .ToList()
+        ?? new List<Product>();
+
+    var discountedProductsCount = products.Count(product =>
+        product.Price.HasValue &&
+        product.ListPrice.HasValue &&
+        product.ListPrice.Value > product.Price.Value);
 
     var grid = new ProductGridVm
     {
-        Title = "Deals of the Day",
+        // Keep empty to prevent _ProductGrid from rendering
+        // a second Deals of the Day heading card.
+        Title = string.Empty,
+
         Actions = ProductGridActions.DetailsOnly,
         HighlightDeals = true,
+
         Products = products
             .Select(product => product.ToCardVm())
             .ToList()
@@ -20,133 +34,520 @@
 
 @section Styles {
     <style>
-        .listing-page {
+        .deals-page {
             min-height: calc(100vh - 90px);
-            padding: 28px 0 50px;
-            background: radial-gradient( circle at 10% 0%, rgba(245, 158, 11, .10), transparent 30%), linear-gradient( 180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+            padding: 20px 0 45px;
+            background: radial-gradient( circle at 92% 0%, rgba(245, 158, 11, .11), transparent 30%), radial-gradient( circle at 8% 5%, rgba(251, 191, 36, .07), transparent 27%), linear-gradient( 180deg, #fffbeb 0%, #ffffff 45%, #f8fafc 100%);
         }
 
-        .listing-shell {
+        .deals-shell {
+            width: 100%;
             max-width: 1500px;
             margin: 0 auto;
         }
 
-        .listing-hero {
-            padding: 28px;
-            margin-bottom: 24px;
-            border: 1px solid rgba(15, 23, 42, .08);
-            border-radius: 28px;
-            background: linear-gradient( 135deg, rgba(255, 255, 255, .98), rgba(255, 251, 235, .95));
-            box-shadow: 0 22px 60px rgba(15, 23, 42, .08);
+        .deals-hero {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            padding: 24px 26px;
+            border: 1px solid rgba(245, 158, 11, .18);
+            border-radius: 26px;
+            background: linear-gradient( 125deg, rgba(255, 255, 255, .98) 0%, rgba(255, 251, 235, .96) 55%, rgba(254, 243, 199, .60) 100%);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, .07), inset 0 1px 0 rgba(255, 255, 255, .90);
         }
 
-        .listing-kicker {
+            .deals-hero::before {
+                position: absolute;
+                top: -85px;
+                right: -60px;
+                width: 230px;
+                height: 230px;
+                border-radius: 50%;
+                background: rgba(245, 158, 11, .09);
+                content: "";
+                pointer-events: none;
+            }
+
+            .deals-hero::after {
+                position: absolute;
+                bottom: -120px;
+                left: 38%;
+                width: 250px;
+                height: 250px;
+                border-radius: 50%;
+                background: rgba(251, 191, 36, .07);
+                content: "";
+                pointer-events: none;
+            }
+
+        .deals-hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .deals-main {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .deals-icon {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            width: 66px;
+            height: 66px;
+            border: 1px solid rgba(245, 158, 11, .20);
+            border-radius: 21px;
+            background: linear-gradient( 145deg, rgba(245, 158, 11, .16), rgba(251, 191, 36, .08));
+            color: #d97706;
+            box-shadow: 0 12px 30px rgba(245, 158, 11, .13);
+            font-size: 27px;
+        }
+
+        .deals-text {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .deals-kicker {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 7px 12px;
-            margin-bottom: 12px;
-            border-radius: 999px;
+            gap: 7px;
+            margin-bottom: 5px;
             color: #b45309;
-            background: rgba(245, 158, 11, .12);
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 900;
+            letter-spacing: .07em;
             text-transform: uppercase;
         }
 
-        .listing-title {
+        .deals-title {
             margin: 0;
             color: #0f172a;
-            font-size: clamp(30px, 4vw, 48px);
+            font-size: clamp(27px, 3vw, 40px);
             font-weight: 950;
-            letter-spacing: -.04em;
+            line-height: 1.08;
+            letter-spacing: -.035em;
         }
 
-        .listing-description {
-            max-width: 760px;
-            margin: 12px 0 0;
+        .deals-description {
+            max-width: 790px;
+            margin: 7px 0 0;
             color: #64748b;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 650;
-            line-height: 1.7;
+            line-height: 1.55;
         }
 
-        .listing-navigation {
+        .deals-stats {
+            display: flex;
+            flex: 0 0 auto;
+            gap: 10px;
+        }
+
+        .deals-stat-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 52px;
+            padding: 8px 14px;
+            border: 1px solid rgba(245, 158, 11, .17);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .80);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, .05);
+        }
+
+        .deals-stat-icon {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            background: rgba(245, 158, 11, .11);
+            color: #d97706;
+            font-size: 14px;
+        }
+
+        .deals-stat-content {
+            min-width: 0;
+        }
+
+        .deals-stat-value {
+            color: #0f172a;
+            font-size: 22px;
+            font-weight: 950;
+            line-height: 1;
+        }
+
+        .deals-stat-label {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .deals-navigation {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 18px;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(15, 23, 42, .07);
         }
 
-            .listing-navigation .btn {
-                min-height: 44px;
+            .deals-navigation .btn {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
                 gap: 8px;
-                padding: 0 17px;
-                border-radius: 14px;
-                font-size: 13px;
+                min-height: 40px;
+                padding: 0 15px;
+                border-radius: 13px;
+                font-size: 12px;
                 font-weight: 900;
+                white-space: nowrap;
             }
 
-        @@media (max-width: 575.98px) {
-            .listing-page {
-                padding: 16px 0 35px;
+            .deals-navigation .btn-warning {
+                border-color: #f59e0b;
+                background: linear-gradient( 135deg, #f59e0b, #d97706);
+                color: #ffffff;
+                box-shadow: 0 9px 20px rgba(245, 158, 11, .20);
             }
 
-            .listing-hero {
+                .deals-navigation .btn-warning:hover,
+                .deals-navigation .btn-warning:focus {
+                    border-color: #b45309;
+                    background: linear-gradient( 135deg, #d97706, #b45309);
+                    color: #ffffff;
+                }
+
+            .deals-navigation .btn-light {
+                border: 1px solid rgba(15, 23, 42, .10);
+                background: rgba(255, 255, 255, .80);
+                color: #334155;
+            }
+
+                .deals-navigation .btn-light:hover,
+                .deals-navigation .btn-light:focus {
+                    border-color: rgba(245, 158, 11, .30);
+                    background: #ffffff;
+                    color: #b45309;
+                }
+
+        .deals-products-section {
+            position: relative;
+        }
+
+        .deals-empty {
+            padding: 38px 22px;
+            border: 1px solid rgba(245, 158, 11, .16);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, .07);
+            text-align: center;
+        }
+
+        .deals-empty-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 15px;
+            border-radius: 22px;
+            background: linear-gradient( 145deg, rgba(245, 158, 11, .15), rgba(251, 191, 36, .09));
+            color: #d97706;
+            font-size: 26px;
+        }
+
+        .deals-empty h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 24px;
+            font-weight: 950;
+            letter-spacing: -.03em;
+        }
+
+        .deals-empty p {
+            max-width: 610px;
+            margin: 9px auto 18px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 650;
+            line-height: 1.65;
+        }
+
+        .deals-empty-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: 0 16px;
+            border-radius: 13px;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .deals-main {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .deals-stats {
+                width: 100%;
+                padding-left: 84px;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .deals-page {
+                padding: 14px 0 34px;
+            }
+
+            .deals-hero {
                 padding: 20px;
                 border-radius: 22px;
             }
 
-            .listing-navigation {
-                flex-direction: column;
+            .deals-main {
+                gap: 14px;
             }
 
-                .listing-navigation .btn {
+            .deals-icon {
+                width: 56px;
+                height: 56px;
+                border-radius: 18px;
+                font-size: 23px;
+            }
+
+            .deals-stats {
+                flex-wrap: wrap;
+                padding-left: 70px;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .deals-hero {
+                padding: 17px;
+                border-radius: 20px;
+            }
+
+            .deals-main {
+                display: grid;
+                grid-template-columns: 48px minmax(0, 1fr);
+                gap: 12px;
+            }
+
+            .deals-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 16px;
+                font-size: 20px;
+            }
+
+            .deals-title {
+                font-size: 27px;
+            }
+
+            .deals-description {
+                grid-column: 1 / -1;
+                margin-top: 9px;
+                font-size: 13px;
+            }
+
+            .deals-stats {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                width: 100%;
+                padding-left: 0;
+            }
+
+            .deals-stat-card {
+                min-width: 0;
+                padding: 8px 10px;
+            }
+
+            .deals-stat-value {
+                font-size: 19px;
+            }
+
+            .deals-navigation {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 8px;
+                margin-top: 13px;
+                padding-top: 13px;
+            }
+
+                .deals-navigation .btn {
                     width: 100%;
+                    min-height: 43px;
                 }
+
+            .deals-empty {
+                padding: 32px 17px;
+                border-radius: 21px;
+            }
+        }
+
+        @@media (max-width: 390px) {
+            .deals-stats {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 }
 
-<section class="listing-page">
-    <div class="container-fluid listing-shell">
-        <header class="listing-hero">
-            <div class="listing-kicker">
-                <i class="fa-solid fa-bolt"></i>
-                Limited-Time Offers
+<section class="deals-page">
+    <div class="container-fluid deals-shell">
+
+        <header class="deals-hero">
+            <div class="deals-hero-content">
+
+                <div class="deals-main">
+
+                    <div class="deals-icon"
+                         aria-hidden="true">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+
+                    <div class="deals-text">
+                        <div class="deals-kicker">
+                            <i class="fa-solid fa-fire"></i>
+                            Limited-Time Offers
+                        </div>
+
+                        <h1 class="deals-title">
+                            Deals of the Day
+                        </h1>
+
+                        <p class="deals-description">
+                            Browse active discounted products and selected daily
+                            offers. Open a product page to review complete details,
+                            current pricing and available savings.
+                        </p>
+                    </div>
+
+                    <div class="deals-stats">
+
+                        <div class="deals-stat-card">
+                            <div class="deals-stat-icon"
+                                 aria-hidden="true">
+                                <i class="fa-solid fa-box"></i>
+                            </div>
+
+                            <div class="deals-stat-content">
+                                <div class="deals-stat-value">
+                                    @products.Count.ToString("N0")
+                                </div>
+
+                                <div class="deals-stat-label">
+                                    Products
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="deals-stat-card">
+                            <div class="deals-stat-icon"
+                                 aria-hidden="true">
+                                <i class="fa-solid fa-tags"></i>
+                            </div>
+
+                            <div class="deals-stat-content">
+                                <div class="deals-stat-value">
+                                    @discountedProductsCount.ToString("N0")
+                                </div>
+
+                                <div class="deals-stat-label">
+                                    Discounted
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <nav class="deals-navigation"
+                     aria-label="Product page navigation">
+
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="btn btn-warning">
+                        <i class="fa-solid fa-star"></i>
+                        Featured Products
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="TopVisited"
+                       class="btn btn-light">
+                        <i class="fa-solid fa-chart-line"></i>
+                        Top Visited Products
+                    </a>
+
+                    <a asp-controller="Catalog"
+                       asp-action="Index"
+                       class="btn btn-light">
+                        <i class="fa-solid fa-store"></i>
+                        Browse Catalog
+                    </a>
+
+                </nav>
+
             </div>
-
-            <h1 class="listing-title">
-                Deals of the Day
-            </h1>
-
-            <p class="listing-description">
-                Browse active discounted products and selected daily offers.
-                Open a product page to view complete details before purchasing.
-            </p>
-
-            <nav class="listing-navigation"
-                 aria-label="Product page navigation">
-                <a asp-controller="Home"
-                   asp-action="Index"
-                   class="btn btn-outline-primary">
-                    <i class="fa-solid fa-star"></i>
-                    Featured Products
-                </a>
-
-                <a asp-controller="Home"
-                   asp-action="TopVisited"
-                   class="btn btn-outline-secondary">
-                    <i class="fa-solid fa-chart-line"></i>
-                    Top Visited
-                </a>
-            </nav>
         </header>
 
-        <partial name="~/Views/Shared/Products/_ProductGrid.cshtml"
-                 model="grid" />
+        @if (!products.Any())
+        {
+            <div class="deals-empty">
+
+                <div class="deals-empty-icon">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+
+                <h2>No deals are currently available</h2>
+
+                <p>
+                    Products marked as active Deals of the Day will appear here.
+                    Browse featured products or the complete product catalog.
+                </p>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn btn-warning deals-empty-btn">
+                    <i class="fa-solid fa-star"></i>
+                    View Featured Products
+                </a>
+
+            </div>
+        }
+        else
+        {
+            <section class="deals-products-section"
+                     aria-labelledby="deals-products-heading">
+
+                <h2 id="deals-products-heading"
+                    class="visually-hidden">
+                    Deals of the Day Products
+                </h2>
+
+                <partial name="~/Views/Shared/Products/_ProductGrid.cshtml"
+                         model="grid" />
+
+            </section>
+        }
+
     </div>
 </section>
